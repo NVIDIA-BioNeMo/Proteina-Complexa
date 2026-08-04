@@ -92,7 +92,14 @@ tests/test_eval_generated/
 .rsync_lock/
 
 .pytest_tmp/
-.claude/
+# Ignore .claude/ contents EXCEPT the published agent skills. The skills under
+# .claude/skills/ are tracked and are vendored downstream by the NVIDIA/skills
+# and bionemo-agent-toolkit catalogs. A bare `.claude/` excludes the directory
+# itself, so git never descends into it and a `!` negation cannot re-include
+# anything below it — which silently drops every NEW file added to a skill dir
+# (cards, evals, references) unless the author remembers `git add -f`.
+.claude/*
+!.claude/skills/
 .dotnet/
 .gitconfig
 .gnupg/
