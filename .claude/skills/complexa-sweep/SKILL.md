@@ -23,7 +23,7 @@ Run cartesian-product parameter sweeps over Proteina-Complexa design pipelines. 
 ## Step 1: Pre-flight
 
 ```bash
-bash .claude/skills/_shared/scripts/preflight.sh
+bash scripts/preflight.sh
 ```
 
 Read `./complexa_setup/preflight.json`. A sweep multiplies GPU time by the number of configs. **Before launching, confirm the cost with the user**:
@@ -34,7 +34,7 @@ If `gpu.available=false`, stop — sweeps are not feasible on CPU.
 
 ## Step 2: Pick the pipeline + target
 
-Use the same dialogue as `complexa-design` — do **not** duplicate it here. See [`.claude/skills/complexa-design/SKILL.md`](../complexa-design/SKILL.md) Step 2 ("Pick the pipeline") and Step 3 ("Gather parameters"). Capture:
+Use the same dialogue as `complexa-design` — do **not** duplicate it here. See the `complexa-design` skill, Step 2 ("Pick the pipeline") and Step 3 ("Gather parameters"). Capture:
 
 - `pipeline_config_name` — e.g. `search_binder_local_pipeline` (default), `search_ligand_binder_local_pipeline`, `search_ame_local_pipeline`.
 - `task_name` — e.g. `02_PDL1`, `22_DerF21`, `39_7V11_LIGAND`. Passed as `--override generation.task_name=<task>`.
@@ -78,7 +78,7 @@ Rules (from `script_utils/generate_inference_configs.py:load_sweeper_file`):
 - Cartesian product: total configs = product of list lengths. Two 4-value axes = 16 configs; budget accordingly.
 - If a key appears in both the sweeper file and an `--override`, the override wins and that axis collapses.
 
-See [reference/sweep_axes.md](reference/sweep_axes.md) for the full catalogue of swept keys (typical ranges, cost multipliers, what improves/regresses).
+See [references/sweep_axes.md](references/sweep_axes.md) for the full catalogue of swept keys (typical ranges, cost multipliers, what improves/regresses).
 
 ### Dry-run preview before generating
 
@@ -174,7 +174,7 @@ Capture the resolved invocation + outputs for replay. The shared helper takes a 
 
 ```bash
 BEST_ID=4   # from Step 6 ranking
-python3 .claude/skills/_shared/scripts/write_manifest.py \
+python3 scripts/write_manifest.py \
     --output-dir ./evaluation_results/eval_${BEST_ID}_my_sweep \
     --command "python script_utils/generate_inference_configs.py --config_name search_binder_local_pipeline --sweeper configs/sweeps/my_sweep.yaml --override generation.task_name=22_DerF21 --run_name my_sweep && for cfg in configs/inference_configs/inf_*_my_sweep.yaml; do complexa design \"\$cfg\"; done" \
     --skill complexa-sweep \
@@ -198,7 +198,7 @@ Alongside the manifest, save the ranked `sweep_summary.csv` from Step 6 to `./sw
 
 Total GPU-time for a sweep = `N_configs × per_run_GPU_time`. A single `search_binder_local_pipeline` run on one A100 is roughly 30–90 min (binder length + nsteps dependent). A 4-axis × 4-value sweep = 256 configs × ~60 min = ~256 GPU-hours — at that scale, plan on a multi-GPU host with the Step-4 sharding pattern.
 
-Refer to [`.claude/skills/_shared/reference/hardware.md`](../_shared/reference/hardware.md) for the per-run baseline + VRAM minima.
+Refer to [`references/hardware.md`](references/hardware.md) for the per-run baseline + VRAM minima.
 
 ## Troubleshooting
 
@@ -213,6 +213,6 @@ Refer to [`.claude/skills/_shared/reference/hardware.md`](../_shared/reference/h
 
 ---
 
-For per-axis reference (typical ranges, cost, what gets better/worse), see [reference/sweep_axes.md](reference/sweep_axes.md).
+For per-axis reference (typical ranges, cost, what gets better/worse), see [references/sweep_axes.md](references/sweep_axes.md).
 
-For the user-facing sweep system overview (config generation, output layout), see [`docs/SWEEP.md`](../../../docs/SWEEP.md).
+For the user-facing sweep system overview (config generation, output layout), see [`references/SWEEP.md`](references/SWEEP.md).

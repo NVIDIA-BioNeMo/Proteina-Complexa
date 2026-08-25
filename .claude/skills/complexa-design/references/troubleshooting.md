@@ -170,7 +170,7 @@ looks like a missing value.
 
 **Fix:** Always use `++` for design pipeline overrides (the pipeline composes
 multiple configs and key existence varies by stage). Re-check the key against
-`reference/overrides.md`. Validate the run before launching:
+`references/overrides.md`. Validate the run before launching:
 
 ```bash
 complexa validate design <pipeline_config> ++<overrides>

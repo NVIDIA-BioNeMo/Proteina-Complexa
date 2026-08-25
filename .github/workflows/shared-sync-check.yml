@@ -1,0 +1,30 @@
+# Verifies that each complexa skill's hard copies of shared assets stay
+# identical to the single source under .claude/skills/_shared/.
+#
+# Shared assets (preflight.sh, write_manifest.py, hardware.md) must ship as REAL
+# files inside every skill that uses them — the NVIDIA/skills catalog
+# sparse-checks-out each skill on its own and `codex plugin add` drops symlinks,
+# so cross-skill references / symlinks cannot be relied on. Authors edit the
+# canonical copy under _shared/ and run `sync_shared.py --write`; this check
+# fails a PR whose per-skill copies drifted.
+name: shared-sync-check
+
+on:
+  pull_request:
+    paths:
+      - '.claude/skills/**'
+  push:
+    branches: [main]
+    paths:
+      - '.claude/skills/**'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify per-skill shared copies match _shared/
+        run: python3 .claude/skills/_shared/sync_shared.py --check

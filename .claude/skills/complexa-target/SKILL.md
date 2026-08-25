@@ -211,7 +211,7 @@ Then write the appended YAML snippet (the lines `complexa target add` wrote unde
 
 None for target definition — this is a YAML edit, not a training/inference step. Disk impact is a few KB appended to the targets dict (plus an automatic `.yaml.bak` backup written by `save_targets_dict`).
 
-For the downstream design / evaluate runs that consume the target, defer to `complexa-design` and `_shared/reference/hardware.md`.
+For the downstream design / evaluate runs that consume the target, defer to `complexa-design` and `references/hardware.md`.
 
 ## Troubleshooting
 
@@ -228,7 +228,7 @@ For the downstream design / evaluate runs that consume the target, defer to `com
 
 ## Reference
 
-- `reference/target_schema.md` — every field, chain-spec grammar, AME task-name grammar, three worked examples.
+- `references/target_schema.md` — every field, chain-spec grammar, AME task-name grammar, three worked examples.
 - `configs/targets/targets_dict.yaml` — live protein entries (copy a known-good one as a template).
 - `configs/targets/ligand_targets_dict.yaml` — live ligand entries.
 - `configs/design_tasks/ame_dict_v2.yaml` — AME task definitions (file-edit only, not exposed via `complexa target` CLI).

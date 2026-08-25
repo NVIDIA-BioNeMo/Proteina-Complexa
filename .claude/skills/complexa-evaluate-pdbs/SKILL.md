@@ -35,7 +35,7 @@ Score a directory of pre-existing PDB files against the same metrics Proteina-Co
 Always check GPU / disk / tool binaries before launching a refold job. RF3 and ColabDesign-AF2 are large.
 
 ```bash
-bash .claude/skills/_shared/scripts/preflight.sh
+bash scripts/preflight.sh
 ```
 
 Surface from `preflight.json`:
@@ -97,7 +97,7 @@ complexa analysis configs/evaluate_ame_from_pdb_dir.yaml \
     ++run_name=eval_ame_chm
 ```
 
-See `reference/eval_configs.md` for the full matrix (every `result_type`, every threshold default, every supported folding backend, motif-protein-binder variant).
+See `references/eval_configs.md` for the full matrix (every `result_type`, every threshold default, every supported folding backend, motif-protein-binder variant).
 
 ## Step 3: Gather inputs (AskUserQuestion)
 
@@ -124,7 +124,7 @@ complexa analysis configs/evaluate_from_pdb_dir.yaml \
   ++run_name=eval_pdl1_af2
 ```
 
-For ligand binders flip `binder_folding_method=rf3_latest`, `inverse_folding_model=ligand_mpnn`, `result_type=ligand_binder`. For AME use `configs/evaluate_ame_from_pdb_dir.yaml` — see `reference/eval_configs.md` for full worked examples.
+For ligand binders flip `binder_folding_method=rf3_latest`, `inverse_folding_model=ligand_mpnn`, `result_type=ligand_binder`. For AME use `configs/evaluate_ame_from_pdb_dir.yaml` — see `references/eval_configs.md` for full worked examples.
 
 If you need to inspect output between stages, run them separately. The configs above are shared between `evaluate` and `analyze`:
 
@@ -178,7 +178,7 @@ Summarize to the user:
 Capture the resolved invocation + outputs for replay.
 
 ```bash
-python3 .claude/skills/_shared/scripts/write_manifest.py \
+python3 scripts/write_manifest.py \
   --output-dir ./evaluation_results/${run_name} \
   --command "complexa analysis configs/evaluate_from_pdb_dir.yaml ++sample_storage_path=<dir> ++dataset.task_name=<task> ++metric.binder_folding_method=<backend> ++run_name=<run>" \
   --skill complexa-evaluate-pdbs \
@@ -200,7 +200,7 @@ The manifest pins: resolved config, git SHA, ckpt SHA-256s, the result CSV paths
 | `++metric.compute_pre_refolding_metrics=true`  | Add bioinformatics/TMOL/HBPLUS metrics on the input structures.       |
 | `++metric.keep_folding_outputs=true`           | Save the refolded PDBs (large, but useful for inspection).            |
 | `++result_type=<type>`                         | Override default thresholds: `protein_binder` / `ligand_binder` / `motif_protein_binder` / `motif_ligand_binder`. |
-| `++aggregation.success_thresholds.<…>`         | Tighten or loosen specific thresholds (see `reference/eval_configs.md`). |
+| `++aggregation.success_thresholds.<…>`         | Tighten or loosen specific thresholds (see `references/eval_configs.md`). |
 | `++eval_njobs=N`                               | Parallel GPUs for the evaluate step.                                  |
 | `++dryrun=true`                                | Plan without running any folding.                                     |
 | `++file_limit=N`                               | Cap input PDBs (handy for first-pass smoke tests).                    |
@@ -209,7 +209,7 @@ The manifest pins: resolved config, git SHA, ckpt SHA-256s, the result CSV paths
 
 - **GPU**: ≥1 CUDA GPU. AF2 (`colabdesign`) and RF3 (`rf3_latest`) need ≥40 GB VRAM (A100/H100/L40S). ESMFold runs on ≥24 GB. Multi-GPU via `++eval_njobs=N`.
 - **CPU/disk**: 24 CPUs default (`ncpus_: 24`). Each refolded PDB + intermediate output is ~1–5 MB; `keep_folding_outputs=true` can balloon to tens of GB for thousands of inputs.
-- See `_shared/reference/hardware.md` for per-backend wall-clock and VRAM tables.
+- See `references/hardware.md` for per-backend wall-clock and VRAM tables.
 
 ## Troubleshooting
 
@@ -221,4 +221,4 @@ The manifest pins: resolved config, git SHA, ckpt SHA-256s, the result CSV paths
 
 ## Reference
 
-Full evaluate/analyze config matrix, every supported `result_type`, per-threshold defaults, and three worked examples (protein binder / ligand binder / AME): see `reference/eval_configs.md`.
+Full evaluate/analyze config matrix, every supported `result_type`, per-threshold defaults, and three worked examples (protein binder / ligand binder / AME): see `references/eval_configs.md`.

@@ -42,7 +42,7 @@ GPU and the right checkpoint, evaluation needs AF2/RF3 weights and tool
 binaries. Bail early if the host cannot run the chosen pipeline.
 
 ```bash
-bash .claude/skills/_shared/scripts/preflight.sh
+bash scripts/preflight.sh
 ```
 
 Read `./complexa_setup/preflight.json` and bail if any of these are missing for
@@ -130,7 +130,7 @@ is `single-pass`; switch to `best-of-n` only if you also enable the
 | **Required ckpts (`complexa download`)** | `--complexa --all` (AF2 in community) | `--complexa-ligand --all` (RF3 in community) | `--complexa-ame --all` (RF3 in community) |
 
 For the full per-pipeline breakdown (reward weights, success thresholds,
-analysis modes), see [reference/pipelines.md](reference/pipelines.md).
+analysis modes), see [references/pipelines.md](references/pipelines.md).
 
 ## Step 3: Gather parameters
 
@@ -263,7 +263,7 @@ Drop a JSON manifest beside the results so the run is replayable. The shared
 helper captures the command, config, git SHA, and pointers to the result CSVs.
 
 ```bash
-python3 .claude/skills/_shared/scripts/write_manifest.py \
+python3 scripts/write_manifest.py \
     --output-dir ./evaluation_results/${RUN_NAME} \
     --command "complexa design configs/search_binder_local_pipeline.yaml ++run_name=${RUN_NAME} ++generation.task_name=${TASK}" \
     --skill complexa-design \
@@ -275,7 +275,7 @@ Surface the manifest path and the result CSV to the user.
 ## Most-common overrides
 
 The 10 overrides that cover ~90% of runs. Full reference (every key, type,
-default) is in [reference/overrides.md](reference/overrides.md).
+default) is in [references/overrides.md](references/overrides.md).
 
 | Override | Default | What it controls |
 |----------|---------|------------------|
@@ -307,7 +307,7 @@ Typical wall-clock for 100 designs, `beam_width=8`, default `nsteps=400`:
 - Any pipeline + ESMFold refold: ~30–60 min (fast iteration).
 
 Bumping `gen_njobs=2` and `eval_njobs=2` halves wall-clock on a 2-GPU host. See
-`.claude/skills/_shared/reference/hardware.md` for per-pipeline VRAM tables.
+`references/hardware.md` for per-pipeline VRAM tables.
 
 ## Troubleshooting (common cases)
 
@@ -322,17 +322,17 @@ Bumping `gen_njobs=2` and `eval_njobs=2` halves wall-clock on a 2-GPU host. See
 
 For the full list (chain-ID mismatches, hotspot residues, ligand residue
 renaming for RF3, missing inverse-folding models, etc.) see
-[reference/troubleshooting.md](reference/troubleshooting.md).
+[references/troubleshooting.md](references/troubleshooting.md).
 
 ---
 
 For per-pipeline details (which model, reward, inverse folding, evaluation
 backend, `result_type`, LoRA settings, `USE_V2_COMPLEXA_ARCH` toggle), see
-[reference/pipelines.md](reference/pipelines.md).
+[references/pipelines.md](references/pipelines.md).
 
 For the full override reference (every `generation.*`, `metric.*`,
 `aggregation.*` key with type, default, example, and effect), see
-[reference/overrides.md](reference/overrides.md).
+[references/overrides.md](references/overrides.md).
 
 For all troubleshooting cases (cause + fix + source), see
-[reference/troubleshooting.md](reference/troubleshooting.md).
+[references/troubleshooting.md](references/troubleshooting.md).

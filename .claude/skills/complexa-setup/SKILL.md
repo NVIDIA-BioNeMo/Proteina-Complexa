@@ -49,7 +49,7 @@ require `.env` to exist — it falls back to defaults — and it tells you wheth
 the host can run Complexa at all.
 
 ```bash
-bash .claude/skills/_shared/scripts/preflight.sh
+bash scripts/preflight.sh
 ```
 
 The script writes `./complexa_setup/preflight.json`. Read it and surface:
@@ -139,7 +139,7 @@ LOCAL_DATA_PATH=/absolute/path/to/PFM_data
 Everything else (cache, ckpts, community-model dirs, tool binaries) is derived
 from `LOCAL_CODE_PATH` by default and only needs editing if you have a
 non-standard layout. For the full table — every key, what it controls, what
-fails if it is missing — see [reference/env_keys.md](reference/env_keys.md).
+fails if it is missing — see [references/env_keys.md](references/env_keys.md).
 
 Quick decision table for the four edits most users make:
 
@@ -181,7 +181,7 @@ need at run time.
 - All three: `complexa download --everything`
 
 For the full per-model destination breakdown and per-flag NGC sources, see
-[reference/downloads.md](reference/downloads.md).
+[references/downloads.md](references/downloads.md).
 
 Pick the smallest invocation that covers the user's goal, then run:
 
@@ -233,7 +233,7 @@ describing the resulting state. The shared helper writes it for you:
 
 ```bash
 mkdir -p ./complexa_setup
-python .claude/skills/_shared/scripts/write_manifest.py \
+python scripts/write_manifest.py \
     --kind setup \
     --runtime "$(grep -E '^COMPLEXA_RUNTIME=' .env | cut -d= -f2)" \
     --preflight ./complexa_setup/preflight.json \
@@ -265,7 +265,7 @@ complexa_setup/
 | OS | Ubuntu 22.04+ (UV) | Ubuntu 22.04+ or Docker on any host |
 
 Ubuntu 20.04 throws GLIBC errors with the UV runtime — use `complexa init
---runtime docker` on those hosts. See `.claude/skills/_shared/reference/hardware.md`
+--runtime docker` on those hosts. See `references/hardware.md`
 for per-pipeline (binder vs ligand vs AME) requirements.
 
 ## Troubleshooting
@@ -282,7 +282,7 @@ for per-pipeline (binder vs ligand vs AME) requirements.
 ---
 
 For the full `.env` reference (every key, defaults, failure modes), see
-[reference/env_keys.md](reference/env_keys.md).
+[references/env_keys.md](references/env_keys.md).
 
 For the full download flag matrix, NGC URLs, and destination layout, see
-[reference/downloads.md](reference/downloads.md).
+[references/downloads.md](references/downloads.md).
