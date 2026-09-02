@@ -1,18 +1,14 @@
 ---
 name: complexa-evaluate-pdbs
 description: >
-  Standalone evaluation of an existing PDB directory with Proteina-Complexa. Use
-  when the user wants to "evaluate PDB files", "re-fold these designs", "compute
-  interface pAE", "compute i_pLDDT for a folder", "run AF2 / RF3 / ESMFold on my
-  designs", "score binder candidates", "designability of this folder", "scRMSD for
-  designs", "motif RMSD for these PDBs", "complexa analysis", "complexa evaluate
-  from a PDB directory", "evaluate from pdb dir", or to score third-party outputs
-  (BindCraft, AlphaProteo, RFdiffusion, hand-curated decoys). Picks the correct
-  evaluate_*.yaml config, wires ++dataset.pdb_dir and the folding backend, runs the
-  evaluate → analyze chain, parses the result CSV, and reports pass-rates against
-  the right result_type thresholds.
+  Agent runbook for evaluating an existing PDB directory through the separately
+  installed first-party Proteina-Complexa CLI. Use to refold or score designs,
+  compute interface pAE, i_pLDDT, scRMSD, motif RMSD, or designability, run
+  complexa analysis, or assess third-party BindCraft, AlphaProteo, or RFdiffusion
+  outputs. SKILL.md selects and invokes the evaluation configuration; bundled
+  executables only inspect local readiness and write a run manifest.
 compatibility: "complexa CLI installed (pip install -e .); CUDA GPU; AF2_DIR (colabdesign) or RF3_CKPT_PATH+RF3_EXEC_PATH (rf3_latest); ESMFold weights for monomer paths"
-allowed-tools: Bash, Read, Write, AskUserQuestion
+allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
 # Complexa Evaluate-PDBs Skill

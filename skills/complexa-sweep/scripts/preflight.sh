@@ -3,14 +3,14 @@
 #
 # Probes GPU (name/VRAM/count/driver/CUDA), disk free in $CKPT_PATH, the six
 # canonical Complexa ckpts, the six tool binaries (foldseek/mmseqs/dssp/hbplus/
-# sc/rf3), .env loadability + required-var presence, community model paths
+# sc/rf3), dotenv readability + required-var presence, community model paths
 # (AF2_DIR/ESM_DIR/RF3_CKPT_PATH), and git SHA. Every probe degrades to
 # {available:false} / {exists:false} rather than failing.
 #
 # Usage: bash preflight.sh [--quiet] [--out PATH] [--help]
 set -euo pipefail
 
-QUIET=0; OUT="./preflight.json"
+QUIET=0; OUT="./complexa_setup/preflight.json"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --quiet) QUIET=1; shift ;;
@@ -29,25 +29,63 @@ json_str() {
     fi
 }
 
-# Source .env in a subshell and dump variables we care about as KEY<TAB>VALUE.
+# Parse the repository dotenv as data and dump only the allowlisted variables as
+# KEY<TAB>VALUE. Never source it: dotenv files are configuration, not shell code.
 ENV_FILE="$PWD/.env"; ENV_LOADED=false
 declare -A V=()
 if [[ -f "$ENV_FILE" ]]; then
     ENV_LOADED=true
-    DUMP=$(bash -c '
-        set -a
-        source "'"$ENV_FILE"'" 2>/dev/null || true
-        set +a
-        for k in LOCAL_CODE_PATH LOCAL_DATA_PATH CKPT_PATH LOCAL_CHECKPOINT_PATH \
-                 COMPLEXA_RUNTIME FOLDSEEK_EXEC MMSEQS_EXEC DSSP_EXEC HBPLUS_EXEC \
-                 SC_EXEC RF3_EXEC_PATH AF2_DIR ESM_DIR RF3_CKPT_PATH; do
-            printf "%s\t%s\n" "$k" "${!k-}"
-        done' 2>/dev/null || true)
+    DUMP=$(python3 - "$ENV_FILE" <<'PY' 2>/dev/null || true
+import os
+import re
+import shlex
+import sys
+from pathlib import Path
+
+requested = (
+    "LOCAL_CODE_PATH", "LOCAL_DATA_PATH", "CKPT_PATH", "LOCAL_CHECKPOINT_PATH",
+    "COMPLEXA_INIT", "FOLDSEEK_EXEC", "MMSEQS_EXEC", "DSSP_EXEC",
+    "HBPLUS_EXEC", "SC_EXEC", "RF3_EXEC_PATH", "AF2_DIR", "ESM_DIR",
+    "RF3_CKPT_PATH",
+)
+assignment = re.compile(r"(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\Z")
+reference = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
+values: dict[str, str] = {}
+
+for raw_line in Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace").splitlines():
+    match = assignment.fullmatch(raw_line.strip())
+    if match is None:
+        continue
+    key, raw_value = match.groups()
+    lexer = shlex.shlex(raw_value, posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = "#"
+    try:
+        value = " ".join(lexer)
+    except ValueError:
+        continue
+    values[key] = value
+
+def resolve(value: str) -> str:
+    for _ in range(len(values) + 1):
+        expanded = reference.sub(
+            lambda match: values.get(match.group(1), os.environ.get(match.group(1), match.group(0))),
+            value,
+        )
+        if expanded == value:
+            return expanded
+        value = expanded
+    return value
+
+for key in requested:
+    print(f"{key}\t{resolve(values.get(key, ''))}")
+PY
+    )
     while IFS=$'\t' read -r k v; do [[ -n "$k" ]] && V["$k"]="$v"; done <<<"$DUMP"
 fi
 # Fall through to live env for any unset keys
 for k in LOCAL_CODE_PATH LOCAL_DATA_PATH CKPT_PATH LOCAL_CHECKPOINT_PATH \
-         COMPLEXA_RUNTIME FOLDSEEK_EXEC MMSEQS_EXEC DSSP_EXEC HBPLUS_EXEC \
+         COMPLEXA_INIT FOLDSEEK_EXEC MMSEQS_EXEC DSSP_EXEC HBPLUS_EXEC \
          SC_EXEC RF3_EXEC_PATH AF2_DIR ESM_DIR RF3_CKPT_PATH; do
     [[ -z "${V[$k]:-}" ]] && V["$k"]="${!k-}"
 done
@@ -148,7 +186,7 @@ fi
 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 DOC=$(printf '{"timestamp":%s,"gpu":%s,"disk":%s,"checkpoints":%s,"tools":%s,"env":%s,"community_models":%s,"complexa_runtime":%s,"git_sha":%s}' \
     "$(json_str "$TS")" "$GPU_JSON" "$DISK_JSON" "$CKPT_JSON" "$TOOLS_JSON" "$ENV_JSON" "$COMMUNITY_JSON" \
-    "$(json_str "${V[COMPLEXA_RUNTIME]:-}")" "$(json_str "$GIT_SHA")")
+    "$(json_str "${V[COMPLEXA_INIT]:-}")" "$(json_str "$GIT_SHA")")
 
 PRETTY="$DOC"
 if command -v jq >/dev/null 2>&1; then
@@ -157,5 +195,11 @@ elif command -v python3 >/dev/null 2>&1; then
     PRETTY=$(printf '%s' "$DOC" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin), indent=2))' 2>/dev/null || printf '%s' "$DOC")
 fi
 
-printf '%s\n' "$PRETTY" > "$OUT"
+OUT_PARENT=$(dirname -- "$OUT")
+[[ "$OUT_PARENT" == "." ]] || mkdir -p -- "$OUT_PARENT"
+OUT_TMP=$(mktemp "${OUT}.tmp.XXXXXX")
+trap 'rm -f -- "$OUT_TMP"' EXIT
+printf '%s\n' "$PRETTY" > "$OUT_TMP"
+mv -- "$OUT_TMP" "$OUT"
+trap - EXIT
 [[ "$QUIET" == "1" ]] || printf '%s\n' "$PRETTY"

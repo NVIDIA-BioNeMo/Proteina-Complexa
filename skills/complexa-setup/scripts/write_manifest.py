@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""write_manifest.py — emit run_manifest.json for a Proteina-Complexa run.
+"""Emit a private run_manifest.json for a Proteina-Complexa run.
 
 This is the R8/R9 replayable-artifact emitter shared by all `complexa-*` skills.
 It captures:
@@ -11,7 +11,7 @@ It captures:
   * Per-checkpoint SHA-256 over the first 4096 bytes + size  (4K truncation is
     intentional — model files are multi-GB and full hashes are slow; the first
     4K still detects accidental re-downloads or path mix-ups)
-  * Invocation metadata: argv, cwd, user, host
+  * Optional invocation metadata: cwd, user, and host (only when explicitly requested)
   * Pointers to result CSVs found under <output_dir> (capped at 50)
 
 Stdlib-only on purpose: this often runs before any venv is active.
@@ -21,7 +21,20 @@ Usage:
         --output-dir /path/to/inference/<run_name> \\
         --command   "complexa design <config> ++run_name=foo …" \\
         --skill     complexa-design \\
-        [--out ./run_manifest.json]
+        [--out ./run_manifest.json] [--include-system-metadata]
+
+Arguments:
+    --output-dir: Run output directory containing an optional Hydra config.
+    --command: Complexa invocation to record; common credential values are redacted.
+    --skill: Skill name that produced the run.
+    --out: Destination manifest path.
+    --include-system-metadata: Opt in to recording cwd, username, and hostname.
+
+Output:
+    A JSON manifest created with owner-only permissions (mode 0o600).
+
+Exit codes:
+    0 on success. argparse uses 2 for invalid arguments; unexpected errors use 1.
 """
 from __future__ import annotations
 
@@ -30,6 +43,7 @@ import getpass
 import hashlib
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -40,6 +54,11 @@ from typing import Any
 CKPT_KEYS = ("ckpt_path", "ckpt_name", "autoencoder_ckpt_path")
 HASH_FIRST_N_BYTES = 4096
 MAX_CSV_POINTERS = 50
+GIT_TIMEOUT_SECONDS = 5
+PRIVATE_FILE_MODE = 0o600
+SENSITIVE_ASSIGNMENT_RE = re.compile(
+    r"(?i)(?P<prefix>(?:--)?[A-Za-z0-9_-]*(?:api[_-]?key|token|password|passwd|secret|credential)[A-Za-z0-9_-]*\s*(?:=|\s)\s*)(?P<value>[^\s]+)"
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,7 +67,19 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--command", required=True, help="The complexa invocation that produced the run")
     p.add_argument("--skill", required=True, help="Skill name (e.g. complexa-design)")
     p.add_argument("--out", default="./run_manifest.json", help="Manifest path (default: ./run_manifest.json)")
+    p.add_argument(
+        "--include-system-metadata",
+        action="store_true",
+        help="Record cwd, OS username, and hostname (omitted by default for privacy)",
+    )
     return p.parse_args()
+
+
+def redact_sensitive_values(text: str | None) -> str | None:
+    """Redact common credential assignments in command or configuration text."""
+    if text is None:
+        return None
+    return SENSITIVE_ASSIGNMENT_RE.sub(r"\g<prefix><redacted>", text)
 
 
 def find_repo_root(start: Path) -> Path | None:
@@ -66,7 +97,7 @@ def git_sha(repo_root: Path | None) -> str:
     try:
         res = subprocess.run(
             ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
-            capture_output=True, text=True, timeout=5, check=False,
+            capture_output=True, text=True, timeout=GIT_TIMEOUT_SECONDS, check=False,
         )
         if res.returncode == 0:
             return res.stdout.strip() or "unknown"
@@ -81,9 +112,9 @@ def read_hydra_config(output_dir: Path) -> tuple[str | None, str | None]:
     if not candidate.is_file():
         return None, None
     try:
-        return candidate.read_text(encoding="utf-8", errors="replace"), str(candidate)
+        return candidate.read_text(encoding="utf-8", errors="replace"), ".hydra/config.yaml"
     except OSError:
-        return None, str(candidate)
+        return None, ".hydra/config.yaml"
 
 
 def scan_ckpt_keys(config_text: str) -> dict[str, str]:
@@ -168,6 +199,20 @@ def collect_csv_pointers(output_dir: Path, cap: int = MAX_CSV_POINTERS) -> list[
     return found
 
 
+def write_private_text(path: Path, text: str) -> None:
+    """Write text with owner-only permissions, including when replacing a file."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    fd = os.open(path, flags, PRIVATE_FILE_MODE)
+    try:
+        os.fchmod(fd, PRIVATE_FILE_MODE)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            fd = -1
+            handle.write(text)
+    finally:
+        if fd >= 0:
+            os.close(fd)
+
+
 def main() -> int:
     args = parse_args()
     output_dir = Path(args.output_dir).resolve()
@@ -179,29 +224,28 @@ def main() -> int:
     manifest: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "skill": args.skill,
-        "command": args.command,
-        "output_dir": str(output_dir),
+        "command": redact_sensitive_values(args.command),
+        "output_dir": str(Path(args.output_dir)),
         "git_sha": git_sha(repo_root),
-        "repo_root": str(repo_root) if repo_root else None,
         "config_path": config_path,
-        "config": config_text,
+        "config": redact_sensitive_values(config_text),
         "checkpoints": resolve_ckpts(ckpt_fields),
-        "invocation": {
-            "argv": sys.argv,
-            "cwd": os.getcwd(),
-            "user": getpass.getuser(),
-            "host": socket.gethostname(),
-        },
         "pointers": {"csv_files": collect_csv_pointers(output_dir)},
         "notes": {
             "checkpoint_hash": f"sha256 over first {HASH_FIRST_N_BYTES} bytes (truncated for speed)",
             "csv_pointers_cap": MAX_CSV_POINTERS,
         },
     }
+    if args.include_system_metadata:
+        manifest["invocation"] = {
+            "cwd": os.getcwd(),
+            "user": getpass.getuser(),
+            "host": socket.gethostname(),
+        }
 
     out_path = Path(args.out).resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(manifest, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    write_private_text(out_path, json.dumps(manifest, indent=2, sort_keys=False) + "\n")
     print(f"Wrote manifest: {out_path}")
     return 0
 

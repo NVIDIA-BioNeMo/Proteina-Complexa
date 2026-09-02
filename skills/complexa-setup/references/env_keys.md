@@ -14,22 +14,21 @@ resolution time — intentional, so you see exactly which key is missing.
 ## Section 1 — Required
 
 You must set these before running any pipeline command. `complexa init` does
-not fill these in; it only copies `.env_example` and rewrites runtime-dependent
-lines.
+not fill these in; its first phase only copies `.env_example`.
 
 ### `LOCAL_CODE_PATH`
 
 - **Required.** No default — `.env_example` ships with a placeholder.
 - Absolute path to this repo checkout on the host.
-- Read by: `COMMUNITY_MODELS_PATH`, `AF2_DIR`, `ESM_DIR`, `ESMFOLD_DIR`, `RF3_DIR`, `RF3_CKPT_PATH`, `UV_VENV` (all derived via `${LOCAL_CODE_PATH}/...`).
-- **Failure mode**: every community-model and tool path resolves to `/path/to/protein-foundation-models/...` which does not exist → `complexa validate evaluate` / Hydra `FileNotFoundError`.
-- Fix: edit to an absolute path, e.g. `LOCAL_CODE_PATH=/home/me/code/protein-foundation-models`.
+- Read by: `COMMUNITY_MODELS_PATH`, `AF2_DIR`, `ESM_DIR`, `RF3_DIR`, `RF3_CKPT_PATH`, and `UV_VENV` (all derived via `${LOCAL_CODE_PATH}/...`).
+- **Failure mode**: every community-model and tool path resolves below the placeholder checkout and does not exist → `complexa validate evaluate` / Hydra `FileNotFoundError`.
+- Fix: edit to an absolute path, e.g. `LOCAL_CODE_PATH=/home/me/code/Proteina-Complexa`.
 
 ### `LOCAL_DATA_PATH`
 
 - **Required.** Default placeholder `/path/to/PFM_data`.
 - Absolute path to the PFM data directory (target PDBs under `target_data/`, datasets, etc.).
-- Read by: `DATA_PATH` (active alias rewritten by `complexa init`); `complexa validate env` requires this to point at an existing directory.
+- Read by: the default `DATA_PATH` alias in `.env`; Docker's generated `env.sh` overrides `DATA_PATH` with `DOCKER_DATA_PATH`. `complexa validate env` requires the active value to point at an existing directory.
 - **Failure mode**: `complexa validate env` reports `DATA_PATH: Directory not found`; `complexa validate target` fails to locate `target_data/`.
 - Fix: edit, then `mkdir -p $LOCAL_DATA_PATH` and populate it with the target PDBs you plan to design against (the bundled examples ship under `assets/target_data/`, or build your own with the `complexa-target` skill).
 
@@ -116,7 +115,7 @@ These are read by `env/docker-ops.sh build/pull/run`.
 ### `CONTAINER_NAME`
 
 - **Required for Docker runtime.** Default `proteina-dev`.
-- Name applied to `docker run --name`; reused for `exec` / `stop`.
+- Name assigned to the running container; reused for later `exec` / `stop` operations.
 
 ### `DOCKERFILE_PATH`
 
@@ -125,29 +124,35 @@ These are read by `env/docker-ops.sh build/pull/run`.
 
 ---
 
-## Auto-managed — do not edit by hand
+## Runtime activation and derived values
 
-These are rewritten by `complexa init` based on the `--runtime` flag. Editing
-them manually will be overwritten the next time `complexa init` runs (without
-`--force`, it still swaps the runtime-dependent lines).
+The `.env` template defaults its active aliases to UV values. Running
+`complexa init uv` or `complexa init docker` generates `env.sh`; it does not
+rewrite `.env`. Source `env.sh` before running Complexa so Docker-specific
+overrides and the selected-runtime marker are exported.
 
-### `COMPLEXA_RUNTIME`
+### `COMPLEXA_INIT`
 
-- Set to `uv` or `docker` by `complexa init`. Read by tooling that needs to know which prefix to resolve.
+- Exported as `uv` or `docker` by the generated `env.sh`; it is not an `.env` key.
 
 ### `DATA_PATH` / `CACHE_DIR` / `CKPT_PATH`
 
-- Active aliases. Resolve to `${LOCAL_*}` for UV runtime or `${DOCKER_*}` for Docker runtime. Edit `LOCAL_*` / `DOCKER_*` instead.
+- `DATA_PATH` and `CKPT_PATH` default to `${LOCAL_*}` in `.env`; Docker's
+  generated `env.sh` overrides them with `${DOCKER_*}`. `CACHE_DIR` may be
+  supplied separately by Docker tooling. Edit the local or Docker source
+  values rather than the active aliases.
 
 ### `FOLDSEEK_EXEC` / `RF3_EXEC_PATH` / `SC_EXEC` / `HBPLUS_EXEC` / `MMSEQS_EXEC` / `DSSP_EXEC` / `TMOL_PATH`
 
-- Active tool binaries. Resolve to `${UV_*}` or `${DOCKER_*}` per runtime. Edit the prefix vars if you have a non-standard install (e.g. system-wide `foldseek` at `/usr/local/bin/foldseek` instead of `.venv/bin/foldseek`).
+- Active tool binaries default to `${UV_*}` in `.env`; generated `env.sh`
+  overrides the supported tool variables with `${DOCKER_*}` for Docker. Edit
+  the family variables for a non-standard install.
 - Used by: `complexa evaluate` (foldseek for diversity; mmseqs for sequence clustering; hbplus/sc for interface metrics; dssp for secondary structure; tmol for force-field metrics).
 - **Failure mode if path is wrong**: the tool is silently skipped (treated as a warning in `complexa validate evaluate`), and the corresponding metric column is missing from the result CSV.
 
-### `AF2_DIR` / `ESM_DIR` / `ESMFOLD_DIR` / `RF3_DIR` / `RF3_CKPT_PATH`
+### `AF2_DIR` / `ESM_DIR` / `RF3_DIR` / `RF3_CKPT_PATH`
 
-- **Auto-managed by `complexa init`, but you must point them at real weight dirs for evaluation/reward to work.**
+- **Derived by `.env`, but they must point at real weight directories for evaluation/reward to work.**
 - Derived from `${LOCAL_CODE_PATH}/community_models/ckpts/...`. After `complexa download --all` or `complexa download --af2`, the directories under `community_models/ckpts/` are populated.
 - Read by: reward models (`AF2RewardModel`, `RF3RewardRunner`) and evaluation folding (colabdesign / rf3 backends).
 - **Failure mode if wrong**: `complexa validate evaluate` reports `AF2 weights: Directory not found` or `RF3 checkpoint: File not found`. Generation can still run without these; only reward and refolding break.
@@ -162,7 +167,7 @@ them manually will be overwritten the next time `complexa init` runs (without
 
 ### `UV_VENV` / `UV_*_EXEC` / `DOCKER_*_EXEC`
 
-- Per-runtime tool-path families. `complexa init` selects which family the active `FOLDSEEK_EXEC` etc. point at. Edit the *family member* (e.g. `UV_FOLDSEEK_EXEC`) only if your local install lives somewhere unusual.
+- Per-runtime tool-path families. Generated `env.sh` selects which family the active `FOLDSEEK_EXEC` etc. use. Edit the *family member* (e.g. `UV_FOLDSEEK_EXEC`) only if your local install lives somewhere unusual.
 
 ### `DOCKER_REPO_PATH` / `DOCKER_DATA_PATH` / `DOCKER_PYTHONPATH` / `DOCKER_CHECKPOINT_PATH` / `DOCKER_CACHE_DIR` / `DOCKER_HF_HOME` / `DOCKER_HF_HUB_CACHE`
 

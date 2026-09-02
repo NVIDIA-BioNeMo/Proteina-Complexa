@@ -1,18 +1,15 @@
 ---
 name: complexa-design
 description: >
-  End-to-end Proteina-Complexa design pipeline driver. Use when the user wants to
-  "design a binder", "design binders for X", "run complexa design", "de novo
-  binder", "PDL1 binder", "TrkA binder", "design proteins for target", "protein
-  binder design", "ligand binder", "design a small-molecule binder", "ATP-binding
-  protein", "AME motif scaffolding", "scaffold a motif near a ligand", "motif +
-  ligand design", "enzyme scaffolding", "flow matching protein design",
-  "beam-search binder", "FK steering", "MCTS protein design", or "refold with AF2
-  / RF3 / ESMFold", or wants success rates, interface pAE, scRMSD, or FoldSeek
-  diversity from one command. Drives the complexa design pipeline from target
-  picking to manifest emission and reports how many designs passed.
+  Agent runbook for orchestrating an end-to-end protein, ligand-binder, or AME
+  design through the separately installed first-party Proteina-Complexa CLI.
+  Use for requests such as "design a binder", "run complexa design", "de novo
+  binder", ligand binding, motif scaffolding, beam search, FK steering, MCTS,
+  refolding, or reporting design success and diversity. SKILL.md selects and
+  invokes the project CLI; bundled executables only inspect local readiness and
+  write a run manifest, and do not implement model inference themselves.
 compatibility: "complexa CLI installed (pip install -e .); environment file populated; 1x CUDA GPU >=40GB VRAM (A100/H100/L40S); 24 CPUs; ~50GB disk"
-allowed-tools: Bash, Read, Write, AskUserQuestion
+allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
 # Complexa Design Skill

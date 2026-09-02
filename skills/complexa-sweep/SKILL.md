@@ -1,7 +1,7 @@
 ---
 name: complexa-sweep
-description: Use this skill whenever the user wants to run a parameter sweep over a Proteina-Complexa design pipeline — cartesian-product hyperparameter scans, Pareto search over generation/reward/evaluation knobs, or any "compare configurations" workflow. Trigger phrases include "sweep beam width", "sweep nsteps", "hyperparameter sweep", "parameter scan", "scan beam_width and temperature", "compare configurations", "find the best generation params", "what's the optimal nsteps", "Pareto search for binder quality vs wall-clock", "complexa sweep", "tune Complexa", "ablate the reward weights", "configs/sweeps", "--sweeper", "run beam_width.yaml". This is the only skill that owns sweeper YAML authoring, cartesian-product expansion, and per-config result ranking.
-allowed-tools: Bash, Read, Write, AskUserQuestion
+description: Agent runbook for Proteina-Complexa parameter sweeps through the separately installed first-party CLI and config generator. Use for cartesian-product hyperparameter scans, sweeper YAML authoring, configuration comparisons, ablations, tuning, success-rate ranking, or Pareto searches over quality and wall-clock cost. SKILL.md performs the orchestration; bundled executables only inspect local readiness and write a run manifest.
+allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
 # complexa-sweep

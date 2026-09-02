@@ -1,19 +1,14 @@
 ---
 name: complexa-setup
 description: >
-  First-time setup, environment configuration, and model-weight installation for
-  Proteina-Complexa. Reach for this skill whenever the user says "set up complexa",
-  "install complexa", "configure my environment file", "first-time setup", "what models do I
-  have installed", "what's in my environment file", "download model weights", "download
-  Complexa / AF2 / RF3 / ProteinMPNN / LigandMPNN / ESM2 / ESMFold checkpoints",
-  "preflight my GPU", "verify environment", "complexa init", "complexa download",
-  "complexa download --status", "complexa validate env", or any time a fresh
-  checkout needs to be made runnable. This is the first skill to run on a new
-  clone — it drives `complexa init`, `complexa download`, and `complexa validate
-  env` end-to-end, edits the required `.env` keys, picks the right runtime (UV
-  vs Docker), and emits a replayable setup artifact.
+  Agent runbook for first-time Proteina-Complexa setup, dotenv configuration,
+  runtime activation, model-weight installation, GPU preflight, and environment
+  validation. Use for "set up complexa", "install complexa", "complexa init",
+  "complexa download", checkpoint installation or status, UV versus Docker
+  selection, and fresh checkouts. SKILL.md invokes the first-party CLI; bundled
+  executables safely inspect local readiness and write a private setup manifest.
 compatibility: "complexa CLI installed (pip install -e .); bash 4+; nvidia-smi optional"
-allowed-tools: Bash, Read, Write, AskUserQuestion
+allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
 # Complexa Setup Skill
@@ -28,8 +23,9 @@ user (or a future agent) can re-read instead of re-deriving state.
 
 | Step | Preferred path | Why |
 |---|---|---|
-| `.env` creation (Step 2) | **File edit** (copying the env template + 3 line swaps) or `complexa init` | `complexa init` is a thin wrapper around `cp + 3 regex swaps` (`_swap_runtime_in_env` in `cli_runner.py`). Either path works; pick CLI for new humans, direct edit for agents. |
+| `.env` creation (Step 2) | **CLI** (`complexa init`) | Phase 1 copies `.env_example` to `.env`; it does not select a runtime. |
 | `.env` value edits (Step 3) | **File edit** (StrReplace `LOCAL_CODE_PATH=…` etc.) | No CLI for this — the values are user-specific paths. |
+| Runtime activation (end of Step 3) | **CLI** (`complexa init uv` or `complexa init docker`), then `source env.sh` | Phase 2 generates `env.sh`, which loads `.env` and selects runtime-specific paths. |
 | Download model weights (Step 4) | **CLI** (`complexa download --…`) | Dispatches to `env/download_startup.sh` (~1000 lines of bash with NGC URLs, retries, checksum-style skip-if-present). Don't try to replicate. |
 | Validate env (Step 5) | **CLI** (`complexa validate env`) or `test -f .env && test -d $DATA_PATH` | CLI prints a nicer report; the manual check is one-liner-safe. |
 | Validate full design config (after picking a pipeline) | **CLI** (`complexa validate design CONFIG`) | Non-trivial Hydra defaults traversal + ckpt + env-var checks; not worth replicating. |
@@ -89,40 +85,26 @@ Use AskUserQuestion if it is not obvious from context:
 
 > "Which runtime do you want to configure? `uv` (recommended, faster) or `docker` (use if you do not have a UV venv built locally)?"
 
-### Path A: file edit (preferred for agents)
-
-`complexa init` only does three things — copy `.env_example` → `.env` and
-swap the `COMPLEXA_RUNTIME=` line plus the `UV_*` ↔ `DOCKER_*` prefixes on the
-tool/data/cache path block. You can do the same with `cp` + StrReplace and skip
-the CLI:
+### Preferred: CLI
 
 ```bash
-cp .env_example .env
-# Then StrReplace these lines in .env:
-#   COMPLEXA_RUNTIME=uv          → COMPLEXA_RUNTIME=<runtime>
-#   FOLDSEEK_EXEC=${UV_FOLDSEEK_EXEC}  → FOLDSEEK_EXEC=${DOCKER_FOLDSEEK_EXEC}   (and same for RF3_EXEC_PATH, SC_EXEC, HBPLUS_EXEC, MMSEQS_EXEC, DSSP_EXEC, TMOL_PATH)
-#   DATA_PATH=${LOCAL_DATA_PATH} → DATA_PATH=${DOCKER_DATA_PATH}                  (and same for CACHE_DIR, CKPT_PATH)
+test -f .env || complexa init    # Phase 1: copy .env_example to .env
 ```
 
-Skip the prefix swap entirely if you're staying on UV (the `.env_example`
-already targets UV).
+If the CLI is not yet available but the checkout is trusted, `cp .env_example
+.env` is equivalent to phase 1 only. Runtime selection happens later through
+`env.sh`; do not rewrite the active path expressions in `.env`.
 
-### Path B: CLI
+To deliberately discard an existing dotenv and recreate it from the template:
 
 ```bash
-complexa init                    # UV runtime (default)
-complexa init --runtime docker   # Docker runtime
 complexa init --force            # Recreate .env from .env_example (drops any edits)
 ```
-
-If `.env` already exists and `--force` is not passed, only the runtime-dependent
-lines are swapped — user edits in Step 3 are preserved across runtime flips.
 
 ### Verify either way
 
 ```bash
 test -f .env && echo "OK: .env present" || echo "MISSING"
-grep -E '^COMPLEXA_RUNTIME=' .env
 ```
 
 ## Step 3: Edit .env
@@ -132,7 +114,7 @@ machine-specific paths into `.env` by hand (StrReplace or your editor). The two
 absolutely-required edits are:
 
 ```bash
-LOCAL_CODE_PATH=/absolute/path/to/protein-foundation-models
+LOCAL_CODE_PATH=/absolute/path/to/Proteina-Complexa
 LOCAL_DATA_PATH=/absolute/path/to/PFM_data
 ```
 
@@ -149,6 +131,17 @@ Quick decision table for the four edits most users make:
 | `LOCAL_DATA_PATH` | `/path/to/PFM_data` | Always — required, points at target PDBs |
 | `HF_TOKEN` | placeholder | You need ESMFold or gated HF models |
 | `WANDB_API_KEY` | placeholder | You want training runs logged to W&B |
+
+After editing the paths, generate and activate the runtime environment. The
+runtime is a positional argument:
+
+```bash
+complexa init uv                 # or: complexa init docker
+source env.sh
+```
+
+`env.sh` sources the edited `.env`, maps the active tool/data/checkpoint paths
+for the selected runtime, and exports `COMPLEXA_INIT=uv` or `docker`.
 
 ## Step 4: Download checkpoints
 
@@ -234,9 +227,9 @@ describing the resulting state. The shared helper writes it for you:
 ```bash
 mkdir -p ./complexa_setup
 python scripts/write_manifest.py \
-    --kind setup \
-    --runtime "$(grep -E '^COMPLEXA_RUNTIME=' .env | cut -d= -f2)" \
-    --preflight ./complexa_setup/preflight.json \
+    --output-dir ./complexa_setup \
+    --command "complexa init ${COMPLEXA_INIT}; complexa download <selected flags>; complexa validate env" \
+    --skill complexa-setup \
     --out ./complexa_setup/run_manifest.json
 ```
 
@@ -265,7 +258,7 @@ complexa_setup/
 | OS | Ubuntu 22.04+ (UV) | Ubuntu 22.04+ or Docker on any host |
 
 Ubuntu 20.04 throws GLIBC errors with the UV runtime — use `complexa init
---runtime docker` on those hosts. See `references/hardware.md`
+docker` on those hosts. See `references/hardware.md`
 for per-pipeline (binder vs ligand vs AME) requirements.
 
 ## Troubleshooting
@@ -274,10 +267,10 @@ for per-pipeline (binder vs ligand vs AME) requirements.
 |---------|-------|-----|
 | `complexa: command not found` | Package not installed in active env | `source .venv/bin/activate` then `pip install -e .` |
 | `complexa init` says `.env_example not found` | Running outside repo root | `cd` to the project root (where `.env_example` lives) |
-| `.env_example not found. Cannot initialize .env.` | Not in project root | `cd` into `protein-foundation-models/` and retry |
+| `.env_example not found. Cannot initialize .env.` | Not in project root | `cd` into `Proteina-Complexa/` and retry |
 | `complexa download` fails on NGC URL | Behind firewall / no internet | Configure a proxy for the download script, or download the model `.ckpt`s manually from the NGC pages linked in the main `README.md` and drop them into `./ckpts/` |
 | `complexa download --status` shows ckpts present but `validate` fails | `.env` `CKPT_PATH` points elsewhere | Either move ckpts or edit `LOCAL_CHECKPOINT_PATH` in `.env` |
-| GLIBC error on import | Ubuntu 20.04 with UV runtime | Re-run `complexa init --runtime docker` and use `./env/docker-ops.sh run` |
+| GLIBC error on import | Ubuntu 20.04 with UV runtime | Run `complexa init docker`, source `env.sh`, and use `./env/docker-ops.sh run` |
 
 ---
 
