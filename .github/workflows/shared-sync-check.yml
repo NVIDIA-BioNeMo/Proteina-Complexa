@@ -1,5 +1,6 @@
 # Verifies that each complexa skill's explicitly owned copies of shared assets
-# stay identical to the single source under skills/_shared/.
+# stay identical to the single source under skills/_shared/. Skills that own any
+# scientific guide own the complete cross-linked guide set.
 #
 # Shared assets must ship as REAL files inside every skill that owns them — the
 # NVIDIA/skills catalog sparse-checks-out each skill on its own and `codex

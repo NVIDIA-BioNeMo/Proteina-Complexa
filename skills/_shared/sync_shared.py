@@ -4,9 +4,11 @@
 `_shared/` is the single edit point for assets used by more than one skill
 (`scripts/`, hardware guidance, and shared scientific guides). Each asset has an
 explicit owner set below so it is copied only into skills that need it. These
-copies cannot be symlinks or cross-skill references: the NVIDIA/skills catalog
-sparse-checks-out each skill directory on its own and copies it with `rsync -a`,
-and `codex plugin add` drops symlinks on install.
+owned assets cannot be replaced by symlinks or cross-skill references: the
+NVIDIA/skills catalog sparse-checks-out each skill directory on its own and
+copies it with `rsync -a`, and `codex plugin add` drops symlinks on install.
+Because the scientific guides cross-link one another, every skill that owns one
+guide owns the complete guide set and remains self-contained.
 
 Authors edit the canonical copy under `_shared/` and run `--write`; CI runs
 `--check` to fail a PR whose owned copies drifted, whose non-owners contain an
@@ -21,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import filecmp
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -29,6 +32,14 @@ SKILLS_ROOT = Path(__file__).resolve().parent.parent  # skills/
 SHARED = SKILLS_ROOT / "_shared"
 REPO_ROOT = SKILLS_ROOT.parent
 DOCS_ROOT = REPO_ROOT / "docs"
+
+GUIDE_OWNERS = frozenset(
+    {
+        "complexa-design",
+        "complexa-evaluate-pdbs",
+        "complexa-sweep",
+    }
+)
 
 # Canonical assets and the only skills that should receive a real copy. Keep
 # this map explicit: inferring ownership from prose references makes it too easy
@@ -59,21 +70,26 @@ SHARED_ASSET_OWNERS: dict[str, frozenset[str]] = {
             "complexa-target",
         }
     ),
-    "references/INFERENCE.md": frozenset({"complexa-design"}),
-    "references/CONFIGURATION_GUIDE.md": frozenset(
-        {
-            "complexa-design",
-            "complexa-sweep",
-        }
-    ),
-    "references/EVALUATION_METRICS.md": frozenset(
-        {
-            "complexa-design",
-            "complexa-evaluate-pdbs",
-        }
-    ),
-    "references/SEARCH_METADATA.md": frozenset({"complexa-sweep"}),
+    "references/INFERENCE.md": GUIDE_OWNERS,
+    "references/CONFIGURATION_GUIDE.md": GUIDE_OWNERS,
+    "references/EVALUATION_METRICS.md": GUIDE_OWNERS,
+    "references/SEARCH_METADATA.md": GUIDE_OWNERS,
+    "references/SWEEP.md": GUIDE_OWNERS,
 }
+
+# Canonical shared guides must link to one another by sibling filename. Their
+# ownership closure guarantees those same links work in every distributed copy.
+SHARED_GUIDES = frozenset(
+    {
+        "references/INFERENCE.md",
+        "references/CONFIGURATION_GUIDE.md",
+        "references/EVALUATION_METRICS.md",
+        "references/SEARCH_METADATA.md",
+        "references/SWEEP.md",
+    }
+)
+
+MARKDOWN_LINK_TARGET_RE = re.compile(r"]\(([^)\s]+)")
 
 # Repository users retain the traditional docs/ paths, while the canonical
 # files live under skills/ so the BAT source sync includes them.
@@ -82,7 +98,7 @@ DOC_GUIDE_ALIASES: dict[str, str] = {
     "CONFIGURATION_GUIDE.md": "../skills/_shared/references/CONFIGURATION_GUIDE.md",
     "EVALUATION_METRICS.md": "../skills/_shared/references/EVALUATION_METRICS.md",
     "SEARCH_METADATA.md": "../skills/_shared/references/SEARCH_METADATA.md",
-    "SWEEP.md": "../skills/complexa-sweep/references/SWEEP.md",
+    "SWEEP.md": "../skills/_shared/references/SWEEP.md",
 }
 
 
@@ -102,6 +118,32 @@ def ownership_problems(skills: list[Path]) -> list[str]:
             problems.append(f"_shared: missing canonical asset {rel}")
         for owner in sorted(owners - known_skills):
             problems.append(f"ownership map: unknown skill {owner!r} for {rel}")
+
+    guide_by_name = {Path(rel).name: rel for rel in SHARED_GUIDES}
+    for rel in SHARED_GUIDES:
+        source = SHARED / rel
+        if not source.is_file():
+            continue
+        for target in MARKDOWN_LINK_TARGET_RE.findall(
+            source.read_text(encoding="utf-8")
+        ):
+            path = target.split("#", 1)[0]
+            target_rel = guide_by_name.get(Path(path).name)
+            if target_rel is None:
+                continue
+            if path != Path(path).name:
+                problems.append(
+                    f"_shared/{rel}: shared-guide link {target!r} must use its "
+                    "sibling filename"
+                )
+            missing_owners = (
+                SHARED_ASSET_OWNERS[rel] - SHARED_ASSET_OWNERS[target_rel]
+            )
+            for owner in sorted(missing_owners):
+                problems.append(
+                    f"ownership map: {owner!r} receives {rel}, which links to "
+                    f"unowned {target_rel}"
+                )
     return problems
 
 
@@ -151,7 +193,8 @@ def do_write() -> int:
             dst = skill / rel
             if skill.name in owners:
                 dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(SHARED / rel, dst)  # preserve mode, e.g. +x scripts
+                # copy2 preserves mode, e.g. +x on preflight.sh.
+                shutil.copy2(SHARED / rel, dst)
                 count += 1
             elif dst.exists() or dst.is_symlink():
                 dst.unlink()
@@ -180,7 +223,8 @@ def do_check() -> int:
                     )
                 elif not filecmp.cmp(SHARED / rel, dst, shallow=False):
                     problems.append(
-                        f"{skill.name}: {rel} differs from _shared/{rel} (run --write)"
+                        f"{skill.name}: {rel} differs from _shared/{rel} "
+                        f"(run --write)"
                     )
             elif dst.exists() or dst.is_symlink():
                 problems.append(

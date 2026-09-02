@@ -3,10 +3,10 @@
 Every sample produced by a search algorithm carries a **metadata tag** -- a string that encodes the algorithm, original sample identity, and full lineage of branching decisions.
 
 > **Documentation Map**
-> - Running a design? See [Inference Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/INFERENCE.md)
-> - Tuning YAML configs? See [Configuration Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/CONFIGURATION_GUIDE.md)
-> - Understanding metrics? See [Evaluation Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/EVALUATION_METRICS.md)
-> - Parameter sweeps? See [Sweep System](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/complexa-sweep/references/SWEEP.md)
+> - Running a design? See [Inference Guide](INFERENCE.md).
+> - Tuning YAML configs? See [Configuration Guide](CONFIGURATION_GUIDE.md).
+> - Understanding metrics? See [Evaluation Guide](EVALUATION_METRICS.md).
+> - Parameter sweeps? See [Sweep System](SWEEP.md).
 
 The tag appears in:
 

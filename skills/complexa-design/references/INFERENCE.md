@@ -3,10 +3,10 @@
 How to run protein design with Proteina-Complexa: local execution, SLURM cluster deployment, custom targets, and troubleshooting.
 
 > **Documentation Map**
-> - Tuning YAML configs? See [Configuration Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/CONFIGURATION_GUIDE.md)
-> - Understanding metrics? See [Evaluation Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/EVALUATION_METRICS.md)
-> - Parameter sweeps? See [Sweep System](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/complexa-sweep/references/SWEEP.md)
-> - Search metadata? See [Search Metadata](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/SEARCH_METADATA.md)
+> - Tuning YAML configs? See [Configuration Guide](CONFIGURATION_GUIDE.md).
+> - Understanding metrics? See [Evaluation Guide](EVALUATION_METRICS.md).
+> - Parameter sweeps? See [Sweep System](SWEEP.md).
+> - Search metadata? See [Search Metadata](SEARCH_METADATA.md).
 
 ---
 
@@ -139,7 +139,7 @@ configs/search_ame_local_pipeline.yaml
 └── pipeline/ame/ame_analyze.yaml     → aggregation.*
 ```
 
-For the full config structure, pipeline YAML examples, and every configurable parameter, see the [Configuration Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/CONFIGURATION_GUIDE.md).
+For the full config structure, pipeline YAML examples, and every configurable parameter, see the [Configuration Guide](CONFIGURATION_GUIDE.md).
 
 > **Note**: You can also run individual modules directly with `python -m proteinfoundation.generate`, `python -m proteinfoundation.evaluate`, etc. The `complexa` CLI wraps these with additional validation and logging.
 
@@ -224,7 +224,7 @@ complexa design configs/search_binder_local_pipeline.yaml \
 ++generation.filter.reward_threshold=0.5
 ```
 
-For the full list of configurable parameters, see the [Configuration Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/CONFIGURATION_GUIDE.md#common-overrides-cheat-sheet).
+For the full list of configurable parameters, see the [Configuration Guide](CONFIGURATION_GUIDE.md#common-overrides-cheat-sheet).
 
 ### Quick Local Test
 

@@ -3,10 +3,10 @@
 Metric definitions, result CSV structure, motif scaffolding, and Python analysis for the Proteina-Complexa pipeline.
 
 > **Documentation Map**
-> - Running a design? See [Inference Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/INFERENCE.md)
-> - Tuning YAML configs? See [Configuration Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/CONFIGURATION_GUIDE.md)
-> - Parameter sweeps? See [Sweep System](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/complexa-sweep/references/SWEEP.md)
-> - Search metadata? See [Search Metadata](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/SEARCH_METADATA.md)
+> - Running a design? See [Inference Guide](INFERENCE.md).
+> - Tuning YAML configs? See [Configuration Guide](CONFIGURATION_GUIDE.md).
+> - Parameter sweeps? See [Sweep System](SWEEP.md).
+> - Search metadata? See [Search Metadata](SEARCH_METADATA.md).
 
 ## Table of Contents
 
@@ -1333,7 +1333,7 @@ Novelty is computed using FoldSeek against reference databases. Enable via confi
 
 ## Configuration Guide
 
-For complete evaluation and analysis configuration examples -- including binder, monomer, combined, external PDB, custom ranking criteria, custom success thresholds, and training configs -- see the [Configuration Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/CONFIGURATION_GUIDE.md).
+For complete evaluation and analysis configuration examples -- including binder, monomer, combined, external PDB, custom ranking criteria, custom success thresholds, and training configs -- see the [Configuration Guide](CONFIGURATION_GUIDE.md).
 
 ### Minimal Config Quick Reference
 

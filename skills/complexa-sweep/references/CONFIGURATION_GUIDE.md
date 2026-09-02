@@ -3,10 +3,10 @@
 The single reference for all YAML configuration in the design pipeline: search/generation, reward models, evaluation, analysis, and training.
 
 > **Documentation Map**
-> - Running a design? See [Inference Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/INFERENCE.md)
-> - Understanding metrics? See [Evaluation Guide](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/EVALUATION_METRICS.md)
-> - Parameter sweeps? See [Sweep System](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/complexa-sweep/references/SWEEP.md)
-> - Search metadata? See [Search Metadata](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/dev/skills/_shared/references/SEARCH_METADATA.md)
+> - Running a design? See [Inference Guide](INFERENCE.md).
+> - Understanding metrics? See [Evaluation Guide](EVALUATION_METRICS.md).
+> - Parameter sweeps? See [Sweep System](SWEEP.md).
+> - Search metadata? See [Search Metadata](SEARCH_METADATA.md).
 
 ---
 

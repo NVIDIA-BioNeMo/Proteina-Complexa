@@ -36,15 +36,19 @@ inside each `SKILL.md` for cases where they fit better.
 | [`_shared/scripts/preflight.sh`](./_shared/scripts/preflight.sh) | One-shot system probe (GPU, VRAM, disk, checkpoints, tools, `.env`). Outputs `preflight.json`. |
 | [`_shared/scripts/write_manifest.py`](./_shared/scripts/write_manifest.py) | Emits a pinned, replayable `run_manifest.json` per pipeline run. |
 | [`_shared/references/hardware.md`](./_shared/references/hardware.md) | Per-pipeline hardware requirements. |
-| [`_shared/references/INFERENCE.md`](./_shared/references/INFERENCE.md) | Canonical inference and search guide. Owned by `complexa-design`. |
-| [`_shared/references/CONFIGURATION_GUIDE.md`](./_shared/references/CONFIGURATION_GUIDE.md) | Canonical pipeline configuration guide. Owned by `complexa-design` and `complexa-sweep`. |
-| [`_shared/references/EVALUATION_METRICS.md`](./_shared/references/EVALUATION_METRICS.md) | Canonical evaluation and analysis guide. Owned by `complexa-design` and `complexa-evaluate-pdbs`. |
-| [`_shared/references/SEARCH_METADATA.md`](./_shared/references/SEARCH_METADATA.md) | Canonical search-metadata guide. Owned by `complexa-sweep`. |
+| [`_shared/references/INFERENCE.md`](./_shared/references/INFERENCE.md) | Canonical inference and search guide. |
+| [`_shared/references/CONFIGURATION_GUIDE.md`](./_shared/references/CONFIGURATION_GUIDE.md) | Canonical pipeline configuration guide. |
+| [`_shared/references/EVALUATION_METRICS.md`](./_shared/references/EVALUATION_METRICS.md) | Canonical evaluation and analysis guide. |
+| [`_shared/references/SEARCH_METADATA.md`](./_shared/references/SEARCH_METADATA.md) | Canonical search-metadata guide. |
+| [`_shared/references/SWEEP.md`](./_shared/references/SWEEP.md) | Canonical parameter-sweep guide. |
 
 The explicit ownership map in [`_shared/sync_shared.py`](./_shared/sync_shared.py)
 copies each asset as a real file only into the independently distributed skills
-that need it. The traditional top-level `docs/*.md` guide paths are symlinks to
-these canonical files for full-repository users.
+that need it. Because the five canonical guides cross-link one another, the map
+copies the complete guide set into `complexa-design`,
+`complexa-evaluate-pdbs`, and `complexa-sweep`; `complexa-setup` and
+`complexa-target` receive none of those guides. The traditional top-level
+`docs/*.md` guide paths are symlinks to the canonical files.
 
 The skills require `complexa` (this repo's CLI), `bash`, and optionally `nvidia-smi`.
 

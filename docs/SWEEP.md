@@ -1,1 +1,1 @@
-../skills/complexa-sweep/references/SWEEP.md
+../skills/_shared/references/SWEEP.md
