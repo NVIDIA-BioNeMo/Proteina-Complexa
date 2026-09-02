@@ -29,13 +29,22 @@ inside each `SKILL.md` for cases where they fit better.
 | [`complexa-evaluate-pdbs`](./complexa-evaluate-pdbs/) | **CLI** (`complexa analysis <eval_cfg>` chains evaluate→analyze) | Direct `python -m proteinfoundation.{evaluate,analyze}` for debugging | Re-folding / scoring an existing PDB directory with AF2 / RF3 / ESMFold |
 | [`complexa-sweep`](./complexa-sweep/) | **Python script** (`script_utils/generate_inference_configs.py`) + a `complexa design` loop | No CLI — `complexa design` does not accept `--sweeper`; generate configs first, then loop | Finding optimal beam_width, nsteps, reward weights, etc. |
 
-## Shared infrastructure
+## Shared infrastructure and references
 
 | File | Purpose |
 |---|---|
 | [`_shared/scripts/preflight.sh`](./_shared/scripts/preflight.sh) | One-shot system probe (GPU, VRAM, disk, checkpoints, tools, `.env`). Outputs `preflight.json`. |
 | [`_shared/scripts/write_manifest.py`](./_shared/scripts/write_manifest.py) | Emits a pinned, replayable `run_manifest.json` per pipeline run. |
 | [`_shared/references/hardware.md`](./_shared/references/hardware.md) | Per-pipeline hardware requirements. |
+| [`_shared/references/INFERENCE.md`](./_shared/references/INFERENCE.md) | Canonical inference and search guide. Owned by `complexa-design`. |
+| [`_shared/references/CONFIGURATION_GUIDE.md`](./_shared/references/CONFIGURATION_GUIDE.md) | Canonical pipeline configuration guide. Owned by `complexa-design` and `complexa-sweep`. |
+| [`_shared/references/EVALUATION_METRICS.md`](./_shared/references/EVALUATION_METRICS.md) | Canonical evaluation and analysis guide. Owned by `complexa-design` and `complexa-evaluate-pdbs`. |
+| [`_shared/references/SEARCH_METADATA.md`](./_shared/references/SEARCH_METADATA.md) | Canonical search-metadata guide. Owned by `complexa-sweep`. |
+
+The explicit ownership map in [`_shared/sync_shared.py`](./_shared/sync_shared.py)
+copies each asset as a real file only into the independently distributed skills
+that need it. The traditional top-level `docs/*.md` guide paths are symlinks to
+these canonical files for full-repository users.
 
 The skills require `complexa` (this repo's CLI), `bash`, and optionally `nvidia-smi`.
 

@@ -1,1 +1,1 @@
-../.claude/skills/complexa-sweep/references/SWEEP.md
+../skills/complexa-sweep/references/SWEEP.md

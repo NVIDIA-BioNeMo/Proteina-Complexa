@@ -1,8 +1,9 @@
 # Troubleshooting Reference
 
-Symptoms, causes, and fixes for `complexa design` failures. Sourced from
-`docs/INFERENCE.md` "Troubleshooting", `docs/EVALUATION_METRICS.md`, and the
-pipeline configs themselves.
+Symptoms, causes, and fixes for `complexa design` failures. Sourced from the
+local [Inference Guide](INFERENCE.md),
+[Evaluation & Analysis Guide](EVALUATION_METRICS.md), and the pipeline configs
+themselves.
 
 ## GPU OOM during generation
 
@@ -22,7 +23,8 @@ Beam-search amplifies this because `max_batch_size` inherits from
 ```
 
 If still OOMing, drop to `batch_size=4` and `++generation.args.nsteps=200` to
-shrink activation history. Reference: `docs/INFERENCE.md` "Memory Issues".
+shrink activation history. Reference: [Inference Guide](INFERENCE.md), "Memory
+Issues".
 
 ## GPU OOM during folding
 
@@ -60,7 +62,7 @@ backend to ESMFold (does not need AF2 weights):
 ```
 
 Run `complexa download --all` to fetch AF2 weights into the canonical
-location. Reference: `docs/INFERENCE.md` "Missing Model Weights".
+location. Reference: [Inference Guide](INFERENCE.md), "Missing Model Weights".
 
 ## Missing `RF3_CKPT_PATH` / `RF3_EXEC_PATH` (rf3_latest fails)
 
@@ -80,7 +82,7 @@ export RF3_EXEC_PATH=/path/to/rf3
 ```
 
 Run `complexa download --all` to install RF3 into the canonical location.
-Reference: `docs/INFERENCE.md` "RF3 Environment Variables".
+Reference: [Inference Guide](INFERENCE.md), "RF3 Environment Variables".
 
 ## Chain-ID mismatch between target PDB and `target_input`
 
@@ -281,4 +283,5 @@ Or re-run analyze alone with the new thresholds — no need to re-generate:
 complexa analyze configs/search_binder_local_pipeline.yaml ++run_name=<same> ++aggregation.success_thresholds.i_pAE.threshold=10.0
 ```
 
-Reference: `docs/EVALUATION_METRICS.md` "Customizing Binder Thresholds".
+Reference: [Evaluation & Analysis Guide](EVALUATION_METRICS.md), "Customizing
+Binder Thresholds".

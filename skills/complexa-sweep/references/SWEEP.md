@@ -3,9 +3,9 @@
 How to run parameter sweeps and override experiment settings without modifying source code.
 
 > **Documentation Map**
-> - Running a design? See [Inference Guide](INFERENCE.md)
-> - Tuning YAML configs? See [Configuration Guide](CONFIGURATION_GUIDE.md)
-> - Understanding metrics? See [Evaluation Guide](EVALUATION_METRICS.md)
+> - Running a design? Use the `complexa-design` skill.
+> - Tuning YAML configs? See [Configuration Guide](CONFIGURATION_GUIDE.md).
+> - Understanding metrics? Use the `complexa-evaluate-pdbs` skill.
 > - Search metadata? See [Search Metadata](SEARCH_METADATA.md)
 
 ## Overview

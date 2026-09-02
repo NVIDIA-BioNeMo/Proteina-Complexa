@@ -192,6 +192,6 @@ Pass-rate filter (applied by analyze): `min_ipAE * 31 < 2.0 AND scRMSD_ca < 2.0 
 
 ## 7. Pointers
 
-- Per-metric output column names: `docs/EVALUATION_METRICS.md` "Result CSV Reference".
-- Default thresholds and Python filter examples: `docs/EVALUATION_METRICS.md` "Success Criteria" and "Reading Results in Python".
+- Per-metric output column names: [Evaluation & Analysis Guide](EVALUATION_METRICS.md), "Result CSV Reference".
+- Default thresholds and Python filter examples: [Evaluation & Analysis Guide](EVALUATION_METRICS.md), "Success Criteria" and "Reading Results in Python".
 - Hardware tables (VRAM per backend, wall-clock per N PDBs): `references/hardware.md`.
