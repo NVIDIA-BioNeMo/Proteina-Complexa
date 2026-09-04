@@ -36,8 +36,10 @@ Always run the shared preflight before launching a design — generation needs t
 GPU and the right checkpoint, evaluation needs AF2 or RF3 weights and tool
 binaries. Bail early if the host cannot run the chosen pipeline.
 
+Set `SKILL_DIR` to the directory containing this manifest, then run:
+
 ```bash
-bash scripts/preflight.sh
+bash "$SKILL_DIR"/scripts/preflight.sh
 ```
 
 Read the JSON report emitted by preflight and bail if any of these are missing
@@ -69,8 +71,9 @@ Protein binder is the default when the user does not identify a ligand or
 motif. Do not remove the `lora:` block in ligand or AME pipeline YAMLs; those
 released checkpoints require it. AME defaults to `single-pass`; enable a
 reward model before selecting a reward-guided search algorithm. Use the exact
-pipeline command from [references/pipelines.md](references/pipelines.md),
-which also lists checkpoints, target dictionaries, and thresholds.
+pipeline command in the bundled Pipeline Reference at
+`"$SKILL_DIR"/references/pipelines.md`; it also lists checkpoints, target
+dictionaries, and thresholds.
 
 ## Step 3: Gather parameters
 
@@ -78,9 +81,8 @@ Use AskUserQuestion to fill in the four parameters that vary every run. Default
 to sensible production settings if the user has no preference.
 
 - **Target name** — must be a key in the matching protein, ligand, or AME target
-  dictionary documented in [references/pipelines.md](references/pipelines.md).
-  If the user names a target that is not present, hand off to `complexa-target`
-  to add it first.
+  dictionary documented in the bundled Pipeline Reference. If the user names a
+  target that is not present, hand off to `complexa-target` to add it first.
 - **Run name** — a short identifier appended to the output dir (e.g. `pdl1_v1`).
 - **Search algorithm** — default to `beam-search` with `beam_width=8` and
   `n_branch=4` for production. Use `single-pass` for a quick smoke test.
@@ -96,10 +98,10 @@ which would otherwise abort the pipeline mid-evaluation after hours of
 generation.
 
 Run `complexa validate design` with the selected pipeline command and the
-chosen target override. The exact validation examples are in
-[references/INFERENCE.md](references/INFERENCE.md). The validator returns
-non-zero on failure and prints a status report. Re-run it with the suggested
-overrides until it returns clean.
+chosen target override. The bundled Inference Guide at
+`"$SKILL_DIR"/references/INFERENCE.md` has exact validation examples. The
+validator returns non-zero on failure and prints a status report. Re-run it with
+the suggested overrides until it returns clean.
 
 ## Step 5: Run the pipeline
 
@@ -109,10 +111,10 @@ shared run name, log directory, and multi-GPU split. Re-implementing that
 manually loses the per-stage log routing and progress prints.
 
 Use `++` (forced) Hydra overrides; they apply to all stages. Start from the
-matching production command in [references/pipelines.md](references/pipelines.md)
-and add the run name, target, search algorithm, beam width, and refold backend
-selected above. For ligand binder and AME, select the matching pipeline and
-target; the common overrides can otherwise be reused.
+matching production command in the bundled Pipeline Reference and add the run
+name, target, search algorithm, beam width, and refold backend selected above.
+For ligand binder and AME, select the matching pipeline and target; the common
+overrides can otherwise be reused.
 
 Add `--verbose` to stream logs to the terminal. The skill does not poll
 progress — the user re-invokes if they want a status; point them at
@@ -123,8 +125,7 @@ progress — the user re-invokes if they want a status; point them at
 For debugger or profiler use, call the matching `proteinfoundation` module
 directly with the same resolved pipeline configuration. Prefer the CLI for
 ordinary runs because it preserves logs and parallel-job routing; the
-individual-stage command patterns are in
-[references/INFERENCE.md](references/INFERENCE.md#individual-stages).
+individual-stage command patterns are in the bundled Inference Guide.
 
 For AME inputs evaluated with RF3, ensure the ligand is represented as `L:0`
 before refolding; otherwise RF3 can complete CCD atoms and corrupt RMSD
@@ -143,9 +144,8 @@ paths printed by the CLI:
 > use. Choose an empty run directory or back up existing results first.
 
 Read the combined results CSV and summarize the success-rate, per-design, and
-diversity CSVs described in [references/EVALUATION_METRICS.md](references/EVALUATION_METRICS.md).
-Report top-N designs by i_pAE for protein binders or min_ipAE for ligand
-binders.
+diversity CSVs described in the bundled Evaluation Metrics Guide. Report top-N
+designs by i_pAE for protein binders or min_ipAE for ligand binders.
 
 ## Step 7: Emit manifest
 
@@ -153,7 +153,7 @@ Drop a JSON manifest beside the results so the run is replayable. The shared
 helper captures the command, config, git SHA, and pointers to the result CSVs.
 
 ```bash
-python3 scripts/write_manifest.py \
+python3 "$SKILL_DIR"/scripts/write_manifest.py \
     --output-dir <results-directory> \
     --command "<exact-complexa-command-that-was-run>" \
     --skill complexa-design \
@@ -165,7 +165,7 @@ Surface the manifest path and the result CSV to the user.
 ## Most-common overrides
 
 The 10 overrides that cover ~90% of runs. Full reference (every key, type,
-default) is in [references/overrides.md](references/overrides.md).
+default) is in the bundled Overrides Reference.
 
 | Override | Default | What it controls |
 |----------|---------|------------------|
@@ -197,7 +197,7 @@ Typical wall-clock for 100 designs, `beam_width=8`, default `nsteps=400`:
 - Any pipeline + ESMFold refold: ~30–60 min (fast iteration).
 
 Bumping `gen_njobs=2` and `eval_njobs=2` halves wall-clock on a 2-GPU host. See
-`references/hardware.md` for per-pipeline VRAM tables.
+the bundled Hardware Reference for per-pipeline VRAM tables.
 
 ## Troubleshooting (common cases)
 
@@ -210,5 +210,4 @@ Bumping `gen_njobs=2` and `eval_njobs=2` halves wall-clock on a 2-GPU host. See
 | `KeyError: 'task_name' not in target_dict_cfg` | Target absent from the selected target dictionary | Use `complexa-target` skill to add it |
 | 0 designs pass success thresholds | Defaults too strict for this target | Loosen via `++aggregation.success_thresholds.*` |
 
-For detailed troubleshooting, see
-[references/troubleshooting.md](references/troubleshooting.md).
+For detailed troubleshooting, see the bundled Troubleshooting Reference.
