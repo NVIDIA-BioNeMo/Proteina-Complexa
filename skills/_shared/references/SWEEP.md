@@ -276,7 +276,7 @@ orchestration. It does not change how individual modules consume configs.
 | `--infer_config_name search_binder`        | `--config_name search_binder_pipeline`           |
 | `generate_binder_inference_configs.py`     | `generate_inference_configs.py`                  |
 | Hardcoded `ALPHA_PROTEO_TARGETS` list      | Removed (use sweep or override)                  |
-| `rm -rf configs/inference_configs`         | Automatic: temp dir + staging (concurrent-safe)  |
+| Manually delete generated configuration files | Automatic: temp dir + staging (concurrent-safe) |
 
 ## Tests
 
