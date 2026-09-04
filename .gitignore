@@ -92,7 +92,8 @@ tests/test_eval_generated/
 .rsync_lock/
 
 .pytest_tmp/
-.claude/
+.claude/*
+!.claude/skills/
 .dotnet/
 .gitconfig
 .gnupg/

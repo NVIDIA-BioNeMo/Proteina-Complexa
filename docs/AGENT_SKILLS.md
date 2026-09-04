@@ -32,7 +32,7 @@ Shared helpers live under [`.claude/skills/_shared/`](../.claude/skills/_shared/
 |---|---|
 | [`scripts/preflight.sh`](../.claude/skills/_shared/scripts/preflight.sh) | One-shot host probe (GPU, VRAM, disk, ckpts, tool binaries, `.env`). Emits `preflight.json` that the design / evaluate / sweep skills read in Step 1. |
 | [`scripts/write_manifest.py`](../.claude/skills/_shared/scripts/write_manifest.py) | Writes a pinned, replayable `run_manifest.json` per pipeline run (command, git SHA, ckpt SHA-256s, CSV pointers). |
-| [`reference/hardware.md`](../.claude/skills/_shared/reference/hardware.md) | Per-pipeline VRAM / CPU / disk requirements and a "when you hit OOM" mitigation checklist. |
+| [`references/hardware.md`](../.claude/skills/_shared/references/hardware.md) | Per-pipeline VRAM / CPU / disk requirements and a "when you hit OOM" mitigation checklist. |
 
 ## Using them
 

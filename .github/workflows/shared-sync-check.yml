@@ -1,0 +1,47 @@
+# Verifies that each complexa skill's explicitly owned copies of shared assets
+# stay identical to the single source under skills/_shared/. Skills that own any
+# scientific guide own the complete cross-linked guide set.
+#
+# Shared assets must ship as REAL files inside every skill that owns them — the
+# NVIDIA/skills catalog sparse-checks-out each skill on its own and `codex
+# plugin add` drops symlinks, so cross-skill references / symlinks cannot be
+# relied on. The ownership map prevents large scientific guides from being
+# copied into skills that do not need them. Authors edit the canonical copy
+# under _shared/ and run `sync_shared.py --write`; this check fails a PR whose
+# ownership, copies, or repository-facing docs aliases drift.
+#
+# NOTE: the skills live under the real `skills/` directory; `.claude/skills` is a
+# symlink to it. GitHub reports changed skill files under the real path, so the
+# skill filter and script path below MUST target `skills/**`, not
+# `.claude/skills/**`. The five managed docs aliases are also explicit filters.
+name: shared-sync-check
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'docs/INFERENCE.md'
+      - 'docs/CONFIGURATION_GUIDE.md'
+      - 'docs/EVALUATION_METRICS.md'
+      - 'docs/SEARCH_METADATA.md'
+      - 'docs/SWEEP.md'
+  push:
+    branches: [dev]
+    paths:
+      - 'skills/**'
+      - 'docs/INFERENCE.md'
+      - 'docs/CONFIGURATION_GUIDE.md'
+      - 'docs/EVALUATION_METRICS.md'
+      - 'docs/SEARCH_METADATA.md'
+      - 'docs/SWEEP.md'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify per-skill shared copies match _shared/
+        run: python3 skills/_shared/sync_shared.py --check

@@ -1,0 +1,29 @@
+# SkillSpector suppression baseline — complexa-setup
+#
+# Audited false positives only. NV-CARPS applies this file explicitly during
+# Tier 1 and retains suppressed findings plus these reasons in its report.
+version: 2
+
+rules:
+  - id: "PE3"
+    path: "*SKILL.md"
+    message: "*.env*"
+    reason: >-
+      Reviewed false positive (BioNeMo, omosafi@nvidia.com, 2026-09-02).
+      complexa-setup is a first-party setup skill whose documented purpose is
+      creating and editing the user's repository-local dotenv configuration
+      through `complexa init`. These matches are user-facing configuration and
+      troubleshooting instructions, not access to SSH keys, cloud credential
+      stores, or unrelated secret files.
+  - id: "PE3"
+    path: "*scripts/preflight.sh"
+    message: "*.env*"
+    reason: >-
+      Reviewed false positive after remediation (BioNeMo, 2026-09-02). The
+      helper parses the user's repository-local dotenv as inert key/value data,
+      never sources or executes it, and emits only an explicit allowlist of
+      non-secret Complexa path/runtime settings. SkillSpector 2.9.6 PE3 flags
+      the literal dotenv filename in executable code regardless of this safe
+      handling.
+
+fingerprints: []
