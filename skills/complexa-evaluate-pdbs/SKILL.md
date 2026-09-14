@@ -11,6 +11,8 @@ compatibility: "complexa CLI installed (pip install -e .); CUDA GPU; AF2_DIR (co
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
+<!-- Re-signing refresh: 2026-09-14 -->
+
 # Complexa Evaluate-PDBs Skill
 
 Score a directory of pre-existing PDB files against the same metrics Proteina-Complexa uses internally. Wraps `complexa analysis <evaluate_config> ++sample_storage_path=<dir>`: the CLI runs the `evaluate` step (refold + interface metrics + monomer metrics) and then the `analyze` step (success thresholds, diversity, pass-rate CSVs). Do **not** run `complexa generate` here — the inputs already exist.

@@ -12,6 +12,8 @@ compatibility: "complexa CLI installed; environment file populated; one CUDA GPU
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
+<!-- Re-signing refresh: 2026-09-14 -->
+
 # Complexa Design Skill
 
 Drive the full four-stage `complexa design` pipeline: generate (flow matching +

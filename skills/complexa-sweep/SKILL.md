@@ -4,6 +4,8 @@ description: Agent runbook for Proteina-Complexa parameter sweeps through the se
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
+<!-- Re-signing refresh: 2026-09-14 -->
+
 # complexa-sweep
 
 Run cartesian-product parameter sweeps over Proteina-Complexa design pipelines. Pick or author a sweeper YAML in `configs/sweeps/`, expand it to N inference configs with `script_utils/generate_inference_configs.py`, loop `complexa design` over those configs, then aggregate per-config success metrics into a ranked summary CSV plus a manifest.

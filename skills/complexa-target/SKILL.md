@@ -4,6 +4,8 @@ description: Use this skill whenever the user wants to add, register, edit, list
 allowed-tools: Bash, Read, Write, AskUserQuestion
 ---
 
+<!-- Re-signing refresh: 2026-09-14 -->
+
 # complexa-target
 
 Add or edit a design target in Proteina-Complexa. Targets live in **three YAML files**, one per `complexa design` pipeline:
