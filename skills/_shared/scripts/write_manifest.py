@@ -122,7 +122,7 @@ def scan_ckpt_keys(config_text: str) -> dict[str, str]:
 
     Intentionally a tiny line-based parser — stdlib has no YAML module and we
     only need three well-known keys at any depth. Treats the first scalar after
-    `<key>:` as the value. Hydra resolvers like `${oc.env:CKPT_PATH}` are
+    `<key>:` as the value. Hydra resolvers like ``${oc.env:CKPT_PATH}`` are
     captured verbatim; the caller can decide whether to hash them.
     """
     found: dict[str, str] = {}
@@ -159,7 +159,7 @@ def hash_first_4k(path: Path) -> dict[str, Any]:
 def resolve_ckpts(ckpt_fields: dict[str, str]) -> dict[str, dict[str, Any]]:
     """Build manifest.checkpoints from the scanned ckpt fields.
 
-    Joins `ckpt_path` + `ckpt_name` if both are scalars (no `${…}` interpolation
+    Joins `ckpt_path` + `ckpt_name` if both are scalars (no ``${…}`` interpolation
     left). Always also records `autoencoder_ckpt_path` if present.
     """
     out: dict[str, dict[str, Any]] = {}
