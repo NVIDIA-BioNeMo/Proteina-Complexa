@@ -4,7 +4,7 @@ description: Use this skill whenever the user wants to add, register, edit, list
 allowed-tools: Bash, Read, Write, AskUserQuestion
 ---
 
-<!-- Re-signing refresh: 2026-09-14 -->
+<!-- CI revalidation requested. -->
 
 # complexa-target
 

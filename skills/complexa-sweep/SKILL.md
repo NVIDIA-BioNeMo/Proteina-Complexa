@@ -4,7 +4,7 @@ description: Agent runbook for Proteina-Complexa parameter sweeps through the se
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
-<!-- Re-signing refresh: 2026-09-14 -->
+<!-- CI revalidation requested. -->
 
 # complexa-sweep
 
