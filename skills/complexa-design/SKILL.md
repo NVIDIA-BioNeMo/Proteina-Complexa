@@ -38,6 +38,19 @@ Always run the shared preflight before launching a design — generation needs t
 GPU and the right checkpoint, evaluation needs AF2 or RF3 weights and tool
 binaries. Bail early if the host cannot run the chosen pipeline.
 
+For configuration review or preparation of a future run, report missing runtime
+prerequisites and complete the requested configuration or launch-script artifacts
+on CPU. Check script syntax without launching inference. A missing GPU is a
+blocker for generation, not for reviewing supplied files; report scientific
+metrics only when actual completed-run outputs are available.
+
+When a request permits a CPU fallback only if no GPU is available, verify the
+allocated hardware first. A GPU host with missing dependencies or weights, or a
+failed GPU run, remains blocked on the requested execution; it does not qualify
+for that fallback. Report probe failures separately from confirmed GPU absence.
+The shared preflight's `gpu.available=false` also covers failed or missing
+`nvidia-smi`; check device/allocation evidence before treating it as GPU absence.
+
 Set `SKILL_DIR` to the directory containing this manifest, then run:
 
 ```bash
@@ -49,11 +62,11 @@ for the chosen pipeline:
 
 - `gpu.available: false` -> all pipelines fail.
 - `gpu.vram_gb < 40` -> generation OOMs at default `batch_size: 16`; lower to 8.
-- `ckpts.complexa[.ckpt]` -> required for protein binder.
-- `ckpts.complexa_ligand[.ckpt]` -> required for ligand binder.
-- `ckpts.complexa_ame[.ckpt]` -> required for AME.
-- `env.AF2_DIR` missing -> protein binder default eval (`colabdesign`) fails.
-- `env.RF3_CKPT_PATH` or `env.RF3_EXEC_PATH` missing -> ligand binder / AME default eval (`rf3_latest`) fails.
+- `checkpoints["complexa.ckpt"].exists` and `checkpoints["complexa_ae.ckpt"].exists` -> required for protein binder.
+- `checkpoints["complexa_ligand.ckpt"].exists` and `checkpoints["complexa_ligand_ae.ckpt"].exists` -> required for ligand binder.
+- `checkpoints["complexa_ame.ckpt"].exists` and `checkpoints["complexa_ame_ae.ckpt"].exists` -> required for AME.
+- `community_models.AF2_DIR.exists: false` -> protein binder default eval (`colabdesign`) fails.
+- `community_models.RF3_CKPT_PATH.exists: false` or `tools.rf3.exists: false` -> ligand binder / AME default eval (`rf3_latest`) fails.
 
 If a ckpt is missing, point at `complexa-setup` and have the user run
 `complexa download --complexa-<variant>` first.

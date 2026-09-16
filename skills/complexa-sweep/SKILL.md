@@ -24,15 +24,28 @@ Run cartesian-product parameter sweeps over Proteina-Complexa design pipelines. 
 
 ## Step 1: Pre-flight
 
+Set `SKILL_DIR` to the directory containing this manifest, then run:
+
 ```bash
-bash scripts/preflight.sh
+bash "$SKILL_DIR"/scripts/preflight.sh
 ```
 
 Read `./complexa_setup/preflight.json`. A sweep multiplies GPU time by the number of configs. **Before launching, confirm the cost with the user**:
 
 > "This sweep produces N configs × ~M minutes per config ≈ TOTAL GPU-hours. OK to proceed? (y / reduce / cancel)"
 
-If `gpu.available=false`, stop — sweeps are not feasible on CPU.
+If `gpu.available=false`, stop before GPU execution. Sweeper authoring,
+Cartesian-product enumeration, cost estimates, and analysis of supplied CSVs
+can run on CPU. For those requests, finish the requested artifacts and record
+the launch prerequisites. Label synthetic input data as synthetic and keep
+estimated GPU time separate from measured runtime.
+
+For a hardware-conditional request, verify the allocated hardware before
+selecting the CPU fallback. Missing weights, dependencies, or sufficient VRAM
+on a GPU host are launch blockers, not evidence of a CPU-only environment.
+Report probe or execution failures without reclassifying the selected branch.
+The shared preflight's `gpu.available=false` also covers failed or missing
+`nvidia-smi`; check device/allocation evidence before treating it as GPU absence.
 
 ## Step 2: Pick the pipeline + target
 
