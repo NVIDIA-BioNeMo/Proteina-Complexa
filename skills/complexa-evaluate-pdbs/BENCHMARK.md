@@ -35,12 +35,12 @@ The three-tier evaluation checks whether the skill:
 
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 84.7% — baseline ran, but no comparable score was available; uplift unavailable | 82.3% — baseline ran, but no comparable score was available; uplift unavailable |
-| Security | 83.3% → 100.0% (+16.7 points) | 100.0% → 100.0% (±0.0 points) |
-| Correctness | 33.3% → 100.0% (+66.7 points) | 26.0% → 100.0% (+74.0 points) |
-| Discoverability | 95.0% — baseline ran, but no comparable score was available; uplift unavailable | 86.7% — baseline ran, but no comparable score was available; uplift unavailable |
-| Effectiveness | 30.6% → 42.1% (+11.5 points) | 19.0% → 50.0% (+31.0 points) |
-| Efficiency | 86.6% — baseline ran, but no comparable score was available; uplift unavailable | 74.9% — baseline ran, but no comparable score was available; uplift unavailable |
+| Overall | 84.8% — baseline ran, but no comparable score was available; uplift unavailable | 81.2% — baseline ran, but no comparable score was available; uplift unavailable |
+| Security | 90.0% → 100.0% (+10.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Correctness | 14.0% → 85.0% (+71.0 points) | 30.0% → 90.0% (+60.0 points) |
+| Discoverability | 91.7% — baseline ran, but no comparable score was available; uplift unavailable | 90.0% — baseline ran, but no comparable score was available; uplift unavailable |
+| Effectiveness | 24.3% → 58.3% (+34.0 points) | 20.3% → 50.0% (+29.7 points) |
+| Efficiency | 88.9% — baseline ran, but no comparable score was available; uplift unavailable | 75.7% — baseline ran, but no comparable score was available; uplift unavailable |
 
 **How to read this table:** baseline is the same task attempted without the target skill. Scores are rounded to one decimal; threshold-adjacent values use additional precision so their displayed band matches the verdict. Uplift is derived from those displayed scores and shown in percentage points.
 
@@ -54,17 +54,17 @@ Actual Tier 3 execution usage is reported for every observed agent/case pair and
 
 | Agent | Dataset case | With skill | Without skill | Delta | Change | Coverage |
 |---|---|---:|---:|---:|---:|---|
-| claude-code | All cases | 1,123,791 | 1,673,904 | N/A | N/A | skill 4/4; base 9/9 |
-| claude-code | complexa-evaluate-pdbs-001 | 503,993 | 89,247 | N/A | N/A | skill 1/1; base 3/3 |
-| claude-code | complexa-evaluate-pdbs-002 | 302,493 | 831,481 | N/A | N/A | skill 1/1; base 3/3 |
-| claude-code | complexa-evaluate-pdbs-003 | 225,418 | 360,830 | N/A | N/A | skill 1/1; base 2/2 |
-| claude-code | complexa-evaluate-pdbs-004 | 91,887 | 392,346 | -300,459 | -76.58% | skill 1/1; base 1/1 |
-| codex | All cases | 592,692 | 1,682,495 | N/A | N/A | skill 4/4; base 10/10 |
-| codex | complexa-evaluate-pdbs-001 | 158,192 | 372,196 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-evaluate-pdbs-002 | 183,486 | 1,024,945 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-evaluate-pdbs-003 | 206,858 | 249,323 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-evaluate-pdbs-004 | 44,156 | 36,031 | +8,125 | +22.55% | skill 1/1; base 1/1 |
-| ALL AGENTS | Dataset aggregate | 1,716,483 | 3,356,399 | N/A | N/A | skill 8/8; base 19/19 |
+| claude-code | All cases | 999,103 | 1,694,229 | N/A | N/A | skill 4/4; base 10/10 |
+| claude-code | complexa-evaluate-pdbs-001 | 281,713 | 119,670 | N/A | N/A | skill 1/1; base 3/3 |
+| claude-code | complexa-evaluate-pdbs-002 | 281,917 | 707,656 | N/A | N/A | skill 1/1; base 3/3 |
+| claude-code | complexa-evaluate-pdbs-003 | 307,648 | 770,582 | N/A | N/A | skill 1/1; base 3/3 |
+| claude-code | complexa-evaluate-pdbs-004 | 127,825 | 96,321 | +31,504 | +32.71% | skill 1/1; base 1/1 |
+| codex | All cases | 486,294 | 1,689,544 | N/A | N/A | skill 4/4; base 10/10 |
+| codex | complexa-evaluate-pdbs-001 | 138,892 | 316,677 | N/A | N/A | skill 1/1; base 3/3 |
+| codex | complexa-evaluate-pdbs-002 | 190,003 | 922,901 | N/A | N/A | skill 1/1; base 3/3 |
+| codex | complexa-evaluate-pdbs-003 | 129,373 | 407,940 | N/A | N/A | skill 1/1; base 3/3 |
+| codex | complexa-evaluate-pdbs-004 | 28,026 | 42,026 | -14,000 | -33.31% | skill 1/1; base 1/1 |
+| ALL AGENTS | Dataset aggregate | 1,485,397 | 3,383,773 | N/A | N/A | skill 8/8; base 20/20 |
 
 Prompt tokens include cached reads, so total tokens are `prompt + completion` (cached is not added twice). The Efficiency score uses `(prompt - cached) + completion`. N/A means the relevant trajectory counters were not available; coverage is never estimated.
 
@@ -72,7 +72,7 @@ Prompt tokens include cached reads, so total tokens are `prompt + completion` (c
 
 | Tier | Purpose | Status | Evidence |
 |---|---|---|---|
-| Tier 1 | Static validation | **PASSED WITH OBSERVATIONS** | 11 validator(s); 23 finding(s) |
+| Tier 1 | Static validation | **PASSED WITH OBSERVATIONS** | 11 validator(s); 25 finding(s) |
 | Tier 2 | Semantic deduplication | **PASSED WITH OBSERVATIONS** | 2 validator(s); 1 finding(s) |
 | Tier 3 | Live agent evaluation | **PASS** | 2 agent(s); 4 task(s) |
 
@@ -86,7 +86,7 @@ Prompt tokens include cached reads, so total tokens are `prompt + completion` (c
 - **MEDIUM** QUALITY/quality_correctness: Instructions don't mention 'run_script' (`skills/complexa-evaluate-pdbs/SKILL.md`)
 - **MEDIUM** QUALITY/quality_correctness: SKILL_SPEC recommended field missing: 'metadata.author' (`skills/complexa-evaluate-pdbs/SKILL.md`)
 - **MEDIUM** QUALITY/quality_correctness: SKILL_SPEC recommended field missing: 'metadata.tags' (`skills/complexa-evaluate-pdbs/SKILL.md`)
-- 19 additional finding(s) are available in the full evaluation artifacts.
+- 21 additional finding(s) are available in the full evaluation artifacts.
 
 </details>
 

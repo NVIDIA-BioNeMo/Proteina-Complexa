@@ -1,5 +1,5 @@
 ## Description: <br>
-Add, register, edit, list, show, or validate a Proteina-Complexa design target for protein binder, ligand binder, or AME / enzyme scaffolding pipelines. <br>
+Add, edit, inspect, or validate Proteina-Complexa target definitions for protein binders, ligand binders, and AME motif scaffolding. <br>
 
 This skill is ready for commercial/non-commercial use. <br>
 
@@ -7,9 +7,8 @@ This skill is ready for commercial/non-commercial use. <br>
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multiple licenses (see LICENSE) <br>
 ## Use Case: <br>
-Developers and computational biologists use this skill to register and manage protein, ligand, and enzyme scaffolding design targets for the Proteina-Complexa structural biology pipeline. <br>
+Developers and computational biologists use this skill to register, edit, and validate protein binder, ligand binder, and AME motif scaffolding target definitions in Proteina-Complexa YAML configuration files. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -31,7 +30,7 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Skill Output: <br>
 **Output Type(s):** [Configuration instructions, Files] <br>
-**Output Format:** [YAML with inline bash code blocks] <br>
+**Output Format:** [YAML configuration blocks] <br>
 **Output Parameters:** [1D] <br>
 **Other Properties Related to Output:** [None] <br>
 
@@ -42,23 +41,23 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative) run in isolated sandbox pods with 3 attempts per task. <br>
+4 evaluation tasks (3 positive, 1 negative) against dataset digest sha256:9501fe4a4a90ef80d10b747a8c7319c28b3e706b8909d8abb2f8462b3e9edf9d. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Tool-call productivity (50%) and token efficiency (50%); avoids wasted skill and tool usage. <br>
+- Security: Is it safe to use? Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Is the answer correct? Final-answer correctness against the reference answer. <br>
+- Discoverability: Was the right skill loaded when needed? Whether the expected skill was selected and decoys were avoided. <br>
+- Effectiveness: Did the skill help complete the task? Equal-weight mean of goal completion and expected workflow adherence. <br>
+- Efficiency: Did it avoid wasted tool calls and token usage? 50% tool-call productivity and 50% token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
 - `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
+- `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
+- `skill_efficiency`: Tool-call productivity (routing is scored under Discoverability). <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
-- `skill_execution`: Whether the expected skill was selected and the workflow executed. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `skill_efficiency`: Tool-call productivity (legacy wire id; routing scored under Discoverability). <br>
 - `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
@@ -66,12 +65,12 @@ Underlying evaluation signals used in this run: <br>
 ## Evaluation Results: <br>
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 90.9% | 82.2% |
-| Security | 100.0% → 100.0% (±0.0 pts) | 50.0% → 50.0% (±0.0 pts) |
-| Correctness | 100.0% → 85.0% (-15.0 pts) | 100.0% → 95.0% (-5.0 pts) |
-| Discoverability | 100.0% | 88.3% |
-| Effectiveness | 91.9% → 94.4% (+2.5 pts) | 91.9% → 90.0% (-1.9 pts) |
-| Efficiency | 75.2% | 87.4% |
+| Overall | 95.2% — uplift unavailable | 81.6% — uplift unavailable |
+| Security | 100.0% → 100.0% (±0.0 points) | 50.0% → 50.0% (±0.0 points) |
+| Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Discoverability | 95.0% — uplift unavailable | 90.0% — uplift unavailable |
+| Effectiveness | 95.0% → 100.0% (+5.0 points) | 85.0% → 93.8% (+8.8 points) |
+| Efficiency | 80.8% — uplift unavailable | 74.1% — uplift unavailable |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>
