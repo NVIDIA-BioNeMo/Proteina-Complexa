@@ -1,15 +1,15 @@
 ## Description: <br>
 Agent runbook for first-time Proteina-Complexa setup, dotenv configuration, runtime activation, model-weight installation, GPU preflight, and environment validation. <br>
 
-This skill is ready for commercial/non-commercial use. <br>
+This skill is for research and development only. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multi-license <br>
+Multiple licenses (see LICENSE) <br>
 ## Use Case: <br>
-Developers and engineers setting up the Proteina-Complexa computational protein design environment for the first time, including dotenv configuration, checkpoint downloads, and runtime validation. <br>
+Developers and engineers performing first-time setup of the Proteina-Complexa protein binder design pipeline, including environment configuration, model checkpoint download, and GPU preflight validation. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -43,23 +43,23 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative), each run in an isolated sandbox pod. <br>
+4 evaluation tasks (3 positive, 1 negative) with 3 attempts per task in isolated k8s-sandbox pods. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the right skill was loaded and activated when needed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal and expected workflow. <br>
-- Efficiency: Whether the skill avoided wasted tool calls and token usage. <br>
+- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Verifies final-answer correctness against the reference answer. <br>
+- Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
+- Effectiveness: Equal-weight mean of goal completion (goal_accuracy) and expected workflow adherence (behavior_check). <br>
+- Efficiency: 50% tool-call productivity and 50% token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
-- `accuracy`: Final-answer correctness against the reference answer. <br>
+- `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
 - `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
+- `skill_efficiency`: Tool-call productivity (routing scored under Discoverability). <br>
+- `accuracy`: Final-answer correctness against the reference answer. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `skill_efficiency`: Tool-call productivity scored under Efficiency. <br>
 - `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
@@ -67,12 +67,12 @@ Underlying evaluation signals used in this run: <br>
 ## Evaluation Results: <br>
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 85.8% — uplift unavailable | Not available |
-| Security | 100.0% → 100.0% (±0.0 points) | Not available |
-| Correctness | 45.0% → 100.0% (+55.0 points) | Not available |
-| Discoverability | 100.0% — uplift unavailable | Not available |
-| Effectiveness | 31.3% → 40.0% (+8.7 points) | Not available |
-| Efficiency | 89.1% — uplift unavailable | Not available |
+| Overall | 84.5% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
+| Security | 80.0% → 100.0% (+20.0 points) | Not available |
+| Correctness | 28.0% → 100.0% (+72.0 points) | Not available |
+| Discoverability | 98.3% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
+| Effectiveness | 17.5% → 37.5% (+20.0 points) | Not available |
+| Efficiency | 86.4% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>
