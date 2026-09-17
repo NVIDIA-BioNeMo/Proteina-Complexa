@@ -1,6 +1,11 @@
 ---
 name: complexa-target
-description: Use this skill whenever the user wants to add, register, edit, list, show, or validate a Proteina-Complexa design target for any pipeline — protein binder (default), ligand binder, or AME / enzyme scaffolding. Triggers include "add a target", "define a new target for binder design", "register a hotspot", "set up a PDL1 binder target", "ligand binder pocket", "SMILES target", "AME task", "enzyme motif", "M0024_1nzy", "complexa target add", "complexa target show", "configure target X", "what targets are available", "where do hotspots live", "what does target_input mean", "chain-spec syntax", "binder length range", or any question about `configs/targets/{,ligand_}targets_dict.yaml` and `configs/design_tasks/ame_dict_v2.yaml`. Also covers `complexa validate target`. This is the only skill that touches the three targets dict files.
+description: >
+  Add, edit, inspect, or validate Proteina-Complexa target definitions for protein
+  binders, ligand binders, and AME motif scaffolding. Use for target registries,
+  chain/residue selectors, hotspots, ligand fields, and incomplete motif inputs.
+  Covers direct YAML edits and complexa target/validate target commands; running
+  a campaign with an already registered target belongs to complexa-design.
 allowed-tools: Bash, Read, Write, AskUserQuestion
 ---
 
@@ -20,14 +25,23 @@ The `complexa target` CLI only manages the first two. AME tasks use an extended 
 
 `complexa target add` is a thin wrapper around "load YAML → build dict → append a block" (see `src/proteinfoundation/cli/target_manager.py:add_target_cli` and `append_target_to_dict`). For agentic use, **just edit the targets dict directly** — the schema is short, the existing entries are great copy templates, and you skip 14 CLI flags / SMILES shell-escaping. Use the CLI only if you explicitly want its YAML auto-quoter or its overwrite-prompt safety.
 
-The skill therefore presents both paths:
+For an offline edit, work on the supplied registry or requested output copy.
+An installed Complexa runtime, GPU, or target structure is not required to write
+the configuration. Use the field schema below, preserve unrelated entries, and
+read back the saved block. Coordinate validation remains pending when the
+structure is absent; finish the configuration task without installing a runtime.
+With Read/Edit tools, read the destination copy before editing it; reading the
+original input path does not satisfy Edit's requirement for the output path.
+
+The skill presents both paths:
 
 | Step | Direct file edit (preferred) | CLI |
 |---|---|---|
 | Look at existing targets | Read `configs/targets/{,ligand_}targets_dict.yaml` (or `configs/design_tasks/ame_dict_v2.yaml` for AME) | `complexa target list` (protein/ligand only) |
 | Look at one target | Read the dict and grep for the key | `complexa target show NAME` |
 | Add a new target | Append a YAML block (Step 3a) | `complexa target add ...` (Step 3b) |
-| Verify the PDB resolves on disk | — *(no shortcut, this checks Hydra defaults)* | `complexa validate target CONFIG --target NAME` |
+| Verify configuration | Parse the saved YAML and compare the changed entry and untouched keys | `complexa target show NAME --dict PATH` |
+| Check runtime PDB-path resolution | Requires the full pipeline and environment | `complexa validate target CONFIG --target NAME` |
 
 `complexa target` only sees the two protein-style dicts (`targets_dict.yaml` and `ligand_targets_dict.yaml`). For AME tasks (which use a different schema), file-edit is the only path — see Step 1 below.
 
@@ -51,11 +65,20 @@ Targets live in **three different files**, one per `complexa design` pipeline. P
 
 ### AME tasks (enzyme pipeline)
 
-Similar story — AME tasks live in `configs/design_tasks/ame_dict_v2.yaml` under `motif_target_dict_cfg:` with their own schema (`source`, `target_filename`, `ligand`, `contig_atoms`, `binder_length`, `use_bonds_from_file`). The `contig_atoms` string encodes per-residue motif atom selections like `"A64: [O, C]; A86: [CB, CA, N, C]; ..."` — these are hand-curated, so adding a new AME task is a file edit, not a CLI invocation. Browse the file, copy a similar entry as a template, and pass `++generation.task_name=<NAME>` to `complexa design configs/search_ame_local_pipeline.yaml`.
+AME tasks live under `motif_target_dict_cfg:` with `source`, `target_filename`,
+`ligand`, `contig_atoms`, `binder_length`, and `use_bonds_from_file`. The
+`contig_atoms` string contains curated chain/residue/atom selections. Existing
+entries illustrate the field structure, not the selections for a new motif.
+If motif atoms, ligand selection, or structure location are missing, list the
+missing inputs and write a separate, explicitly incomplete template if useful.
+Leave the registry unchanged until those scientific inputs are supplied. A task
+name or PDB ID alone does not determine them. Completed entries are selected with
+`++generation.task_name=<NAME>` and `configs/search_ame_local_pipeline.yaml`.
 
 ## Step 2: Gather required info
 
-Use AskUserQuestion to collect — do not guess these. Required fields differ for protein vs ligand.
+Use the supplied values and ask only for missing required information. Required
+fields differ for protein, ligand, and AME definitions.
 
 ### Protein target
 
@@ -69,17 +92,27 @@ Use AskUserQuestion to collect — do not guess these. Required fields differ fo
 | binder_length | "Binder length range `[min, max]` or single `[length]`?" | `[80, 150]`, `[100]` | optional (default `[60, 120]`) |
 | pdb_id | "Reference PDB ID (optional, metadata only)?" | `"2lag"` | optional |
 
+Hotspot selectors encode **chain + residue number**, not amino-acid identity.
+For example, Tyr42 (`Y42`) on explicitly specified chain B becomes `B42`;
+already supplied chain/residue selectors stay unchanged. Preserve the user's
+residue numbering. Without coordinates, report that residue identities and
+membership in the structure are unverified.
+
 ### Ligand target — protein fields above (minus `target_input`), plus:
 
 | Field | Question | Example | Required |
 |---|---|---|---|
 | ligand | "3-letter PDB ligand residue code?" | `FAD`, `OQO`, `SAM` | yes (presence marks target as ligand) |
-| smiles | "SMILES string for the ligand?" | `"O=C2C3=Nc1cc(c(...)..."` | recommended |
+| SMILES | "SMILES string for the ligand?" | `"O=C2C3=Nc1cc(c(...)..."` | recommended; uppercase YAML key |
 | ligand_only | "Generate pocket around ligand only (no protein-protein interface)?" | `true` / `false` | optional (default `true`) |
 | use_bonds_from_file | "Use bond info from the input PDB/CIF?" | `true` / `false` | optional (default `true`) |
 | target_input | not required for ligand targets | — | no |
 
 Check for name collisions by reading the dict (`rg '^  NEW_NAME:' configs/targets/targets_dict.yaml`) or running `complexa target list -v --ligand` / `--protein`.
+
+Copy a supplied SMILES exactly. Chain-specific ligand selection belongs to
+preparation of the input structure; do not invent a `chain` field or protein
+`target_input` to represent it in the ligand entry.
 
 ## Step 3a: Append the YAML block directly (preferred)
 
@@ -128,65 +161,27 @@ Use the CLI when you want its automatic chain/residue quoting, the overwrite-con
 
 ### Confirmed flags (from `src/proteinfoundation/cli/target_cli.py`)
 
-| Flag | Type | Applies to | Notes |
-|---|---|---|---|
-| `name` (positional) | str | both | dict key |
-| `--dict PATH` | path | both | override target dict path |
-| `-i, --interactive` | flag | both | open `$EDITOR` |
-| `-e, --editor NAME` | str | both | `code`, `nano`, `vim`, `cursor`, ... |
-| `--source NAME` | str | both | directory under `$DATA_PATH/target_data/` |
-| `--target-filename NAME` | str | both | PDB stem (no `.pdb`) |
-| `--target-path PATH` | str | both | full path; overrides `source`+`filename` |
-| `--target-input SPEC` | str | protein | chain/residue range, e.g. `A1-115` |
-| `--hotspot-residues R [R ...]` | list | both | e.g. `A33 A95` |
-| `--binder-length N [N ...]` | int list | both | `[min, max]` or `[length]` |
-| `--pdb-id ID` | str | both | metadata only |
-| `--ligand CODE` | str | ligand | presence marks ligand target |
-| `--ligand-only` | flag | ligand | pocket-only mode |
-| `--smiles STR` | str | ligand | SMILES for the ligand |
-| `--use-bonds-from-file` | flag | ligand | use PDB bonds |
-| `-f, --force` | flag | both | overwrite existing without prompt |
-
-### Protein example
-
-```bash
-complexa target add 02_PDL1 \
-  --source bindcraft_targets \
-  --target-filename PD-L1 \
-  --target-input A1-115 \
-  --hotspot-residues A37 A39 A49 A98 \
-  --binder-length 64 155 \
-  --pdb-id 4z18
-```
-
-### Ligand example
-
-```bash
-complexa target add 41_7BKC_LIGAND \
-  --source ligand_targets \
-  --target-filename 7BKC_ligand_centered \
-  --pdb-id 7BKC \
-  --ligand FAD \
-  --ligand-only \
-  --use-bonds-from-file \
-  --smiles "O=C2C3=Nc1cc(c(cc1N(C3=NC(=O)N2)CC(O)C(O)C(O)COP(=O)(O)OP(=O)(O)OCC6OC(n5cnc4c(ncnc45)N)C(O)C6O)C)C" \
-  --binder-length 100
-```
-
-Why these defaults: `--source` defaults to `custom_targets` (protein) or `ligand_targets` (ligand) and `--target-filename` defaults to `name`, so be explicit when the PDB stem differs from the target name. The dict gets `ligand_only: true` and `use_bonds_from_file: true` by default for ligand targets — pass the flags to be explicit, or omit to accept defaults.
+Read [target_schema.md](references/target_schema.md#cli-options) for the flag
+table and worked CLI examples when this path is needed. Select the intended
+dictionary with `--dict`; `--source` and `--target-filename` should be explicit
+when they differ from the CLI defaults. AME registration remains a direct edit.
 
 ## Step 4: Verify
 
-Run two checks, in order. Stop and fix on the first failure.
+First parse the saved YAML with an available YAML parser and check the selected
+mapping, field types, requested values, and preservation of other entries.
+Read back the resulting block. This verifies configuration editing only.
+
+With a prepared Complexa installation, pipeline configs, environment, and target
+structure, additionally check runtime path resolution from that checkout:
 
 ```bash
-# 1. Confirm the entry landed and looks right.
-#    Direct read works just as well: `rg -A 7 '^  02_PDL1:' configs/targets/targets_dict.yaml`
-complexa target show 02_PDL1
+# 1. Select the dictionary that was actually edited.
+complexa target show 02_PDL1 --dict configs/targets/targets_dict.yaml
 
 # 2. Resolve the PDB path and validate it exists on disk.
-#    No shortcut for this — it traverses Hydra defaults to find the target dict.
-complexa validate target configs/search_protein_local_pipeline.yaml --target 02_PDL1
+#    This traverses Hydra defaults to find the target dict.
+complexa validate target configs/search_binder_local_pipeline.yaml --target 02_PDL1
 ```
 
 `complexa validate target` (from `src/proteinfoundation/cli/validate.py::validate_target`) checks:
@@ -196,18 +191,28 @@ complexa validate target configs/search_protein_local_pipeline.yaml --target 02_
 - Either `target_path` exists, or `$DATA_PATH/target_data/<source>/<target_filename>.pdb` exists.
 - `target_input`, `hotspot_residues`, `binder_length` are reported back so a human can sanity-check them.
 
-For ligand targets, point `--target` at a ligand pipeline config (e.g. a ligand binder search config).
+For ligand targets, use `configs/targets/ligand_targets_dict.yaml` for `show`
+and `configs/search_ligand_binder_local_pipeline.yaml` for validation; `--target`
+is the target key, not a config path. This validator does not check residue
+identities, ligand chemistry, or AME `contig_atoms`; do not describe a path check
+as coordinate or scientific validation.
 
 ## Step 5: Emit artifact
 
-Save a replayable record under `./target_<name>/`:
+Save the edited entry and validation status at the user's requested output
+location (otherwise `./target_<name>/`). For an offline edit, the saved YAML
+block is sufficient; no CLI-generated artifact is required. On a prepared
+installation, a target-show record can also be saved:
 
 ```bash
 mkdir -p target_02_PDL1
 complexa target show 02_PDL1 > target_02_PDL1/target_show.txt
 ```
 
-Then write the appended YAML snippet (the lines `complexa target add` wrote under `target_dict_cfg:`) to `target_02_PDL1/target_definition.yaml` using the Write tool. The artifact lets the user diff target definitions across runs and re-create the entry on another checkout via `complexa target add ... --force`.
+Save the actual entry under its registry key in `target_definition.yaml` and
+report the consumer pipeline and downstream `generation.task_name`. For an
+incomplete AME request, report the separate template and missing inputs instead
+of claiming a registered target.
 
 ## Hardware requirements
 
