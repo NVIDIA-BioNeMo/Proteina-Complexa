@@ -1,7 +1,9 @@
 ---
 name: complexa-sweep
-description: Agent runbook for Proteina-Complexa parameter sweeps through the separately installed first-party CLI and config generator. Use for cartesian-product hyperparameter scans, sweeper YAML authoring, configuration comparisons, ablations, tuning, success-rate ranking, or Pareto searches over quality and wall-clock cost. SKILL.md performs the orchestration; bundled executables only inspect local readiness and write a run manifest.
+description: Agent runbook for Proteina-Complexa parameter sweeps through the separately installed first-party CLI and config generator. Use for cartesian-product hyperparameter scans, sweeper YAML authoring, configuration comparisons, ablations, tuning, success-rate ranking, or Pareto searches over quality and wall-clock cost. Do not use for a single existing-job launch or SLURM submission template. SKILL.md performs the orchestration; bundled executables only inspect local readiness and write a run manifest.
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
+metadata:
+  author: Ohad Mosafi <omosafi@nvidia.com>
 ---
 
 <!-- CI revalidation requested. -->
@@ -12,12 +14,15 @@ Run cartesian-product parameter sweeps over Proteina-Complexa design pipelines. 
 
 > **Important:** The `complexa design` CLI does **NOT** accept `--sweeper` directly. Sweeps are driven by `script_utils/generate_inference_configs.py`, which writes one `configs/inference_configs/inf_{idx}_{run_name}.yaml` per sweep combination. You then loop `complexa design` over those generated configs.
 
-## Choose the requested outcome
+## Instructions
 
 Sweeper authoring, Cartesian enumeration, cost estimates, and analysis of supplied
 CSVs need only the relevant configs and data. Complete those artifacts without
-setting up inference. Use [sweep_axes.md](references/sweep_axes.md) for key names
-and the selected source config for current defaults. For a partial snapshot,
+setting up inference. Read the relevant axis section in
+[sweep_axes.md](references/sweep_axes.md), then check the matching keys in the
+selected source config for current defaults. Summary CSVs with supplied counts
+and objective columns do not require the full inference or metric guides.
+For a partial snapshot,
 enumerate combinations locally and provide the future generator command;
 running that command requires the full project and its dependencies.
 
@@ -70,11 +75,13 @@ and `search_ame_local_pipeline`, respectively. Ask only for missing values:
 - `task_name` — e.g. `02_PDL1`, `22_DerF21`, `39_7V11_LIGAND`. Passed as `--override generation.task_name=<task>`.
 - `run_name` — short tag for output dir naming.
 
-## Step 3: Pick or author the sweeper YAML
+## Examples
+
+### Step 3: Pick or author the sweeper YAML
 
 Sweeper YAMLs live in `configs/sweeps/`. Each key is a dot-notation Hydra path; each value is a list. The cartesian product becomes N configs.
 
-### Canned sweepers
+#### Canned sweepers
 
 | File | Axis | Values | Configs |
 |---|---|---|---|
@@ -89,7 +96,7 @@ The binder config defaults to `best-of-n`: a beam-width sweep must also pin
 `generation.search.algorithm: [best-of-n]`. For AME, reward-guided search also
 requires a configured reward model; its default is `null`.
 
-### Authoring a new sweeper
+#### Authoring a new sweeper
 
 Minimal multi-axis example (saved to `configs/sweeps/my_sweep.yaml`):
 
@@ -110,13 +117,16 @@ generation.args.nsteps:
 Rules (from `script_utils/generate_inference_configs.py:load_sweeper_file`):
 
 - Top-level mapping only. Keys are dot-notation Hydra paths.
+- Keep budgets, launch status, and other planning metadata in the launch plan, outside the sweeper. Every top-level entry becomes an override axis; a separate `targets` list would multiply the grid again.
 - Values must be **lists**. A scalar is auto-wrapped into a single-element list (which pins a value without adding a dimension).
+- For a list-valued parameter, nest each candidate list: `metric.sequence_types: [[self, mpnn]]` pins one list. The flat form sweeps two strings; `--override` parses scalars only.
 - Cartesian product: total configs = product of list lengths. Multiply by the number of targets unless target names are already one of the axes; do not count them twice.
 - If a key appears in both the sweeper file and an `--override`, the override wins and that axis collapses.
+- Reject empty axes before launch: an axis of `[]` produces zero configurations.
 
 See [references/sweep_axes.md](references/sweep_axes.md) for the full catalogue of swept keys (typical ranges, cost multipliers, what improves/regresses).
 
-### Dry-run preview before generating
+#### Dry-run preview before generating
 
 With the full project available, confirm the config count first:
 
@@ -130,10 +140,25 @@ python script_utils/generate_inference_configs.py \
 ```
 
 The output lists every axis + value list and prints `DRY RUN — would generate N config pair(s)`.
+This previews enumeration only; it returns before Hydra composition and does
+not validate the pipeline, parameter types, or launch prerequisites.
+
+When the full project is available, inspect the materialized inference configs
+before launching. Check the resolved target, selected search algorithm, and
+requested parameter values across the generated grid. The generator permits
+unknown keys during merging, so a successful write alone does not establish
+that a misspelled or misplaced axis changes the intended parameter. With only
+a partial snapshot, check each dot-path against its source config and report
+that materialization remains unverified.
 
 ## Step 4: Generate configs + loop `complexa design`
 
 Once the dry-run looks right, drop `--dryrun` to materialize `inf_{idx}_{run_name}.yaml` + `eval_{idx}_{run_name}.yaml` pairs under `configs/inference_configs/` and `configs/eval_configs/`. Then loop `complexa design` over the inference configs.
+
+For multiple targets, put `generation.task_name` in the sweeper as an axis, or
+give each target's generator invocation a distinct `--run_name`. Indices restart
+at zero on each invocation and filenames omit the target; reusing the same run
+name and output directories overwrites earlier configs and reuses result paths.
 
 ```bash
 # 1. Generate one inf_*.yaml + one eval_*.yaml per combination.
@@ -216,7 +241,10 @@ Then report:
   objective and strictly better on at least one. Keep distinct config IDs at
   equal nondominated coordinates; report invalid/missing measurements separately.
 
-Print the best config + the frontier to the terminal. Save the full table to `sweep_summary.csv`.
+Save the full table to `sweep_summary.csv`, then reopen the saved results and
+print a compact summary: row count, best config and metric values, and frontier
+IDs with their objective values. Report the CSV paths and keep the hardware
+probe and configuration dumps separate from this result summary.
 
 ## Step 7: Emit manifest
 
@@ -256,7 +284,7 @@ Refer to [`references/hardware.md`](references/hardware.md) for the per-run base
 |---|---|---|
 | `Sweeper file not found` from `generate_inference_configs.py` | Path resolved from wrong CWD | Use a path relative to the repo root; or pass an absolute path. |
 | `Sweeper YAML must be a mapping` | Top-level YAML is a list or scalar | Rewrite as `key: [v1, v2]` mapping. |
-| `No configs were generated` | One of the value lists is empty `[]` | Sweeper file has a `key: []` line — add at least one value. |
+| Dry-run reports zero config pairs | One of the value lists is empty `[]` | Supply at least one value before generating or launching; the generator does not reject an empty product. |
 | `complexa design` rejects `--sweeper` | Confusion between entrypoints | The CLI does not accept `--sweeper`. Use `generate_inference_configs.py` first, then loop `complexa design` over the generated configs. |
 | Override silently collapses a sweep axis | `--override key=v` shadowed a sweep key | Drop either the override OR the matching key from the sweeper file. |
 | One config in the loop fails, sweep keeps going | The `\|\| echo "FAILED…"` in Step 4 swallows the error | Re-run the failed `inf_*.yaml` standalone; check the per-config log under `./logs/`. Skip failed `config_id` when ranking. |

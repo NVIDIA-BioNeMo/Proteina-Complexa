@@ -108,7 +108,19 @@ Validation rules (`script_utils/generate_inference_configs.py:load_sweeper_file`
 - Top-level YAML must be a mapping. List or scalar at top = error.
 - All keys must be strings. Numeric keys = error.
 - List values are kept verbatim. Scalar values are wrapped to `[value]`.
-- Empty list `[]` for an axis = launcher dies with "No configs were generated."
+- Empty list `[]` for an axis yields zero configurations. Reject it before launch;
+  the generator can return normally without writing config pairs.
+
+For a list-valued parameter, the outer list enumerates candidates and each inner
+list is one parameter value:
+
+```yaml
+metric.sequence_types: [[self], [self, mpnn]]  # two configs, each retaining a list
+```
+
+`metric.sequence_types: [self, mpnn]` instead produces two string-valued configs.
+To pin both sequence types in one config, use `[[self, mpnn]]`; the generator's
+`--override` parser accepts scalars, so a CLI string `[self,mpnn]` is not a list.
 
 ## Generating sweeper YAMLs programmatically
 
@@ -133,7 +145,11 @@ with open("configs/sweeps/big_grid.yaml", "w") as f:
     yaml.safe_dump(axes, f, sort_keys=False, default_flow_style=False)
 ```
 
-For an irregular set of `(key1, key2)` pairs (not a full cartesian product), there is no native support — emit one sweeper file per pair and concatenate the summary CSVs.
+For an irregular set of `(key1, key2)` pairs (not a full cartesian product), there
+is no native support: emit one sweeper file per pair and use a distinct
+`--run_name` for each invocation. Indices restart at zero, so sharing the run
+name would overwrite configs and reuse result paths. Keep the run name and
+config index when combining summary CSVs.
 
 ## Result-aggregation logic
 
