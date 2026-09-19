@@ -1,15 +1,15 @@
 ## Description: <br>
 Agent runbook for first-time Proteina-Complexa setup, dotenv configuration, runtime activation, model-weight installation, GPU preflight, and environment validation. <br>
 
-This skill is ready for commercial/non-commercial use. <br>
+This skill is for research and development only. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multi-license <br>
+Multiple licenses (see LICENSE file) <br>
 ## Use Case: <br>
-Developers and engineers setting up the Proteina-Complexa computational protein design environment for the first time, including dotenv configuration, checkpoint downloads, and runtime validation. <br>
+Developers and researchers setting up the Proteina-Complexa protein binder design environment, including dotenv configuration, runtime selection, model checkpoint installation, and GPU preflight validation. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -32,9 +32,9 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Skill Output: <br>
 **Output Type(s):** [Shell commands, Configuration instructions, Files] <br>
-**Output Format:** [Markdown with inline bash code blocks] <br>
+**Output Format:** [Markdown with inline bash code blocks and JSON artifacts] <br>
 **Output Parameters:** [1D] <br>
-**Other Properties Related to Output:** [Produces preflight.json and run_manifest.json artifacts in complexa_setup/] <br>
+**Other Properties Related to Output:** [Produces preflight.json (host snapshot) and run_manifest.json (replay-friendly setup record)] <br>
 
 ## Evaluation Agents Used: <br>
 - Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`) <br>
@@ -43,23 +43,23 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative), each run in an isolated sandbox pod. <br>
+Evaluated against 4 tasks (3 positive, 1 negative), each with 3 attempts per task in isolated k8s-sandbox pods. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the right skill was loaded and activated when needed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal and expected workflow. <br>
-- Efficiency: Whether the skill avoided wasted tool calls and token usage. <br>
+- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Checks final-answer correctness against the reference answer. <br>
+- Discoverability: Checks whether the expected skill was selected and the workflow executed. <br>
+- Effectiveness: Checks whether the user's goal was achieved and the expected workflow behavior was followed (50% goal_accuracy + 50% behavior_check). <br>
+- Efficiency: Checks tool-call productivity and token efficiency (50% skill_efficiency + 50% token_efficiency). <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
 - `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `skill_efficiency`: Tool-call productivity scored under Efficiency. <br>
+- `skill_efficiency`: Tool-call productivity (routing scored under Discoverability). <br>
 - `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
@@ -67,12 +67,12 @@ Underlying evaluation signals used in this run: <br>
 ## Evaluation Results: <br>
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 85.8% — uplift unavailable | Not available |
-| Security | 100.0% → 100.0% (±0.0 points) | Not available |
-| Correctness | 45.0% → 100.0% (+55.0 points) | Not available |
-| Discoverability | 100.0% — uplift unavailable | Not available |
-| Effectiveness | 31.3% → 40.0% (+8.7 points) | Not available |
-| Efficiency | 89.1% — uplift unavailable | Not available |
+| Overall | 80.2% | Not available |
+| Security | 87.5% → 100.0% (+12.5 points) | Not available |
+| Correctness | 27.5% → 75.0% (+47.5 points) | Not available |
+| Discoverability | 96.7% | Not available |
+| Effectiveness | 23.8% → 47.5% (+23.7 points) | Not available |
+| Efficiency | 81.6% | Not available |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

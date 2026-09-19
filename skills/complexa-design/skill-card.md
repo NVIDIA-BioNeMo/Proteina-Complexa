@@ -1,15 +1,15 @@
 ## Description: <br>
 Agent runbook for orchestrating an end-to-end protein, ligand-binder, or AME design through the separately installed first-party Proteina-Complexa CLI. <br>
 
-This skill is ready for commercial/non-commercial use. <br>
+This skill is for research and development only. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multi-license (multiple components covered by different licenses) <br>
+Apache 2.0 (code), CC-BY-4.0 (datasets), NVIDIA Open Model License (weights) <br>
 ## Use Case: <br>
-Developers and computational biologists who need to design protein binders, ligand binders, or AME motif scaffolds using the Proteina-Complexa CLI pipeline. <br>
+Developers and computational biology researchers use this skill to orchestrate end-to-end protein binder, ligand-binder, or AME design campaigns through the Proteina-Complexa CLI. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -38,9 +38,9 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Skill Output: <br>
 **Output Type(s):** [Shell commands, Configuration instructions, Files, Analysis] <br>
-**Output Format:** [Markdown with inline bash code blocks, JSON manifest, and CSV result summaries] <br>
+**Output Format:** [Markdown with inline bash code blocks] <br>
 **Output Parameters:** [1D] <br>
-**Other Properties Related to Output:** [None] <br>
+**Other Properties Related to Output:** [JSON manifest and CSV result files] <br>
 
 ## Evaluation Agents Used: <br>
 - Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`) <br>
@@ -49,36 +49,36 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative) in isolated sandbox pods. <br>
+4 evaluation tasks (3 positive, 1 negative) with 3 attempts per task in isolated k8s-sandbox pods. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Whether the final answer is correct against the reference answer. <br>
-- Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Whether the skill avoided wasted tool calls and token usage (50% tool-call productivity + 50% token efficiency). <br>
+- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Verifies final-answer correctness against the reference answer. <br>
+- Discoverability: Checks whether the expected skill was selected and the workflow executed. <br>
+- Effectiveness: Equal-weight mean of goal completion and expected workflow adherence. <br>
+- Efficiency: Tool-call productivity (50%) and token efficiency (50%). <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- `security`: Detects unsafe operations, secret leakage, and unauthorized access. <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
-- `skill_execution`: Whether the expected skill was selected and the workflow executed. <br>
-- `skill_efficiency`: Tool-call productivity. <br>
+- `skill_execution`: Whether the expected skill was selected and decoys were avoided. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `token_efficiency`: Actual uncached prompt plus completion usage. <br>
+- `skill_efficiency`: Tool-call productivity across the run. <br>
+- `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
 
 ## Evaluation Results: <br>
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 86.3% | 80.8% |
-| Security | 62.5% → 100.0% (+37.5 pts) | 50.0% → 100.0% (+50.0 pts) |
-| Correctness | 45.0% → 95.0% (+50.0 pts) | 65.0% → 90.0% (+25.0 pts) |
-| Discoverability | 100.0% | 90.0% |
-| Effectiveness | 36.3% → 57.5% (+21.2 pts) | 37.5% → 55.0% (+17.5 pts) |
-| Efficiency | 79.2% | 69.1% |
+| Overall | 90.5% | 90.3% |
+| Security | 75.0% → 100.0% (+25.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Discoverability | 81.7% | 83.3% |
+| Effectiveness | 100.0% → 100.0% (±0.0 points) | 100.0% → 98.8% (-1.2 points) |
+| Efficiency | 70.8% | 69.6% |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

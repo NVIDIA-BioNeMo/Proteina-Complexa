@@ -62,6 +62,7 @@ A hotspot is a single residue, identified by chain + residue number:
 Rules:
 - Must be a string (always quote in YAML — the YAML dumper auto-quotes any `<chain><digits>` pattern).
 - Chain letter is case-sensitive and must match a chain in the PDB.
+- An amino-acid label plus an explicitly supplied chain must be translated: Tyr42 (`Y42`) on chain B is selector `B42`. Do not infer the chain from the amino-acid letter or claim the identity was checked without coordinates.
 - Residue number must exist in the PDB (use `grep "^ATOM" target.pdb | awk '{print $5, $6}' | sort -u` to enumerate).
 - The list may be empty (`[]`) — no hotspots = no special interface focus.
 - The list may contain only `[null]` for ligand targets where the pocket is ligand-defined.
@@ -130,6 +131,11 @@ Each entry under `motif_target_dict_cfg.<name>` has:
 | `use_bonds_from_file` | bool | `true` | Use bond info from the PDB. |
 | `pdb_id` | str | `"1nzy"` | Reference PDB ID, metadata only. |
 
+The motif atom selections and ligand identity must come from the user or a
+curated structure/task definition. A task name alone is insufficient. When
+those inputs are absent, preserve the registry and put placeholders in a
+separate template explicitly marked incomplete.
+
 To run an AME task:
 
 ```bash
@@ -139,6 +145,34 @@ complexa design configs/search_ame_local_pipeline.yaml \
 ```
 
 **Do not use `complexa target add` for AME tasks** — they live in a different dict and add the `contig_atoms` field (and use `motif_target_dict_cfg` instead of `target_dict_cfg`) that the CLI does not know how to construct.
+
+## CLI options
+
+For `complexa target add`, confirmed by `src/proteinfoundation/cli/target_cli.py`:
+
+| Flag | Type | Applies to | Notes |
+|---|---|---|---|
+| `name` (positional) | str | both | dict key |
+| `--dict PATH` | path | both | select target dictionary explicitly |
+| `-i, --interactive` | flag | both | opens an editor; avoid for unattended use |
+| `-e, --editor NAME` | str | both | editor command |
+| `--source NAME` | str | both | directory under `$DATA_PATH/target_data/` |
+| `--target-filename NAME` | str | both | PDB stem without `.pdb` |
+| `--target-path PATH` | str | both | full path, instead of source + filename |
+| `--target-input SPEC` | str | protein | chain/residue range |
+| `--hotspot-residues R [R ...]` | list | both | chain/residue selectors |
+| `--binder-length N [N ...]` | int list | both | range or fixed length |
+| `--pdb-id ID` | str | both | metadata only |
+| `--ligand CODE` | str | ligand | marks ligand mode |
+| `--ligand-only` | flag | ligand | pocket-only mode |
+| `--smiles STR` | str | ligand | writes uppercase `SMILES` |
+| `--use-bonds-from-file` | flag | ligand | use input bonds |
+| `-f, --force` | flag | both | overwrite existing without prompting |
+
+`--source` defaults to `custom_targets` for protein or `ligand_targets` for
+ligand entries; `--target-filename` defaults to the target name. Ligand entries
+default to `ligand_only: true` and `use_bonds_from_file: true`. These commands
+do not manage AME entries.
 
 ## Worked examples
 

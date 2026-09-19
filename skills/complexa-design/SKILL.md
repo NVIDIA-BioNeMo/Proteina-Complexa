@@ -12,6 +12,8 @@ compatibility: "complexa CLI installed; environment file populated; one CUDA GPU
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
+<!-- CI revalidation requested. -->
+
 # Complexa Design Skill
 
 Drive the full four-stage `complexa design` pipeline: generate (flow matching +
@@ -21,14 +23,21 @@ config for the design intent, validate the run upfront so the user does not
 discover a missing ckpt mid-folding, run it, and emit a replayable manifest +
 per-design success CSV.
 
-## What this skill enables
+## Choose the requested outcome
 
-- Protein binder design for protein targets (AF2 reward + ColabDesign refold).
-- Ligand binder design for small-molecule targets (RF3 reward + RF3 refold).
-- AME motif scaffolding with ligand context (motif + ligand features, RF3).
-- Search-based optimization: single-pass, best-of-n, beam-search, fk-steering, mcts.
-- Refold backends: ColabDesign (AF2), RF3, Boltz2, ESMFold (fast iteration).
-- Pass-rate + diversity analysis with per-`result_type` thresholds.
+For a configuration review or future launch script, use the supplied project
+files and [Pipeline Reference](references/pipelines.md). Read the selected
+pipeline YAML and its generation config; follow other references only for a
+specific unresolved key or output. A partial snapshot supports a review, but
+does not establish that the CLI, targets, weights, or refolder are installed.
+Finish the requested artifacts and record missing launch prerequisites. Check
+shell syntax with `bash -n`; runtime validation waits for a prepared installation.
+
+For an actual campaign, follow the runtime steps below. Use parameters already
+supplied by the user; ask only for missing inputs that change the design. When
+readiness was already probed for this request, reuse that evidence unless the
+environment changes. Keep configuration preparation, generation, and measured
+evaluation results distinct in the final answer.
 
 ## Step 1: Pre-flight
 
@@ -36,7 +45,21 @@ Always run the shared preflight before launching a design — generation needs t
 GPU and the right checkpoint, evaluation needs AF2 or RF3 weights and tool
 binaries. Bail early if the host cannot run the chosen pipeline.
 
-Set `SKILL_DIR` to the directory containing this manifest, then run:
+When a request permits a CPU fallback only if no GPU is available, verify the
+allocated hardware first. An allocated GPU with missing dependencies or weights, or a
+failed GPU run, remains blocked on the requested execution; it does not qualify
+for that fallback. Report probe failures separately from confirmed GPU absence.
+The shared preflight's `gpu.available=false` also covers failed or missing
+`nvidia-smi`; check device/allocation evidence before treating it as GPU absence.
+In containers, `/proc/driver/nvidia/gpus` and loaded kernel modules may describe
+the host, not this task's allocation. Check container device exposure and any
+available scheduler allocation information together. A CPU allocation can share
+a GPU host; an allocated GPU with inaccessible devices is blocked. If allocation
+remains unclear, report it as undetermined.
+
+Set `SKILL_DIR` to the directory containing this manifest in a separate shell
+assignment, then run; an inline environment assignment cannot set its expansion
+in the same command:
 
 ```bash
 bash "$SKILL_DIR"/scripts/preflight.sh
@@ -45,13 +68,13 @@ bash "$SKILL_DIR"/scripts/preflight.sh
 Read the JSON report emitted by preflight and bail if any of these are missing
 for the chosen pipeline:
 
-- `gpu.available: false` -> all pipelines fail.
+- `gpu.available: false` -> GPU execution is not ready; distinguish absent hardware from a failed probe as above.
 - `gpu.vram_gb < 40` -> generation OOMs at default `batch_size: 16`; lower to 8.
-- `ckpts.complexa[.ckpt]` -> required for protein binder.
-- `ckpts.complexa_ligand[.ckpt]` -> required for ligand binder.
-- `ckpts.complexa_ame[.ckpt]` -> required for AME.
-- `env.AF2_DIR` missing -> protein binder default eval (`colabdesign`) fails.
-- `env.RF3_CKPT_PATH` or `env.RF3_EXEC_PATH` missing -> ligand binder / AME default eval (`rf3_latest`) fails.
+- `checkpoints["complexa.ckpt"].exists` and `checkpoints["complexa_ae.ckpt"].exists` -> required for protein binder.
+- `checkpoints["complexa_ligand.ckpt"].exists` and `checkpoints["complexa_ligand_ae.ckpt"].exists` -> required for ligand binder.
+- `checkpoints["complexa_ame.ckpt"].exists` and `checkpoints["complexa_ame_ae.ckpt"].exists` -> required for AME.
+- `community_models.AF2_DIR.exists: false` -> protein binder default eval (`colabdesign`) fails.
+- `community_models.RF3_CKPT_PATH.exists: false` or `tools.rf3.exists: false` -> ligand binder / AME default eval (`rf3_latest`) fails.
 
 If a ckpt is missing, point at `complexa-setup` and have the user run
 `complexa download --complexa-<variant>` first.
@@ -77,15 +100,21 @@ dictionaries, and thresholds.
 
 ## Step 3: Gather parameters
 
-Use AskUserQuestion to fill in the four parameters that vary every run. Default
-to sensible production settings if the user has no preference.
+Fill in parameters not already specified. Preserve the selected pipeline's
+defaults unless the user requests a change.
 
 - **Target name** — must be a key in the matching protein, ligand, or AME target
   dictionary documented in the bundled Pipeline Reference. If the user names a
   target that is not present, hand off to `complexa-target` to add it first.
 - **Run name** — a short identifier appended to the output dir (e.g. `pdl1_v1`).
-- **Search algorithm** — default to `beam-search` with `beam_width=8` and
-  `n_branch=4` for production. Use `single-pass` for a quick smoke test.
+- **Search algorithm** — binder and ligand default to `best-of-n`; AME defaults
+  to `single-pass` with no reward model. A requested beam-width change also
+  needs `++generation.search.algorithm=beam-search`; changing the width alone
+  does not select that algorithm.
+- **Sample count** — set `++generation.dataloader.dataset.nres.nsamples=N`
+  for the requested base sample count. `batch_size` controls memory use and
+  `filter_samples_limit` caps retained outputs; neither requests N generated
+  designs. Search intermediates, filtering, and failures can change final counts.
 - **Evaluation refold backend** — protein binder defaults to `colabdesign`
   (AF2); ligand and AME default to `rf3_latest`. Use `esmfold` for fast iteration
   (worse but seconds per sample).
@@ -93,15 +122,16 @@ to sensible production settings if the user has no preference.
 ## Step 4: Validate
 
 Validate before running. This is cheap (seconds) and catches missing ckpts,
-missing env vars, unknown override keys, and missing target entries — all of
+missing env vars, configuration errors, and missing target entries — all of
 which would otherwise abort the pipeline mid-evaluation after hours of
 generation.
 
 Run `complexa validate design` with the selected pipeline command and the
 chosen target override. The bundled Inference Guide at
 `"$SKILL_DIR"/references/INFERENCE.md` has exact validation examples. The
-validator returns non-zero on failure and prints a status report. Re-run it with
-the suggested overrides until it returns clean.
+validator returns non-zero on failure and prints a status report. Correct the
+reported configuration issue and retry after that change. Missing runtime or
+scientific inputs are blockers to report, not reasons to keep retrying validation.
 
 ## Step 5: Run the pipeline
 
