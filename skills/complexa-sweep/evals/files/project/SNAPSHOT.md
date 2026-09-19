@@ -10,3 +10,9 @@ These files are not a complete Hydra installation. They support preparation and
 review of future commands, not a claim of tested configuration materialization
 or GPU execution. The sibling CSVs are synthetic fixtures and do not measure
 biological design quality.
+
+The sibling `launch_review/` is an authored draft for an offline launch-plan
+review task, not an upstream source snapshot or an executed campaign. The
+`summary_review.csv` fixture represents a synthetic summary export with missing
+and inconsistent data. Each task's declared inputs are supplied unchanged to
+both evaluation conditions.
