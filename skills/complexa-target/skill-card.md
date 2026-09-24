@@ -7,8 +7,9 @@ This skill is ready for commercial/non-commercial use. <br>
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
+Multi-license (multiple components covered by different licenses) <br>
 ## Use Case: <br>
-Developers and computational biologists use this skill to register, edit, and validate protein binder, ligand binder, and AME motif scaffolding target definitions in Proteina-Complexa YAML configuration files. <br>
+Developers and computational biologists use this skill to register, edit, and validate protein and ligand target definitions in Proteina-Complexa design pipelines. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -30,7 +31,7 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Skill Output: <br>
 **Output Type(s):** [Configuration instructions, Files] <br>
-**Output Format:** [YAML configuration blocks] <br>
+**Output Format:** [YAML target definition blocks with CLI validation output] <br>
 **Output Parameters:** [1D] <br>
 **Other Properties Related to Output:** [None] <br>
 
@@ -41,36 +42,36 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative) against dataset digest sha256:9501fe4a4a90ef80d10b747a8c7319c28b3e706b8909d8abb2f8462b3e9edf9d. <br>
+4 evaluation tasks (3 positive, 1 negative) run in isolated sandbox pods with 3 attempts per task. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Is it safe to use? Checks for unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Is the answer correct? Final-answer correctness against the reference answer. <br>
-- Discoverability: Was the right skill loaded when needed? Whether the expected skill was selected and decoys were avoided. <br>
-- Effectiveness: Did the skill help complete the task? Equal-weight mean of goal completion and expected workflow adherence. <br>
-- Efficiency: Did it avoid wasted tool calls and token usage? 50% tool-call productivity and 50% token efficiency. <br>
+- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Final-answer correctness against the reference answer. <br>
+- Discoverability: Whether the expected skill was selected and the workflow executed. <br>
+- Effectiveness: Whether the user's goal was achieved and the expected workflow behavior was followed. <br>
+- Efficiency: Tool-call productivity and token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
-- `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
-- `skill_efficiency`: Tool-call productivity (routing is scored under Discoverability). <br>
+- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
+- `skill_execution`: Whether the expected skill was selected and decoys avoided. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
+- `skill_efficiency`: Tool-call productivity. <br>
 - `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
 
 ## Evaluation Results: <br>
-| Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
+| Measure | Claude Code | Codex |
 |---|---:|---:|
-| Overall | 95.2% — uplift unavailable | 81.6% — uplift unavailable |
-| Security | 100.0% → 100.0% (±0.0 points) | 50.0% → 50.0% (±0.0 points) |
-| Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
-| Discoverability | 95.0% — uplift unavailable | 90.0% — uplift unavailable |
-| Effectiveness | 95.0% → 100.0% (+5.0 points) | 85.0% → 93.8% (+8.8 points) |
-| Efficiency | 80.8% — uplift unavailable | 74.1% — uplift unavailable |
+| Overall | 95.5% | 92.1% |
+| Security | 100.0% | 100.0% |
+| Correctness | 100.0% | 100.0% |
+| Discoverability | 96.7% | 83.3% |
+| Effectiveness | 100.0% | 100.0% |
+| Efficiency | 81.1% | 76.9% |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

@@ -7,9 +7,9 @@ This skill is for research and development only. <br>
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multiple licenses (see LICENSE) <br>
+Multiple (see LICENSE) <br>
 ## Use Case: <br>
-Developers and researchers use this skill to run cartesian-product parameter sweeps over Proteina-Complexa protein design pipelines, author sweeper YAML configurations, compare ablations, and rank results by success rate and computational cost via Pareto analysis. <br>
+Developers and computational biology researchers running cartesian-product hyperparameter sweeps over Proteina-Complexa protein binder design pipelines for quality-cost optimization, ablation studies, and Pareto searches. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -25,18 +25,18 @@ Risk: Review before execution as proposals could introduce incorrect or misleadi
 Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
-- [Sweep System](references/SWEEP.md) <br>
-- [Sweep Axes Reference](references/sweep_axes.md) <br>
-- [Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
-- [Evaluation Metrics](references/EVALUATION_METRICS.md) <br>
-- [Inference Guide](references/INFERENCE.md) <br>
-- [Search Metadata](references/SEARCH_METADATA.md) <br>
-- [Hardware Requirements](references/hardware.md) <br>
+- [CONFIGURATION_GUIDE.md](references/CONFIGURATION_GUIDE.md) <br>
+- [EVALUATION_METRICS.md](references/EVALUATION_METRICS.md) <br>
+- [INFERENCE.md](references/INFERENCE.md) <br>
+- [SEARCH_METADATA.md](references/SEARCH_METADATA.md) <br>
+- [SWEEP.md](references/SWEEP.md) <br>
+- [hardware.md](references/hardware.md) <br>
+- [sweep_axes.md](references/sweep_axes.md) <br>
 
 
 ## Skill Output: <br>
-**Output Type(s):** [Shell commands, Configuration instructions, Files, Analysis] <br>
-**Output Format:** [Markdown with inline bash code blocks and CSV files] <br>
+**Output Type(s):** [Shell commands, Configuration files, CSV analysis, JSON manifest] <br>
+**Output Format:** [Markdown with inline bash code blocks] <br>
 **Output Parameters:** [1D] <br>
 **Other Properties Related to Output:** [None] <br>
 
@@ -47,15 +47,15 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative) with 3 attempts per task, each in an isolated sandbox pod. <br>
+6 evaluation tasks (5 positive, 1 negative) executed with 3 attempts per task in isolated k8s-sandbox pods. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
 - Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
 - Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the right skill was loaded when needed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Avoidance of wasted tool calls and token usage (50% tool-call productivity + 50% token efficiency). <br>
+- Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
+- Effectiveness: Equal-weight mean of goal completion (goal_accuracy) and expected workflow adherence (behavior_check). <br>
+- Efficiency: 50% tool-call productivity and 50% token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
 - `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
@@ -69,14 +69,14 @@ Underlying evaluation signals used in this run: <br>
 
 
 ## Evaluation Results: <br>
-| Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
+| Dimension | Tasks | Claude Code |
 |---|---:|---:|
-| Overall | 92.0% | 90.4% |
-| Security | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
-| Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
-| Discoverability | 86.7% | 83.3% |
-| Effectiveness | 96.6% → 100.0% (+3.4 points) | 100.0% → 98.4% (-1.6 points) |
-| Efficiency | 73.5% | 70.3% |
+| Overall | 6 | 91.0% |
+| Security | 6 | 100.0% |
+| Correctness | 6 | 96.7% |
+| Discoverability | 6 | 88.0% |
+| Effectiveness | 6 | 98.0% |
+| Efficiency | 6 | 72.2% |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

@@ -1,14 +1,15 @@
 ## Description: <br>
-Agent runbook for evaluating an existing PDB directory through the separately installed first-party Proteina-Complexa CLI, supporting refolding, interface metrics (i_pAE, pLDDT, scRMSD), designability, and pass-rate analysis for protein binder, ligand binder, and AME designs. <br>
+Agent runbook for evaluating an existing PDB directory through the separately installed first-party Proteina-Complexa CLI. <br>
 
-This skill is for research and development only. <br>
+This skill is ready for commercial/non-commercial use. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
+Apache 2.0 (code); see licenses/ for other components <br>
 ## Use Case: <br>
-Developers and computational biologists who need to evaluate designed protein structures (PDB files) using the Proteina-Complexa evaluation pipeline — refolding with AF2, RF3, ESMFold, or Boltz2, computing interface and monomer metrics, and generating pass-rate summaries. <br>
+Developers and computational biologists use this skill to evaluate and score directories of pre-existing PDB protein structure files using the Proteina-Complexa pipeline's refolding, interface metrics, and designability analysis. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -24,18 +25,17 @@ Risk: Review before execution as proposals could introduce incorrect or misleadi
 Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
-- [Evaluation Configs Reference](references/eval_configs.md) <br>
+- [Evaluate Config Reference](references/eval_configs.md) <br>
 - [Evaluation & Analysis Guide](references/EVALUATION_METRICS.md) <br>
 - [Pipeline Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
 - [Hardware Requirements](references/hardware.md) <br>
-- [Inference and Search Guide](references/INFERENCE.md) <br>
 
 
 ## Skill Output: <br>
-**Output Type(s):** [Analysis, Shell commands, Files] <br>
-**Output Format:** [CSV and JSON files with Markdown summary] <br>
+**Output Type(s):** [Shell commands, Analysis, Files] <br>
+**Output Format:** [Markdown with inline bash code blocks and CSV/JSON result files] <br>
 **Output Parameters:** [1D] <br>
-**Other Properties Related to Output:** [Per-PDB metrics CSV, pass-rate summaries, diversity cluster files, run manifest JSON] <br>
+**Other Properties Related to Output:** [Per-PDB metrics CSV, pass-rate summaries, diversity cluster files, and a JSON replay manifest] <br>
 
 ## Evaluation Agents Used: <br>
 - Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`) <br>
@@ -44,15 +44,15 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative), 3 attempts per task, each in an isolated sandbox pod. <br>
+4 evaluation tasks (3 positive, 1 negative), 3 attempts per task, each in an isolated k8s-sandbox pod. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
-- Effectiveness: Goal completion (goal_accuracy, 50%) and expected workflow adherence (behavior_check, 50%). <br>
-- Efficiency: Tool-call productivity (skill_efficiency, 50%) and token efficiency (token_efficiency, 50%). <br>
+- Security: Whether the skill is safe to use — checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Whether the final answer is correct against the reference answer. <br>
+- Discoverability: Whether the right skill was loaded and activated when needed, and decoys were avoided. <br>
+- Effectiveness: Whether the skill helped complete the user's goal (50% goal accuracy + 50% behavior check). <br>
+- Efficiency: Whether the skill avoided wasted tool calls and token usage (50% tool productivity + 50% token efficiency). <br>
 
 Underlying evaluation signals used in this run: <br>
 - `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
@@ -60,20 +60,20 @@ Underlying evaluation signals used in this run: <br>
 - `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `skill_efficiency`: Tool-call productivity (legacy wire id; routing scored under Discoverability). <br>
+- `skill_efficiency`: Tool-call productivity (routing scored under Discoverability). <br>
 - `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
 
 ## Evaluation Results: <br>
-| Measure | Claude Code (Baseline → Skill) | Codex (Baseline → Skill) |
+| Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 84.8% | 81.2% |
-| Security | 90.0% → 100.0% (+10.0 pp) | 100.0% → 100.0% (±0.0 pp) |
-| Correctness | 14.0% → 85.0% (+71.0 pp) | 30.0% → 90.0% (+60.0 pp) |
-| Discoverability | 91.7% | 90.0% |
-| Effectiveness | 24.3% → 58.3% (+34.0 pp) | 20.3% → 50.0% (+29.7 pp) |
-| Efficiency | 88.9% | 75.7% |
+| Overall | 85.9% | 80.4% |
+| Security | 100.0% → 100.0% (±0.0 pp) | 87.5% → 100.0% (+12.5 pp) |
+| Correctness | 31.1% → 100.0% (+68.9 pp) | 45.0% → 100.0% (+55.0 pp) |
+| Discoverability | 90.0% | 83.3% |
+| Effectiveness | 22.8% → 55.0% (+32.2 pp) | 21.9% → 43.8% (+21.9 pp) |
+| Efficiency | 84.6% | 75.0% |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

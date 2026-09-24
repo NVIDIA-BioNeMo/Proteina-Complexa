@@ -9,7 +9,7 @@ Recommended for publication based on the completed evaluation evidence in this r
 ## Evaluation Metadata
 
 - Skill: `complexa-setup`
-- Evaluation date: 2026-09-17
+- Evaluation date: 2026-09-24
 - Evaluator version: `1.5.6`
 - Agents: Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`), Codex (`openai/openai/gpt-5.5`)
 - Tasks: 4 evaluation tasks (3 positive, 1 negative)
@@ -35,12 +35,12 @@ The three-tier evaluation checks whether the skill:
 
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 80.2% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
-| Security | 87.5% → 100.0% (+12.5 points) | Not available |
-| Correctness | 27.5% → 75.0% (+47.5 points) | Not available |
+| Overall | 82.6% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
+| Security | 90.0% → 100.0% (+10.0 points) | Not available |
+| Correctness | 18.0% → 90.0% (+72.0 points) | Not available |
 | Discoverability | 96.7% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
-| Effectiveness | 23.8% → 47.5% (+23.7 points) | Not available |
-| Efficiency | 81.6% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
+| Effectiveness | 18.5% → 37.5% (+19.0 points) | Not available |
+| Efficiency | 88.7% — baseline ran, but no comparable score was available; uplift unavailable | Not available |
 
 **How to read this table:** baseline is the same task attempted without the target skill. Scores are rounded to one decimal; threshold-adjacent values use additional precision so their displayed band matches the verdict. Uplift is derived from those displayed scores and shown in percentage points.
 
@@ -54,17 +54,17 @@ Actual Tier 3 execution usage is reported for every observed agent/case pair and
 
 | Agent | Dataset case | With skill | Without skill | Delta | Change | Coverage |
 |---|---|---:|---:|---:|---:|---|
-| claude-code | All cases | 1,321,607 | 1,739,949 | N/A | N/A | skill 4/4; base 8/8 |
-| claude-code | complexa-setup-001 | 282,296 | 681,677 | N/A | N/A | skill 1/1; base 3/3 |
-| claude-code | complexa-setup-002 | 357,861 | 689,359 | N/A | N/A | skill 1/1; base 3/3 |
-| claude-code | complexa-setup-003 | 498,778 | 185,825 | +312,953 | +168.41% | skill 1/1; base 1/1 |
-| claude-code | complexa-setup-004 | 182,672 | 183,088 | -416 | -0.23% | skill 1/1; base 1/1 |
-| codex | All cases | 4,910,052 | 13,886,232 | N/A | N/A | skill 4/4; base 9/12 |
-| codex | complexa-setup-001 | 4,510,554 | 11,649,152 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-setup-002 | 260,506 | 1,712,073 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-setup-003 | 68,691 | 469,141 | N/A | N/A | skill 1/1; base 2/2 |
-| codex | complexa-setup-004 | 70,301 | 55,866 | +14,435 | +25.84% | skill 1/1; base 1/1 |
-| ALL AGENTS | Dataset aggregate | 6,231,659 | 15,626,181 | N/A | N/A | skill 8/8; base 17/20 |
+| claude-code | All cases | 1,438,667 | 2,132,102 | N/A | N/A | skill 4/4; base 10/10 |
+| claude-code | complexa-setup-001 | 440,162 | 745,110 | N/A | N/A | skill 1/1; base 3/3 |
+| claude-code | complexa-setup-002 | 377,429 | 646,200 | N/A | N/A | skill 1/1; base 3/3 |
+| claude-code | complexa-setup-003 | 436,487 | 590,812 | N/A | N/A | skill 1/1; base 3/3 |
+| claude-code | complexa-setup-004 | 184,589 | 149,980 | +34,609 | +23.08% | skill 1/1; base 1/1 |
+| codex | All cases | 6,366,660 | 15,877,621 | N/A | N/A | skill 5/12; base 8/12 |
+| codex | complexa-setup-001 | 6,106,920 | 14,804,251 | N/A | N/A | skill 2/2; base 3/3 |
+| codex | complexa-setup-002 | 139,088 | 543,037 | N/A | N/A | skill 1/1; base 3/3 |
+| codex | complexa-setup-003 | 65,288 | 460,566 | -395,278 | -85.82% | skill 1/1; base 1/1 |
+| codex | complexa-setup-004 | 55,364 | 69,767 | -14,403 | -20.64% | skill 1/1; base 1/1 |
+| ALL AGENTS | Dataset aggregate | 7,805,327 | 18,009,723 | N/A | N/A | skill 9/16; base 18/22 |
 
 Prompt tokens include cached reads, so total tokens are `prompt + completion` (cached is not added twice). The Efficiency score uses `(prompt - cached) + completion`. N/A means the relevant trajectory counters were not available; coverage is never estimated.
 
