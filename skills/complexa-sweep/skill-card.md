@@ -7,9 +7,9 @@ This skill is for research and development only. <br>
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multiple licenses (see LICENSE) <br>
+Multiple (see LICENSE) <br>
 ## Use Case: <br>
-Developers and computational biologists use this skill to run systematic cartesian-product parameter sweeps over Proteina-Complexa protein design pipelines, enabling hyperparameter tuning, ablation studies, success-rate ranking, and Pareto-optimal configuration searches. <br>
+Developers and computational biology researchers running cartesian-product hyperparameter sweeps over Proteina-Complexa protein binder design pipelines for quality-cost optimization, ablation studies, and Pareto searches. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -25,18 +25,18 @@ Risk: Review before execution as proposals could introduce incorrect or misleadi
 Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
-- [Sweep System](references/SWEEP.md) <br>
-- [Sweep Axes Catalogue](references/sweep_axes.md) <br>
-- [Pipeline Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
-- [Evaluation & Analysis Guide](references/EVALUATION_METRICS.md) <br>
-- [Inference and Search Guide](references/INFERENCE.md) <br>
-- [Search Metadata Tags](references/SEARCH_METADATA.md) <br>
-- [Hardware Requirements](references/hardware.md) <br>
+- [CONFIGURATION_GUIDE.md](references/CONFIGURATION_GUIDE.md) <br>
+- [EVALUATION_METRICS.md](references/EVALUATION_METRICS.md) <br>
+- [INFERENCE.md](references/INFERENCE.md) <br>
+- [SEARCH_METADATA.md](references/SEARCH_METADATA.md) <br>
+- [SWEEP.md](references/SWEEP.md) <br>
+- [hardware.md](references/hardware.md) <br>
+- [sweep_axes.md](references/sweep_axes.md) <br>
 
 
 ## Skill Output: <br>
-**Output Type(s):** [Shell commands, Configuration files, CSV data, JSON manifest] <br>
-**Output Format:** [YAML sweep configs, CSV summary tables, and JSON run manifests with terminal output] <br>
+**Output Type(s):** [Shell commands, Configuration files, CSV analysis, JSON manifest] <br>
+**Output Format:** [Markdown with inline bash code blocks] <br>
 **Output Parameters:** [1D] <br>
 **Other Properties Related to Output:** [None] <br>
 
@@ -47,18 +47,18 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative), each run in an isolated sandbox pod. <br>
+6 evaluation tasks (5 positive, 1 negative) executed with 3 attempts per task in isolated k8s-sandbox pods. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Whether the skill is safe to use, checking for unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Whether the skill produces correct answers against the reference answer. <br>
+- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Final-answer correctness against the reference answer. <br>
 - Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
-- Effectiveness: Whether the skill helps complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Whether the skill avoids wasted tool calls and token usage (50% tool-call productivity + 50% token efficiency). <br>
+- Effectiveness: Equal-weight mean of goal completion (goal_accuracy) and expected workflow adherence (behavior_check). <br>
+- Efficiency: 50% tool-call productivity and 50% token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
 - `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
@@ -69,14 +69,14 @@ Underlying evaluation signals used in this run: <br>
 
 
 ## Evaluation Results: <br>
-| Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
+| Dimension | Tasks | Claude Code |
 |---|---:|---:|
-| Overall | Not available | 75.8% — baseline ran, but no comparable score was available; uplift unavailable |
-| Security | Not available | 50.0% → 75.0% (+25.0 points) |
-| Correctness | Not available | 45.0% → 80.0% (+35.0 points) |
-| Discoverability | Not available | 81.7% — baseline ran, but no comparable score was available; uplift unavailable |
-| Effectiveness | Not available | 41.9% → 63.8% (+21.9 points) |
-| Efficiency | Not available | 78.4% — baseline ran, but no comparable score was available; uplift unavailable |
+| Overall | 6 | 91.0% |
+| Security | 6 | 100.0% |
+| Correctness | 6 | 96.7% |
+| Discoverability | 6 | 88.0% |
+| Effectiveness | 6 | 98.0% |
+| Efficiency | 6 | 72.2% |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

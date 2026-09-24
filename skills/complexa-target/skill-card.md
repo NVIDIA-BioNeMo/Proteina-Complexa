@@ -1,15 +1,15 @@
 ## Description: <br>
-Add, register, edit, list, show, or validate Proteina-Complexa design targets for protein binder, ligand binder, or AME enzyme scaffolding pipelines. <br>
+Add, edit, inspect, or validate Proteina-Complexa target definitions for protein binders, ligand binders, and AME motif scaffolding. <br>
 
-This skill is for research and development only. <br>
+This skill is ready for commercial/non-commercial use. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multiple licenses (see LICENSE) <br>
+Multi-license (multiple components covered by different licenses) <br>
 ## Use Case: <br>
-Developers and computational biologists use this skill to register and manage protein, ligand, and enzyme scaffolding targets in Proteina-Complexa YAML configuration files for downstream binder design pipelines. <br>
+Developers and computational biologists use this skill to register, edit, and validate protein and ligand target definitions in Proteina-Complexa design pipelines. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -26,12 +26,12 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
 - [Target Schema Reference](references/target_schema.md) <br>
-- [Hardware Reference](references/hardware.md) <br>
+- [Hardware Requirements](references/hardware.md) <br>
 
 
 ## Skill Output: <br>
-**Output Type(s):** [Configuration instructions, Shell commands] <br>
-**Output Format:** [Markdown with inline YAML and bash code blocks] <br>
+**Output Type(s):** [Configuration instructions, Files] <br>
+**Output Format:** [YAML target definition blocks with CLI validation output] <br>
 **Output Parameters:** [1D] <br>
 **Other Properties Related to Output:** [None] <br>
 
@@ -42,20 +42,20 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative) in isolated sandbox pods. Dataset digest: sha256:641cc9c7...98b6c002. <br>
+4 evaluation tasks (3 positive, 1 negative) run in isolated sandbox pods with 3 attempts per task. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
 - Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the expected skill was selected, decoys avoided, and workflow executed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Tool-call productivity (50%) and token efficiency (50%). <br>
+- Discoverability: Whether the expected skill was selected and the workflow executed. <br>
+- Effectiveness: Whether the user's goal was achieved and the expected workflow behavior was followed. <br>
+- Efficiency: Tool-call productivity and token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
+- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
-- `skill_execution`: Whether the expected skill was selected and the workflow executed. <br>
+- `skill_execution`: Whether the expected skill was selected and decoys avoided. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
 - `skill_efficiency`: Tool-call productivity. <br>
@@ -64,14 +64,14 @@ Underlying evaluation signals used in this run: <br>
 
 
 ## Evaluation Results: <br>
-| Measure | Claude Code | Codex (Baseline → Skill) |
+| Measure | Claude Code | Codex |
 |---|---:|---:|
-| Overall | N/A | 76.2% |
-| Security | N/A | 100.0% → 87.5% (-12.5 pp) |
-| Correctness | N/A | 90.0% → 75.0% (-15.0 pp) |
-| Discoverability | N/A | 83.3% |
-| Effectiveness | N/A | 44.4% → 47.5% (+3.1 pp) |
-| Efficiency | N/A | 87.5% |
+| Overall | 95.5% | 92.1% |
+| Security | 100.0% | 100.0% |
+| Correctness | 100.0% | 100.0% |
+| Discoverability | 96.7% | 83.3% |
+| Effectiveness | 100.0% | 100.0% |
+| Efficiency | 81.1% | 76.9% |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

@@ -11,6 +11,8 @@ compatibility: "complexa CLI installed (pip install -e .); bash 4+; nvidia-smi o
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
+<!-- CI revalidation requested. -->
+
 # Complexa Setup Skill
 
 Drive the three steps a fresh Proteina-Complexa checkout needs before any
