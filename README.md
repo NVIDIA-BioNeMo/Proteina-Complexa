@@ -19,26 +19,10 @@
   <a href="http://arashvahdat.com/" target="_blank">Arash&nbsp;Vahdat</a><sup>&loz;</sup> &emsp;
   <a href="https://karstenkreis.github.io/" target="_blank">Karsten&nbsp;Kreis</a><sup>&dagger;</sup>
   <br> <br>
-  <!-- <sub>
-    <sup>1</sup>NVIDIA &ensp;
-    <sup>2</sup>University of Oxford &ensp;
-    <sup>3</sup>Mila - Qu&eacute;bec AI Institute &ensp;
-    <sup>4</sup>Universit&eacute; de Montr&eacute;al &ensp;
-    <sup>5</sup>HEC Montr&eacute;al
-    <br>
-    <sup>6</sup>CIFAR AI Chair &ensp;
-    <sup>7</sup>AITHYRA &ensp;
-    <sup>8</sup>School of Biological Sciences, Seoul National University
-    <br>
-    <sup>9</sup>Interdisciplinary Program in Bioinformatics, Seoul National University &ensp;
-    <sup>10</sup>Institute of Molecular Biology and Genetics, Seoul National University
-    <br>
-    <sup>11</sup>Artificial Intelligence Institute, Seoul National University
-  </sub>
-  <br> <br> -->
   <span><sup>*</sup>Core contributor. &emsp; <sup>&loz;</sup>Equal advising. &emsp; <sup>&dagger;</sup>Project lead.</span>
   <br> <br>
-  <a href="https://openreview.net/forum?id=qmCpJtFZra" target="_blank">Paper</a> &emsp; <b>&middot;</b> &emsp;
+  <a href="https://arxiv.org/abs/2603.27950" target="_blank">Method Paper</a> &emsp; <b>&middot;</b> &emsp;
+  <a href="https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1" target="_blank">Wet Lab Paper</a> &emsp; <b>&middot;</b> &emsp;
   <a href="https://research.nvidia.com/labs/genair/proteina-complexa/" target="_blank">Project&nbsp;Page</a>
 </div>
 
@@ -74,7 +58,7 @@ Proteina-Complexa is a generative model for protein complex design using flow ma
 
 ### Wet-Lab Validation
 
-Proteina-Complexa designs have been experimentally validated across diverse protein targets and interaction types, demonstrating that in-silico success translates to real binding activity. For full experimental results, protocols, and characterization data, see the [paper](https://research.nvidia.com/labs/genair/proteina-complexa/assets/proteina_complexa_validation.pdf) and [project website](https://research.nvidia.com/labs/genair/proteina-complexa/).
+Proteina-Complexa designs have been experimentally validated across diverse protein targets and interaction types, demonstrating that in-silico success translates to real binding activity. For full experimental results, protocols, and characterization data, see the [paper](https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1) and [project website](https://research.nvidia.com/labs/genair/proteina-complexa/).
 
 ## What's New in 1.1.0
 
