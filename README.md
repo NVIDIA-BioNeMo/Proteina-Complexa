@@ -501,10 +501,13 @@ Proteina-Complexa/
 ## Citation
 
 ```bibtex
-@article{didi2026invitro,
-  title={Latent Generative Search Unlocks de novo Design of Untapped Biomolecular Interactions at Scale},
-  author={Kieran Didi and Danny Reidenbach and Matthew Penner and Supriya Ravi and Marshall Case and Mike Nichols and Erik Swanson and Alex Reis and Maggie Prescott and Yue Qian and Dongming Qian and Jingjing Yang and Weiji Li and Le Li and Daichi Shonai and Sean Gay and Bhoomika Basu Mallik and Ho Yeung Chim and Liurong Chen and Miguel Atienza Juantay and Hubert Klein and Anna Macintyre and Maxim Secor and Daniele Granata and Zhonglin Cao and Guoqing Zhou and Tomas Geffner and Xi Chen and Micha Livne and Zuobai Zhang and Tianjing Zhang and Michael M. Bronstein and Martin Steinegger and Kristine Deibler and Scott Soderling and Alena Khmelinskaia and Florian Hollfelder and Christian Dallago and Emine Kucukbenli and Arash Vahdat and Pierce Ogden and Karsten Kreis},
-  year={2026}
+@article{didi2026latent,
+  title={Latent generative search unlocks de novo design of untapped biomolecular interactions at scale},
+  author={Didi, Kieran and Reidenbach, Danny and Penner, Matthew and Ravichandran, Supriya and Case, Marshall and Nichols, Mike and Swanson, Erik and Reis, Alex and Prescott, Maggie and Qian, Yue and Qian, Dongming and Yang, Jingjing and Li, Weiji and Li, Le and Shonai, Daichi and Gay, Sean and Basu Mallik, Bhoomika and Chim, Ho Yeung and Chen, Liurong and Atienza Juanatey, Miguel and Klein, Hubert and Rieger, Dominic and Schlegel, Phillip and Macintyre, Anna U. and Secor, Maxim and Granata, Daniele and Cha, Sooyoung and Cao, Zhonglin and Zhou, Guoqing and Geffner, Tomas and Chen, Xi and Livne, Micha and Zhang, Zuobai and Zhang, Tianjing and Gion, Kyle and Bronstein, Michael M. and Steinegger, Martin and Deibler, Kristine and Soderling, Scott and Schoeder, Clara T. and Khmelinskaia, Alena and Hollfelder, Florian and Dallago, Christian and Kucukbenli, Emine and Vahdat, Arash and Ogden, Pierce and Kreis, Karsten},
+  year={2026},
+  doi={10.64898/2026.09.12.751118},
+  URL={https://www.biorxiv.org/content/early/2026/09/18/2026.09.12.751118},
+  journal={bioRxiv}
 }
 
 @inproceedings{didi2026scaling,
