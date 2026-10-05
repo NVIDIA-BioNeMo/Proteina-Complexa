@@ -69,7 +69,7 @@ Proteina-Complexa designs have been experimentally validated across diverse prot
 What this means for users:
 - No API or config changes. `run_af_eval` signature is unchanged; all existing pipeline commands (`complexa evaluate`, `complexa design`) benefit automatically.
 - First sample of an evaluation job still pays the ~20 s build + compile cost; subsequent samples drop to ~1-5 s (JAX may recompile once per unique sequence-length combination).
-- A new public helper [`clear_af2_binder_model_cache()`](src/proteinfoundation/utils/colabdesign_utils.py) is available for tests or when switching AF2 configurations mid-process. The reward path (`AF2RewardModel`, `AbsciBindRewardModel`) was already correct and is unchanged.
+- A new public helper [`clear_af2_binder_model_cache()`](src/proteinfoundation/utils/colabdesign_utils.py) is available for tests or when switching AF2 configurations mid-process. The reward path (`AF2RewardModel`) was already correct and is unchanged.
 - On exception, only the failing cache entry is evicted; entries for other configurations survive.
 
 Measured impact: on a 100-GPU, 200x10 best-of-N search job we observed a ~5x reduction in end-to-end evaluation time.
