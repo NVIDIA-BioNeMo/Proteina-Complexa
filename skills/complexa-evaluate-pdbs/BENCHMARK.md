@@ -9,12 +9,12 @@ Recommended for publication based on the completed evaluation evidence in this r
 ## Evaluation Metadata
 
 - Skill: `complexa-evaluate-pdbs`
-- Evaluation date: 2026-09-17
+- Evaluation date: 2026-10-07
 - Evaluator version: `1.5.6`
 - Agents: Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`), Codex (`openai/openai/gpt-5.5`)
 - Tasks: 4 evaluation tasks (3 positive, 1 negative)
 - Dataset digest: `sha256:0ffad3322b2d22337929bd98734c46260113b2d8ba6f217637a68462c578c8c9` (skill-evaluator-dataset-snapshot/1)
-- Attempts per task: 3
+- Attempts per task: 1
 - Environment: `k8s-sandbox`
 - Tier 2 evidence: required for publication
 - Tier 3 evidence: required for publication
@@ -35,12 +35,12 @@ The three-tier evaluation checks whether the skill:
 
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 84.8% — baseline ran, but no comparable score was available; uplift unavailable | 81.2% — baseline ran, but no comparable score was available; uplift unavailable |
-| Security | 90.0% → 100.0% (+10.0 points) | 100.0% → 100.0% (±0.0 points) |
-| Correctness | 14.0% → 85.0% (+71.0 points) | 30.0% → 90.0% (+60.0 points) |
-| Discoverability | 91.7% — baseline ran, but no comparable score was available; uplift unavailable | 90.0% — baseline ran, but no comparable score was available; uplift unavailable |
-| Effectiveness | 24.3% → 58.3% (+34.0 points) | 20.3% → 50.0% (+29.7 points) |
-| Efficiency | 88.9% — baseline ran, but no comparable score was available; uplift unavailable | 75.7% — baseline ran, but no comparable score was available; uplift unavailable |
+| Overall | 88.2% — baseline ran, but no comparable score was available; uplift unavailable | 82.3% — baseline ran, but no comparable score was available; uplift unavailable |
+| Security | 100.0% → 100.0% (±0.0 points) | 75.0% → 100.0% (+25.0 points) |
+| Correctness | 40.0% → 100.0% (+60.0 points) | 35.0% → 100.0% (+65.0 points) |
+| Discoverability | 88.3% — baseline ran, but no comparable score was available; uplift unavailable | 85.0% — baseline ran, but no comparable score was available; uplift unavailable |
+| Effectiveness | 29.6% → 65.0% (+35.4 points) | 32.5% → 51.3% (+18.8 points) |
+| Efficiency | 87.5% — baseline ran, but no comparable score was available; uplift unavailable | 75.3% — baseline ran, but no comparable score was available; uplift unavailable |
 
 **How to read this table:** baseline is the same task attempted without the target skill. Scores are rounded to one decimal; threshold-adjacent values use additional precision so their displayed band matches the verdict. Uplift is derived from those displayed scores and shown in percentage points.
 
@@ -54,17 +54,17 @@ Actual Tier 3 execution usage is reported for every observed agent/case pair and
 
 | Agent | Dataset case | With skill | Without skill | Delta | Change | Coverage |
 |---|---|---:|---:|---:|---:|---|
-| claude-code | All cases | 999,103 | 1,694,229 | N/A | N/A | skill 4/4; base 10/10 |
-| claude-code | complexa-evaluate-pdbs-001 | 281,713 | 119,670 | N/A | N/A | skill 1/1; base 3/3 |
-| claude-code | complexa-evaluate-pdbs-002 | 281,917 | 707,656 | N/A | N/A | skill 1/1; base 3/3 |
-| claude-code | complexa-evaluate-pdbs-003 | 307,648 | 770,582 | N/A | N/A | skill 1/1; base 3/3 |
-| claude-code | complexa-evaluate-pdbs-004 | 127,825 | 96,321 | +31,504 | +32.71% | skill 1/1; base 1/1 |
-| codex | All cases | 486,294 | 1,689,544 | N/A | N/A | skill 4/4; base 10/10 |
-| codex | complexa-evaluate-pdbs-001 | 138,892 | 316,677 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-evaluate-pdbs-002 | 190,003 | 922,901 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-evaluate-pdbs-003 | 129,373 | 407,940 | N/A | N/A | skill 1/1; base 3/3 |
-| codex | complexa-evaluate-pdbs-004 | 28,026 | 42,026 | -14,000 | -33.31% | skill 1/1; base 1/1 |
-| ALL AGENTS | Dataset aggregate | 1,485,397 | 3,383,773 | N/A | N/A | skill 8/8; base 20/20 |
+| claude-code | All cases | 1,280,483 | 684,458 | +596,025 | +87.08% | skill 4/4; base 4/4 |
+| claude-code | complexa-evaluate-pdbs-001 | 189,230 | 152,992 | +36,238 | +23.69% | skill 1/1; base 1/1 |
+| claude-code | complexa-evaluate-pdbs-002 | 482,287 | 247,972 | +234,315 | +94.49% | skill 1/1; base 1/1 |
+| claude-code | complexa-evaluate-pdbs-003 | 303,182 | 190,773 | +112,409 | +58.92% | skill 1/1; base 1/1 |
+| claude-code | complexa-evaluate-pdbs-004 | 305,784 | 92,721 | +213,063 | +229.79% | skill 1/1; base 1/1 |
+| codex | All cases | 489,372 | 605,852 | -116,480 | -19.23% | skill 4/4; base 4/4 |
+| codex | complexa-evaluate-pdbs-001 | 123,661 | 103,204 | +20,457 | +19.82% | skill 1/1; base 1/1 |
+| codex | complexa-evaluate-pdbs-002 | 156,595 | 372,777 | -216,182 | -57.99% | skill 1/1; base 1/1 |
+| codex | complexa-evaluate-pdbs-003 | 180,668 | 103,965 | +76,703 | +73.78% | skill 1/1; base 1/1 |
+| codex | complexa-evaluate-pdbs-004 | 28,448 | 25,906 | +2,542 | +9.81% | skill 1/1; base 1/1 |
+| ALL AGENTS | Dataset aggregate | 1,769,855 | 1,290,310 | +479,545 | +37.17% | skill 8/8; base 8/8 |
 
 Prompt tokens include cached reads, so total tokens are `prompt + completion` (cached is not added twice). The Efficiency score uses `(prompt - cached) + completion`. N/A means the relevant trajectory counters were not available; coverage is never estimated.
 
