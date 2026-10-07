@@ -40,13 +40,11 @@
 
 Find the Model Card++ for Proteina-Complexa [here](./assets/model_card/overview.md).
 
----
 
 ## Latent generative search unlocks de novo design of untapped biomolecular interactions at scale
 
 The Proteina-Complexa codebase and models were also used to produce all generated binder candidates in *"Latent generative search unlocks de novo design of untapped biomolecular interactions at scale"*, available on bioRxiv, [https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1](https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1). This work experimentally validates the methods and models for diverse, new and challenging targets and in large-scale wet lab benchmarks.
 
----
 
 ## Overview
 
