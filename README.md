@@ -19,26 +19,10 @@
   <a href="http://arashvahdat.com/" target="_blank">Arash&nbsp;Vahdat</a><sup>&loz;</sup> &emsp;
   <a href="https://karstenkreis.github.io/" target="_blank">Karsten&nbsp;Kreis</a><sup>&dagger;</sup>
   <br> <br>
-  <!-- <sub>
-    <sup>1</sup>NVIDIA &ensp;
-    <sup>2</sup>University of Oxford &ensp;
-    <sup>3</sup>Mila - Qu&eacute;bec AI Institute &ensp;
-    <sup>4</sup>Universit&eacute; de Montr&eacute;al &ensp;
-    <sup>5</sup>HEC Montr&eacute;al
-    <br>
-    <sup>6</sup>CIFAR AI Chair &ensp;
-    <sup>7</sup>AITHYRA &ensp;
-    <sup>8</sup>School of Biological Sciences, Seoul National University
-    <br>
-    <sup>9</sup>Interdisciplinary Program in Bioinformatics, Seoul National University &ensp;
-    <sup>10</sup>Institute of Molecular Biology and Genetics, Seoul National University
-    <br>
-    <sup>11</sup>Artificial Intelligence Institute, Seoul National University
-  </sub>
-  <br> <br> -->
   <span><sup>*</sup>Core contributor. &emsp; <sup>&loz;</sup>Equal advising. &emsp; <sup>&dagger;</sup>Project lead.</span>
   <br> <br>
-  <a href="https://openreview.net/forum?id=qmCpJtFZra" target="_blank">Paper</a> &emsp; <b>&middot;</b> &emsp;
+  <a href="https://arxiv.org/abs/2603.27950" target="_blank">Method Paper</a> &emsp; <b>&middot;</b> &emsp;
+  <a href="https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1" target="_blank">Wet Lab Paper</a> &emsp; <b>&middot;</b> &emsp;
   <a href="https://research.nvidia.com/labs/genair/proteina-complexa/" target="_blank">Project&nbsp;Page</a>
 </div>
 
@@ -74,7 +58,7 @@ Proteina-Complexa is a generative model for protein complex design using flow ma
 
 ### Wet-Lab Validation
 
-Proteina-Complexa designs have been experimentally validated across diverse protein targets and interaction types, demonstrating that in-silico success translates to real binding activity. For full experimental results, protocols, and characterization data, see the [paper](https://research.nvidia.com/labs/genair/proteina-complexa/assets/proteina_complexa_validation.pdf) and [project website](https://research.nvidia.com/labs/genair/proteina-complexa/).
+Proteina-Complexa designs have been experimentally validated across diverse protein targets and interaction types, demonstrating that in-silico success translates to real binding activity. For full experimental results, protocols, and characterization data, see the [paper](https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1) and [project website](https://research.nvidia.com/labs/genair/proteina-complexa/).
 
 ## What's New in 1.1.0
 
@@ -85,7 +69,7 @@ Proteina-Complexa designs have been experimentally validated across diverse prot
 What this means for users:
 - No API or config changes. `run_af_eval` signature is unchanged; all existing pipeline commands (`complexa evaluate`, `complexa design`) benefit automatically.
 - First sample of an evaluation job still pays the ~20 s build + compile cost; subsequent samples drop to ~1-5 s (JAX may recompile once per unique sequence-length combination).
-- A new public helper [`clear_af2_binder_model_cache()`](src/proteinfoundation/utils/colabdesign_utils.py) is available for tests or when switching AF2 configurations mid-process. The reward path (`AF2RewardModel`, `AbsciBindRewardModel`) was already correct and is unchanged.
+- A new public helper [`clear_af2_binder_model_cache()`](src/proteinfoundation/utils/colabdesign_utils.py) is available for tests or when switching AF2 configurations mid-process. The reward path (`AF2RewardModel`) was already correct and is unchanged.
 - On exception, only the failing cache entry is evicted; entries for other configurations survive.
 
 Measured impact: on a 100-GPU, 200x10 best-of-N search job we observed a ~5x reduction in end-to-end evaluation time.
@@ -501,10 +485,13 @@ Proteina-Complexa/
 ## Citation
 
 ```bibtex
-@article{didi2026invitro,
-  title={Latent Generative Search Unlocks de novo Design of Untapped Biomolecular Interactions at Scale},
-  author={Kieran Didi and Danny Reidenbach and Matthew Penner and Supriya Ravi and Marshall Case and Mike Nichols and Erik Swanson and Alex Reis and Maggie Prescott and Yue Qian and Dongming Qian and Jingjing Yang and Weiji Li and Le Li and Daichi Shonai and Sean Gay and Bhoomika Basu Mallik and Ho Yeung Chim and Liurong Chen and Miguel Atienza Juantay and Hubert Klein and Anna Macintyre and Maxim Secor and Daniele Granata and Zhonglin Cao and Guoqing Zhou and Tomas Geffner and Xi Chen and Micha Livne and Zuobai Zhang and Tianjing Zhang and Michael M. Bronstein and Martin Steinegger and Kristine Deibler and Scott Soderling and Alena Khmelinskaia and Florian Hollfelder and Christian Dallago and Emine Kucukbenli and Arash Vahdat and Pierce Ogden and Karsten Kreis},
-  year={2026}
+@article{didi2026latent,
+  title={Latent generative search unlocks de novo design of untapped biomolecular interactions at scale},
+  author={Didi, Kieran and Reidenbach, Danny and Penner, Matthew and Ravichandran, Supriya and Case, Marshall and Nichols, Mike and Swanson, Erik and Reis, Alex and Prescott, Maggie and Qian, Yue and Qian, Dongming and Yang, Jingjing and Li, Weiji and Li, Le and Shonai, Daichi and Gay, Sean and Basu Mallik, Bhoomika and Chim, Ho Yeung and Chen, Liurong and Atienza Juanatey, Miguel and Klein, Hubert and Rieger, Dominic and Schlegel, Phillip and Macintyre, Anna U. and Secor, Maxim and Granata, Daniele and Cha, Sooyoung and Cao, Zhonglin and Zhou, Guoqing and Geffner, Tomas and Chen, Xi and Livne, Micha and Zhang, Zuobai and Zhang, Tianjing and Gion, Kyle and Bronstein, Michael M. and Steinegger, Martin and Deibler, Kristine and Soderling, Scott and Schoeder, Clara T. and Khmelinskaia, Alena and Hollfelder, Florian and Dallago, Christian and Kucukbenli, Emine and Vahdat, Arash and Ogden, Pierce and Kreis, Karsten},
+  year={2026},
+  doi={10.64898/2026.09.12.751118},
+  URL={https://www.biorxiv.org/content/early/2026/09/18/2026.09.12.751118},
+  journal={bioRxiv}
 }
 
 @inproceedings{didi2026scaling,
