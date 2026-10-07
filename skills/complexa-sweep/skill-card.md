@@ -1,15 +1,15 @@
 ## Description: <br>
 Agent runbook for Proteina-Complexa parameter sweeps through the separately installed first-party CLI and config generator. <br>
 
-This skill is for research and development only. <br>
+This skill is ready for commercial/non-commercial use. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multiple licenses (see LICENSE) <br>
+Multiple Licenses <br>
 ## Use Case: <br>
-Developers and computational biologists use this skill to run systematic cartesian-product parameter sweeps over Proteina-Complexa protein design pipelines, enabling hyperparameter tuning, ablation studies, success-rate ranking, and Pareto-optimal configuration searches. <br>
+Developers and engineers use this skill to run cartesian-product parameter sweeps over Proteina-Complexa design pipelines, including hyperparameter scans, sweeper YAML authoring, configuration comparisons, ablations, tuning, success-rate ranking, and Pareto searches over quality and wall-clock cost. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -26,17 +26,17 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
 - [Sweep System](references/SWEEP.md) <br>
-- [Sweep Axes Catalogue](references/sweep_axes.md) <br>
+- [Sweep Axes](references/sweep_axes.md) <br>
+- [Hardware](references/hardware.md) <br>
 - [Pipeline Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
 - [Evaluation & Analysis Guide](references/EVALUATION_METRICS.md) <br>
 - [Inference and Search Guide](references/INFERENCE.md) <br>
 - [Search Metadata Tags](references/SEARCH_METADATA.md) <br>
-- [Hardware Requirements](references/hardware.md) <br>
 
 
 ## Skill Output: <br>
-**Output Type(s):** [Shell commands, Configuration files, CSV data, JSON manifest] <br>
-**Output Format:** [YAML sweep configs, CSV summary tables, and JSON run manifests with terminal output] <br>
+**Output Type(s):** [Shell commands, Configuration instructions, Files, Analysis] <br>
+**Output Format:** [YAML configs, CSV tables, JSON manifest, Markdown with inline bash code blocks] <br>
 **Output Parameters:** [1D] <br>
 **Other Properties Related to Output:** [None] <br>
 
@@ -47,15 +47,15 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative), each run in an isolated sandbox pod. <br>
+Evaluated against 6 tasks (5 positive, 1 negative) from an internal skill-evaluator dataset snapshot, each attempt in an isolated sandbox pod. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Whether the skill is safe to use, checking for unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Whether the skill produces correct answers against the reference answer. <br>
-- Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
-- Effectiveness: Whether the skill helps complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Whether the skill avoids wasted tool calls and token usage (50% tool-call productivity + 50% token efficiency). <br>
+- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Final-answer correctness against the reference answer. <br>
+- Discoverability: Whether the expected skill was selected and activated when needed. <br>
+- Effectiveness: Whether the skill helped complete the user's goal and expected workflow (equal-weight mean of goal completion and behavior adherence). <br>
+- Efficiency: Tool-call productivity and token efficiency (50% each). <br>
 
 Underlying evaluation signals used in this run: <br>
 - `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
@@ -63,7 +63,7 @@ Underlying evaluation signals used in this run: <br>
 - `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `skill_efficiency`: Tool-call productivity (routing scored under Discoverability). <br>
+- `skill_efficiency`: Tool-call productivity. <br>
 - `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
@@ -71,12 +71,12 @@ Underlying evaluation signals used in this run: <br>
 ## Evaluation Results: <br>
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | Not available | 75.8% — baseline ran, but no comparable score was available; uplift unavailable |
-| Security | Not available | 50.0% → 75.0% (+25.0 points) |
-| Correctness | Not available | 45.0% → 80.0% (+35.0 points) |
-| Discoverability | Not available | 81.7% — baseline ran, but no comparable score was available; uplift unavailable |
-| Effectiveness | Not available | 41.9% → 63.8% (+21.9 points) |
-| Efficiency | Not available | 78.4% — baseline ran, but no comparable score was available; uplift unavailable |
+| Overall | Not available | 89.4% — uplift unavailable |
+| Security | Not available | 100.0% → 100.0% (±0.0 points) |
+| Correctness | Not available | 93.3% → 100.0% (+6.7 points) |
+| Discoverability | Not available | 80.0% — uplift unavailable |
+| Effectiveness | Not available | 89.4% → 95.6% (+6.2 points) |
+| Efficiency | Not available | 71.2% — uplift unavailable |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

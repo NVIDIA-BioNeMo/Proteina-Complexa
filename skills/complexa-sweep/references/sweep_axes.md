@@ -16,7 +16,7 @@ These live under `generation.*` in the pipeline config (because the base pipelin
 | `generation.search.beam_search.beam_width` | 4 | 1, 2, 4, 8, 16 | linear | More beams = wider search → higher success rate. Diminishing returns past 8 in practice. |
 | `generation.search.beam_search.n_branch` | 4 | 2, 4, 8 | linear | Branching factor per beam step. Together with `beam_width` controls total samples per checkpoint. |
 | `generation.search.beam_search.keep_lookahead_samples` | `true` | `true`/`false` | minor | Whether to keep intermediate lookahead candidates as outputs. Off = fewer final PDBs. |
-| `generation.search.best_of_n.replicas` | 10 | 1, 4, 16, 64 | linear | Best-of-N draws. Increasing tightens success-rate estimate; not search depth. |
+| `generation.search.best_of_n.replicas` | 2 | 1, 4, 16, 64 | linear | Best-of-N candidates per search. Pin the algorithm to `best-of-n`; use separate runs to estimate repeatability. |
 | `generation.search.fk_steering.beam_width` | 4 | 1, 2, 4, 8 | linear | FK-steering equivalent of beam_width. |
 | `generation.search.fk_steering.n_branch` | 4 | 2, 4, 8 | linear | FK-steering branching factor. |
 | `generation.search.fk_steering.temperature` | 0.1 | 0.05, 0.1, 0.2, 0.5 | none | Softmax temperature for FK resampling. Higher = closer to uniform (more exploration). |
@@ -84,6 +84,7 @@ Annotated example based on `configs/sweeps/example.yaml`:
 # --- Sweep axes (lists, cartesian-producted) ---
 # Each key is a config dot-path. Each list value becomes one dimension.
 # Total configs = product of list lengths. Here 2 × 2 = 4.
+generation.search.algorithm: [beam-search]
 generation.search.beam_search.beam_width:
   - 2
   - 4
@@ -107,7 +108,19 @@ Validation rules (`script_utils/generate_inference_configs.py:load_sweeper_file`
 - Top-level YAML must be a mapping. List or scalar at top = error.
 - All keys must be strings. Numeric keys = error.
 - List values are kept verbatim. Scalar values are wrapped to `[value]`.
-- Empty list `[]` for an axis = launcher dies with "No configs were generated."
+- Empty list `[]` for an axis yields zero configurations. Reject it before launch;
+  the generator can return normally without writing config pairs.
+
+For a list-valued parameter, the outer list enumerates candidates and each inner
+list is one parameter value:
+
+```yaml
+metric.sequence_types: [[self], [self, mpnn]]  # two configs, each retaining a list
+```
+
+`metric.sequence_types: [self, mpnn]` instead produces two string-valued configs.
+To pin both sequence types in one config, use `[[self, mpnn]]`; the generator's
+`--override` parser accepts scalars, so a CLI string `[self,mpnn]` is not a list.
 
 ## Generating sweeper YAMLs programmatically
 
@@ -117,6 +130,7 @@ For large parameter grids it is cleaner to render the YAML than to edit by hand:
 import itertools, yaml
 
 axes = {
+    "generation.search.algorithm": ["beam-search"],
     "generation.search.beam_search.beam_width": [1, 2, 4, 8],
     "generation.args.nsteps": [200, 400, 800],
     "generation.model.bb_ca.simulation_step_params.sc_scale_noise": [0.1, 0.2, 0.4],
@@ -131,7 +145,11 @@ with open("configs/sweeps/big_grid.yaml", "w") as f:
     yaml.safe_dump(axes, f, sort_keys=False, default_flow_style=False)
 ```
 
-For an irregular set of `(key1, key2)` pairs (not a full cartesian product), there is no native support — emit one sweeper file per pair and concatenate the summary CSVs.
+For an irregular set of `(key1, key2)` pairs (not a full cartesian product), there
+is no native support: emit one sweeper file per pair and use a distinct
+`--run_name` for each invocation. Indices restart at zero, so sharing the run
+name would overwrite configs and reuse result paths. Keep the run name and
+config index when combining summary CSVs.
 
 ## Result-aggregation logic
 
@@ -141,9 +159,9 @@ For an irregular set of `(key1, key2)` pairs (not a full cartesian product), the
 |---|---|---|
 | `config_id` | The index in `inf_{idx}_{run_name}.yaml` | 0-based, sequential, set by `apply_sweeper_and_save_configs`. |
 | `<axis_name>` (one per axis) | Read from the per-config `inf_*.yaml` at the swept config path | Strip the dot-path to a short column header (e.g. `beam_width`). |
-| `n_samples` | `len(results_csv)` | Rows in the analyze CSV for this config. |
-| `success_rate` | `mean(passes_filter)` if column present, else thresholded `mean((i_pae < 10) & (i_plddt > 0.7) & (sc_rmsd < 2.0))` | Confirm thresholds with the user. |
-| `mean_i_pae` | `i_pae.mean()` | Lower = better. AF2 interface PAE. |
+| `n_samples` | `n_designs` for config summaries, otherwise per-design row count | Do not count summary rows as individual designs. |
+| `success_rate` | `n_passed / n_designs` for config summaries; mean of parsed pass flags for per-design rows | If flags are absent, use the run's configured thresholds and metric units. Zero denominators are undefined. |
+| `mean_i_pae` | Supplied config mean, or mean of per-design values in consistent units | Lower = better. AF2 interface PAE. |
 | `mean_i_plddt` | `i_plddt.mean()` | Higher = better. Interface pLDDT. |
 | `mean_sc_rmsd` | `sc_rmsd.mean()` | Self-consistency RMSD between generated and refolded structures. |
 | `diversity_score` | Unique sequences / `n_samples`, or 1 − mean pairwise TM-score if available | Higher = more diverse pool. |
@@ -152,5 +170,5 @@ For an irregular set of `(key1, key2)` pairs (not a full cartesian product), the
 Ranking:
 
 - **Best by success** = argmax `success_rate`; tie-break on `mean_i_pae` ascending.
-- **Pareto frontier** on (`wall_clock_min`, `success_rate`): a config is on the frontier iff no other config has both lower wall-clock AND higher success rate. Implement with a sort + linear sweep.
+- **Pareto frontier**: minimize wall-clock and maximize success, or minimize both wall-clock and iPAE when requested. Another config dominates a point if it is no worse in both objectives and strictly better in at least one. Equal nondominated points retain all config IDs. Exclude and report missing/non-finite measurements.
 - **Sanity check**: if every config has `success_rate == 0`, the threshold is too strict OR the sweep regime is broken — surface this to the user before reporting "best".

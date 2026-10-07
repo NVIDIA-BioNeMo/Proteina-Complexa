@@ -1,15 +1,15 @@
 ## Description: <br>
-Add, register, edit, list, show, or validate Proteina-Complexa design targets for protein binder, ligand binder, or AME enzyme scaffolding pipelines. <br>
+Add, edit, inspect, or validate Proteina-Complexa target definitions for protein binders, ligand binders, and AME motif scaffolding. <br>
 
-This skill is for research and development only. <br>
+This skill is ready for commercial/non-commercial use. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multiple licenses (see LICENSE) <br>
+Multiple (see LICENSE) <br>
 ## Use Case: <br>
-Developers and computational biologists use this skill to register and manage protein, ligand, and enzyme scaffolding targets in Proteina-Complexa YAML configuration files for downstream binder design pipelines. <br>
+Developers and computational biologists use this skill to register, edit, and validate protein-binder, ligand-binder, and AME motif-scaffolding target definitions in Proteina-Complexa YAML configuration registries. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -26,12 +26,12 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
 - [Target Schema Reference](references/target_schema.md) <br>
-- [Hardware Reference](references/hardware.md) <br>
+- [Hardware Requirements](references/hardware.md) <br>
 
 
 ## Skill Output: <br>
-**Output Type(s):** [Configuration instructions, Shell commands] <br>
-**Output Format:** [Markdown with inline YAML and bash code blocks] <br>
+**Output Type(s):** [Configuration instructions, Code] <br>
+**Output Format:** [YAML configuration blocks with inline bash commands] <br>
 **Output Parameters:** [1D] <br>
 **Other Properties Related to Output:** [None] <br>
 
@@ -42,36 +42,36 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative) in isolated sandbox pods. Dataset digest: sha256:641cc9c7...98b6c002. <br>
+4 evaluation tasks (3 positive, 1 negative) across 2 agents in isolated k8s-sandbox pods. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the expected skill was selected, decoys avoided, and workflow executed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Tool-call productivity (50%) and token efficiency (50%). <br>
+- Security: Is it safe to use? Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Is the answer correct? Final-answer correctness against the reference answer. <br>
+- Discoverability: Was the right skill loaded when needed? Whether the expected skill was selected and the workflow executed. <br>
+- Effectiveness: Did the skill help complete the task? Equal-weight mean of goal completion and expected workflow adherence. <br>
+- Efficiency: Did it avoid wasted tool calls and token usage? 50% tool-call productivity and 50% token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
 - `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
+- `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
-- `skill_execution`: Whether the expected skill was selected and the workflow executed. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `skill_efficiency`: Tool-call productivity. <br>
+- `skill_efficiency`: Tool-call productivity (routing scored under Discoverability). <br>
 - `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
 
 ## Evaluation Results: <br>
-| Measure | Claude Code | Codex (Baseline → Skill) |
+| Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | N/A | 76.2% |
-| Security | N/A | 100.0% → 87.5% (-12.5 pp) |
-| Correctness | N/A | 90.0% → 75.0% (-15.0 pp) |
-| Discoverability | N/A | 83.3% |
-| Effectiveness | N/A | 44.4% → 47.5% (+3.1 pp) |
-| Efficiency | N/A | 87.5% |
+| Overall | 94.5% | 88.7% |
+| Security | 100.0% → 100.0% (±0.0 points) | 25.0% → 75.0% (+50.0 points) |
+| Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Discoverability | 93.3% | 81.7% |
+| Effectiveness | 97.5% → 100.0% (+2.5 points) | 97.5% → 98.8% (+1.3 points) |
+| Efficiency | 78.9% | 87.9% |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

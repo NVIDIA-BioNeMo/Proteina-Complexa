@@ -32,20 +32,24 @@ Notes:
 
 Selected via `++metric.binder_folding_method=colabdesign|rf3_latest|esmfold`.
 
-## Search-algorithm cost multipliers
+## Search settings that affect resource use
 
-Relative to `single-pass` (= 1.0×) at fixed `nsteps` and `dataloader.batch_size`.
+Select the algorithm with `++generation.search.algorithm=<value>`. Values use
+hyphens; nested configuration keys use underscores. These names come from
+`configs/pipeline/*/*_generate.yaml` and `src/proteinfoundation/search/search_factory.py`.
 
-| Algorithm    | Override key                                | Wall-clock | Peak VRAM |
-|--------------|---------------------------------------------|-----------:|----------:|
-| single-pass  | `++generation.search.algorithm=single_pass` |        1.0× |     1.0× |
-| best-of-n    | `…=best_of_n` + `n=N`                       |        N×  |     1.0× |
-| beam-search  | `…=beam_search` + `beam_width=W,n_branch=B` |     W·B× ≈ W× |  ~1.1× |
-| FK-steering  | `…=fk_steering` + `num_particles=N`         |       ~2N× |     1.2× |
-| MCTS         | `…=mcts` + `beam_width=W`                   |       ≥W×  |     1.2× |
+| Algorithm value | Candidate-budget keys under `generation.search` |
+|-----------------|--------------------------------------------------|
+| `single-pass` | No search expansion |
+| `best-of-n` | `best_of_n.replicas` |
+| `beam-search` | `beam_search.beam_width`, `beam_search.n_branch` |
+| `fk-steering` | `fk_steering.beam_width`, `fk_steering.n_branch` |
+| `mcts` | `mcts.n_simulations` |
 
-Memory is roughly constant — search algorithms reuse the same model forward;
-only beam/FK/MCTS retain extra candidate tensors per branch.
+For example, use `++generation.search.algorithm=best-of-n` with
+`++generation.search.best_of_n.replicas=4`. More candidates increase work, but
+wall-clock time and peak VRAM depend on batching, search checkpoints, the reward
+backend, and hardware; candidate counts are not measured timing multipliers.
 
 ## CPU / RAM / disk
 
@@ -53,9 +57,9 @@ Defaults pulled from `configs/search_*_local_pipeline.yaml`:
 
 | Pipeline           | `ncpus_` | `gen_njobs` | `eval_njobs` | RAM (rec.) | Output disk / 100 designs |
 |--------------------|---------:|------------:|-------------:|-----------:|--------------------------:|
-| Protein Binder     |       24 |           2 |            2 |  32 GB (empirical) | ~10–20 GB (empirical) |
-| Ligand Binder      |       24 |           2 |            2 |  32 GB (empirical) | ~15–30 GB (empirical) |
-| AME                |       24 |           2 |            2 |  32 GB (empirical) | ~20–50 GB (empirical) |
+| Protein Binder     |       24 |           1 |            1 |  32 GB (empirical) | ~10–20 GB (empirical) |
+| Ligand Binder      |       24 |           1 |            1 |  32 GB (empirical) | ~15–30 GB (empirical) |
+| AME                |       24 |           1 |            1 |  32 GB (empirical) | ~20–50 GB (empirical) |
 
 `keep_folding_outputs=true` (eval default) roughly doubles the output disk
 footprint — set to `false` if disk is tight.

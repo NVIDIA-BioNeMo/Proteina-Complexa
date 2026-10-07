@@ -25,7 +25,7 @@ When this doc disagrees with the configs, the configs win — re-read them.
 | Evaluation folding | `colabdesign` (AF2) | `rf3_latest` | `rf3_latest` |
 | Analysis `result_type` | `protein_binder` | `ligand_binder` | `motif_ligand_binder` |
 | Analysis modes | `[binder, monomer]` | `[binder, monomer]` | `[motif_binder, monomer]` |
-| Default `gen_njobs` / `eval_njobs` | 2 / 2 | 2 / 2 | 2 / 2 |
+| Default `gen_njobs` / `eval_njobs` | 1 / 1 | 1 / 1 | 1 / 1 |
 | Default `dataloader.batch_size` | 16 | 16 | 16 |
 
 ## Protein binder
