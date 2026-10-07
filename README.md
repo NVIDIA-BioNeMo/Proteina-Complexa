@@ -1,4 +1,4 @@
-# Scaling Atomistic Protein Binder Design with Generative Pretraining and Test-Time Compute (ICLR 2026 Oral Paper)
+# Scaling Atomistic Protein Binder Design with Generative Pretraining and Test-Time Compute (ICLR 2026 Oral Presentation)
 
 <div align="center">
   <a href="https://kdidi.netlify.app/" target="_blank">Kieran&nbsp;Didi</a><sup>*</sup> &emsp;
@@ -42,6 +42,12 @@ Find the Model Card++ for Proteina-Complexa [here](./assets/model_card/overview.
 
 ---
 
+## Latent generative search unlocks de novo design of untapped biomolecular interactions at scale
+
+The Proteina-Complexa codebase and models were also used to produce all generated binder candidates in *"Latent generative search unlocks de novo design of untapped biomolecular interactions at scale"*, available on bioRxiv, [https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1](https://www.biorxiv.org/content/10.64898/2026.09.12.751118v1). This work experimentally validates the methods and models for diverse, new and challenging targets and in large-scale wet lab benchmarks.
+
+---
+
 ## Overview
 
 Proteina-Complexa is a generative model for protein complex design using flow matching. It enables the design of protein binders through a unified framework that models backbone geometry, side-chain conformations, and sequences jointly.
@@ -78,7 +84,8 @@ Measured impact: on a 100-GPU, 200x10 best-of-N search job we observed a ~5x red
 
 ### Option 1: UV Environment (Recommended)
 
-> **Note**: Requires Ubuntu 22.04+ or equivalent. Ubuntu 20.04 will throw GLIBC errors due to older system libraries. Use Docker (Option 2) for older systems.
+> **Note**: Requires Ubuntu 22.04+ or equivalent. Ubuntu 20.04 will throw GLIBC errors due to older system libraries. Use Docker (Option 2) for older systems. The native UV installation defaults to
+Python 3.12. The [installation script](env/build_uv_env.sh) specifies PyTorch 2.7.0+cu126 and, for the full installation, JAX 0.4.29; additional dependencies are declared in [pyproject.toml](pyproject.toml). Inference requires an NVIDIA CUDA-capable GPU; we tested on A100.
 
 ```bash
 git clone https://github.com/NVIDIA-Digital-Bio/Proteina-Complexa
@@ -288,6 +295,8 @@ complexa design configs/search_motif_local_pipeline.yaml \
     ++run_name=motif_test \
     ++generation.task_name=1YCR_AA
 ```
+
+See [docs](docs) for further instructions and examples. Generation examples should complete within minutes, producing binder candidate outputs.
 
 > **Known limitation: TMOL reward not supported for ligand binder / AME pipelines**
 >
