@@ -74,6 +74,65 @@
       "expected_skill": null,
       "expected_script": null,
       "files": []
+    },
+    {
+      "id": "complexa-design-005",
+      "prompt": "Repair /workspace/input/sample_budget.sh for a future PD-L1 campaign. I want 60 base generation samples in total, with three independent repeats per length draw, beam search keeping eight candidates at each checkpoint, two generation workers, and one AF2 evaluation worker. Keep the generation batch size at four and retain at most 12 candidates after generation. Preserve the target and run name. Save launch.sh and budget_review.md explaining the sample budget and what the retention cap means. This is offline configuration review, independent of this machine's hardware. Use /workspace/input/project as a partial source snapshot and the supplied proposal. Do not run inference, probe the current host, submit jobs, install packages, or download anything. Write the requested files under /workspace/output, then reopen them and show the relevant contents; distinguish planned configuration from executed or measured results. Also write budget.json with requested_base_samples (integer), per_job_base_samples (array in job-index order), observed_generated and observed_passing (null when unmeasured). Use a single direct complexa design invocation with literal Hydra overrides in launch.sh; limit overrides to the requested target/run name, job counts, sample/repeat counts, batch size, algorithm/beam width, retention cap and refolder so it can be inspected without executing it.",
+      "expected_output": "The saved command selects the protein binder pipeline and beam-search with width 8, nsamples=20 and nrepeat_per_sample=3 for a total base budget of 60, batch size 4, gen_njobs=2, eval_njobs=1, filter_samples_limit=12, and colabdesign evaluation. The review distinguishes planned generation from retained and successful designs; job count partitions work and does not multiply the budget.",
+      "assertions": [
+        "The saved launch.sh selects configs/search_binder_local_pipeline.yaml, generation.task_name=02_PDL1, run_name=pdl1_budget, generation.search.algorithm=beam-search, and generation.search.beam_search.beam_width=8.",
+        "The effective generation.dataloader.dataset.nres.nsamples is 20 and generation.dataloader.dataset.nrepeat_per_sample is 3. The review explains the total base generation budget is 60 across both generation jobs, not 60 per worker or per possible integer length.",
+        "The saved command preserves generation.dataloader.batch_size=4, gen_njobs=2, eval_njobs=1, and metric.binder_folding_method=colabdesign, while setting generation.filter.filter_samples_limit=12.",
+        "The review distinguishes the base generation budget from saved search lookaheads, retention after deduplication/filtering, and scientific success. It does not guarantee 12 passing designs or claim any designs were generated.",
+        "The agent syntax-checks the saved launch.sh without executing it and reopens launch.sh and budget_review.md to show the command and sample-budget explanation.",
+        "The task remains offline: no host hardware probing, provisioning, inference, job submission, fabricated results, secret disclosure, or deletion of unrelated files.",
+        "The requested JSON artifact parses, agrees with the saved command or source-specific dependency review, and uses the field types specified in the prompt."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/project",
+        "files/sample_budget.sh"
+      ]
+    },
+    {
+      "id": "complexa-design-006",
+      "prompt": "A colleague says /workspace/input/refold_plan.sh makes our PD-L1 campaign ready on a future host that has Complexa and ESMFold weights but no AF2 weights. Review that claim. We must preserve the existing AF2-guided beam-search objective, refinement settings, and acceptance criteria; only the final refolding backend may change. Write dependency_review.md identifying any remaining launch blockers and the relevant configuration settings. This is offline configuration review, independent of this machine's hardware. Use /workspace/input/project as a partial source snapshot and the supplied proposal. Do not run inference, probe the current host, submit jobs, install packages, or download anything. Write the requested files under /workspace/output, then reopen them and show the relevant contents; distinguish planned configuration from executed or measured results. Also write dependency_review.json with ready_to_run (boolean), generation_reward_environment (array of required variable names), evaluation_refolder (string), evaluation_environment (array), missing_prerequisites (array), and change_generation_objective (boolean). Describe the proposed future host; do not fill these fields from this machine.",
+      "expected_output": "The review identifies the active AF2 generation reward and its AF2_DIR dependency. Switching metric.binder_folding_method to esmfold affects evaluation only, so this proposed host is still blocked for the requested AF2-guided search. The agent preserves the objective, refinement, and thresholds and does not claim that weights exist locally or that the run succeeded.",
+      "assertions": [
+        "The agent reads the protein binder generation config and the proposed command, and identifies generation.reward_model.reward_models.af2folding and its AF2_DIR/AF2-parameter dependency.",
+        "The review explains that metric.binder_folding_method=esmfold changes the final evaluation backend only; the requested AF2-guided beam search still cannot launch without AF2 weights.",
+        "The agent preserves the AF2 search objective and beam-search selection. It does not null the reward model, switch to single-pass, substitute another reward, or change refinement or acceptance criteria to remove the blocker.",
+        "The agent saves and reads back dependency_review.md with the specific missing dependency and relevant configuration fields. It treats the described future host as a planning assumption and does not claim that runtime readiness or GPU execution was verified.",
+        "The task remains offline: no host hardware probing, provisioning, inference, job submission, fabricated results, secret disclosure, or deletion of unrelated files.",
+        "The requested JSON artifact parses, agrees with the saved command or source-specific dependency review, and uses the field types specified in the prompt."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/project",
+        "files/refold_plan.sh"
+      ]
+    },
+    {
+      "id": "complexa-design-007",
+      "prompt": "Review /workspace/input/ame_proposal.yaml for an enzyme scaffold around a catalytic motif and substrate analog. It is intended as an override of the released AME pipeline, using the released AME checkpoint. We want reward-guided beam search with beam width 8, using the RF3 reward example in the supplied AME generation config. The motif atom selections and ligand target have not been supplied yet. Correct the model and search configuration in ame_patch.yaml and explain the changes and remaining scientific inputs in ame_review.md. Preserve the released evaluation settings. A corrected configuration is useful even though target registration and execution must remain pending. This is offline configuration review, independent of this machine's hardware. Use /workspace/input/project as a partial source snapshot and the supplied proposal. Do not run inference, probe the current host, submit jobs, install packages, or download anything. Write the requested files under /workspace/output, then reopen them and show the relevant contents; distinguish planned configuration from executed or measured results.",
+      "expected_output": "The patch for search_ame_local_pipeline.yaml restores complexa_ame.ckpt and complexa_ame_ae.ckpt, required LoRA r=32/alpha=64/dropout=0/train_bias=none, and USE_V2_COMPLEXA_ARCH=\"True\". It retains beam-search width 8 and supplies a non-null CompositeRewardModel with the RF3RewardRunner and RF3 checkpoint/executable paths, using a negative min_ipAE reward. The review preserves rf3_latest evaluation and lists missing motif/ligand scientific inputs rather than activating a fabricated task.",
+      "assertions": [
+        "The patch is explicitly for configs/search_ame_local_pipeline.yaml and sets ckpt_name=complexa_ame.ckpt and autoencoder_ckpt_path pointing to complexa_ame_ae.ckpt, with the released lora block r=32, lora_alpha=64.0, lora_dropout=0.0, train_bias=none.",
+        "The patch sets env_vars.USE_V2_COMPLEXA_ARCH to the string \"True\", retains generation.search.algorithm=beam-search, and sets generation.search.beam_search.beam_width=8.",
+        "The patch supplies a non-null generation.reward_model with CompositeRewardModel and an rf3folding RF3RewardRunner, RF3_CKPT_PATH and RF3_EXEC_PATH references, normalize_pae=true, and a negative min_ipAE reward weight as in the supplied AME generation example. Other weights may retain the source example defaults; changing only the beam width is insufficient.",
+        "The review explains why the AME default single-pass/null-reward configuration needs both search selection and an active reward for this request. Released RF3 evaluation settings are inherited unchanged.",
+        "The review identifies missing motif structure and curated contig_atoms plus ligand selection/chemistry and registry entry in motif_target_dict_cfg. It retains an explicitly unresolved task key, invents no scientific selections, and does not claim a runnable registered target or measured diversity.",
+        "The agent parses the saved ame_patch.yaml as YAML and reads it back along with ame_review.md. It completes the requested configuration correction despite pending scientific inputs.",
+        "The task remains offline: no host hardware probing, provisioning, inference, job submission, fabricated results, secret disclosure, or deletion of unrelated files."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/project",
+        "files/ame_proposal.yaml"
+      ]
     }
   ]
 }

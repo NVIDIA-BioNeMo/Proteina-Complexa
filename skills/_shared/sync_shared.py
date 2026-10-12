@@ -45,6 +45,9 @@ GUIDE_OWNERS = frozenset(
 # this map explicit: inferring ownership from prose references makes it too easy
 # for a generic documentation link to copy a large guide into every skill.
 SHARED_ASSET_OWNERS: dict[str, frozenset[str]] = {
+    "scripts/gpu_probe.py": frozenset(
+        {"complexa-design", "complexa-evaluate-pdbs", "complexa-setup", "complexa-sweep"}
+    ),
     "scripts/preflight.sh": frozenset(
         {
             "complexa-design",

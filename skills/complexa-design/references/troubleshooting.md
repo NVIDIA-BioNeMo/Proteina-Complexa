@@ -5,6 +5,10 @@ local [Inference Guide](INFERENCE.md),
 [Evaluation & Analysis Guide](EVALUATION_METRICS.md), and the pipeline configs
 themselves.
 
+Apply runtime fixes only within the authorized execution/setup scope. For an
+offline review, record missing dependencies and future remedies without
+installing packages, downloading weights, or changing the requested experiment.
+
 ## GPU OOM during generation
 
 **Symptom:** `torch.cuda.OutOfMemoryError` during the `generate` step;
@@ -54,15 +58,18 @@ model or the evaluator tries to resolve `${oc.env:AF2_DIR}`.
 default `binder_folding_method: colabdesign` both read `AF2_DIR` from the
 environment. If `.env` does not define it, Hydra interpolation fails.
 
-**Fix:** Add `AF2_DIR=/path/to/af2_params` to `.env`, or switch the eval
-backend to ESMFold (does not need AF2 weights):
+**Fix:** Point `AF2_DIR` at prepared AF2 parameters. Changing the evaluation
+backend to ESMFold affects only the final refold:
 
 ```bash
 ++metric.binder_folding_method=esmfold
 ```
 
-Run `complexa download --all` to fetch AF2 weights into the canonical
-location. Reference: [Inference Guide](INFERENCE.md), "Missing Model Weights".
+The active `generation.reward_model.reward_models.af2folding` still requires
+AF2 weights. Do not disable it or switch search algorithms merely to declare
+the requested campaign ready. Missing AF2 parameters remain a generation
+blocker until provisioned. Reference: [Inference Guide](INFERENCE.md), "Missing
+Model Weights".
 
 ## Missing `RF3_CKPT_PATH` / `RF3_EXEC_PATH` (rf3_latest fails)
 
@@ -265,23 +272,16 @@ at very short lengths.
 **Symptom:** Pipeline completes, `res_filter_*_pass_*.csv` shows
 `pass_rate: 0.0`. Per-design metrics look plausible but nothing passes.
 
-**Cause:** Default thresholds are tuned for the published targets (PDL1,
-TrkA, etc.) and may be too strict for harder targets or smaller search
-budgets.
+**Check:** Inspect per-design metrics, missing or failed refolds, target/chain
+mapping, metric units, and the saved success criteria. For AME, binder and motif
+criteria must pass on the same redesign; separate marginal passes do not imply
+a jointly successful design.
 
-**Fix:** Loosen the thresholds via the aggregation overrides:
-
-```bash
-++aggregation.success_thresholds.i_pAE.threshold=10.0       # was 7.0
-++aggregation.success_thresholds.pLDDT.threshold=0.8        # was 0.9
-++aggregation.success_thresholds.scRMSD.threshold=2.0       # was 1.5
-```
-
-Or re-run analyze alone with the new thresholds — no need to re-generate:
-
-```bash
-complexa analyze configs/search_binder_local_pipeline.yaml ++run_name=<same> ++aggregation.success_thresholds.i_pAE.threshold=10.0
-```
+**Report:** Preserve the original thresholds and report the measured zero pass
+rate. Diagnose the limiting metrics before proposing a change to the design or
+search. If the user requests a sensitivity analysis with alternative thresholds,
+save it separately with the changed criteria and original result; a higher pass
+rate under a new definition does not demonstrate improved designs.
 
 Reference: [Evaluation & Analysis Guide](EVALUATION_METRICS.md), "Customizing
 Binder Thresholds".

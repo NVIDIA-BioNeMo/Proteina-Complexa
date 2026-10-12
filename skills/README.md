@@ -12,7 +12,7 @@ Complexa runs one of three pipelines. **Protein binder is the default**; the oth
 | Ligand binder (small-molecule pocket) | `configs/search_ligand_binder_local_pipeline.yaml` | `complexa_ligand.ckpt` + `complexa_ligand_ae.ckpt` | `configs/targets/ligand_targets_dict.yaml` | `39_7V11_LIGAND`, `41_7BKC_LIGAND`, … | `--complexa-ligand --all` |
 | AME (motif + ligand, enzyme scaffolding) | `configs/search_ame_local_pipeline.yaml` | `complexa_ame.ckpt` + `complexa_ame_ae.ckpt` | `configs/design_tasks/ame_dict_v2.yaml` | `M0024_1nzy`, `M0096_1chm`, … | `--complexa-ame --all` |
 
-**If the user doesn't specify a pipeline, default to protein binder.** Switch to one of the others only when the request explicitly names a ligand pocket / SMILES / enzyme / `M####_<pdb>` task. See [`complexa-design/SKILL.md`](./complexa-design/SKILL.md) Step 2 for the full "what changes when you switch pipeline" cheat sheet and [`complexa-design/references/pipelines.md`](./complexa-design/references/pipelines.md) for the deep dive (reward weights, success thresholds, LoRA, `USE_V2_COMPLEXA_ARCH`).
+**If the user doesn't specify a pipeline, default to protein binder.** Switch to one of the others only when the request explicitly names a ligand pocket / SMILES / enzyme / `M####_<pdb>` task. See [`complexa-design/SKILL.md`](./complexa-design/SKILL.md) Step 1 for pipeline selection and [`complexa-design/references/pipelines.md`](./complexa-design/references/pipelines.md) for the deep dive (reward weights, success thresholds, LoRA, `USE_V2_COMPLEXA_ARCH`).
 
 ## Skills
 
@@ -33,7 +33,8 @@ inside each `SKILL.md` for cases where they fit better.
 
 | File | Purpose |
 |---|---|
-| [`_shared/scripts/preflight.sh`](./_shared/scripts/preflight.sh) | One-shot system probe (GPU, VRAM, disk, checkpoints, tools, `.env`). Outputs `preflight.json`. |
+| [`_shared/scripts/preflight.sh`](./_shared/scripts/preflight.sh) | Bounded task GPU probe plus disk, checkpoints, tools and allowlisted `.env` paths. Outputs `preflight.json`; checkpoint hashing is opt-in. |
+| [`_shared/scripts/gpu_probe.py`](./_shared/scripts/gpu_probe.py) | Classifies task GPU access as accessible, absent, blocked or unknown with saved allocation evidence. |
 | [`_shared/scripts/write_manifest.py`](./_shared/scripts/write_manifest.py) | Emits a pinned, replayable `run_manifest.json` per pipeline run. |
 | [`_shared/references/hardware.md`](./_shared/references/hardware.md) | Per-pipeline hardware requirements. |
 | [`_shared/references/INFERENCE.md`](./_shared/references/INFERENCE.md) | Canonical inference and search guide. |
@@ -50,13 +51,15 @@ copies the complete guide set into `complexa-design`,
 `complexa-target` receive none of those guides. The traditional top-level
 `docs/*.md` guide paths are symlinks to the canonical files.
 
-The skills require `complexa` (this repo's CLI), `bash`, and optionally `nvidia-smi`.
+Execution requires `complexa` (this repo's CLI), `bash`, Python, and optionally
+`nvidia-smi`. The design skill's [offline planner](./complexa-design/references/planning.md)
+uses Python and PyYAML without the ML runtime.
 
 ## Tier 3 evaluation scope
 
-The default `evals/evals.json` datasets for `complexa-design` and `complexa-sweep`
+Cases `complexa-design-001` through `003` and the positive `complexa-sweep` cases
 preserve the original requests in a GPU branch and provide a bounded CPU fallback.
-Both prompts and grading criteria depend on evidence from local hardware probes:
+Their prompts and grading criteria depend on evidence from local hardware probes:
 
 | Environment | Expected behavior |
 |---|---|
@@ -65,7 +68,7 @@ Both prompts and grading criteria depend on evidence from local hardware probes:
 | GPU present but runtime, weights, inputs, or sufficient memory missing | Report the launch blocker; do not switch to the CPU branch. |
 | Hardware cannot be determined, or a GPU run fails | Report the probe or execution failure; do not count it as a completed fallback. |
 
-Each positive design/sweep case requires `/workspace/output/execution_mode.json`
+Each of these hardware-dependent cases requires `/workspace/output/execution_mode.json`
 with `selected_mode`, `task_status`, `gpu_execution`, `reason`, and paths to probe
 and execution evidence. A CPU completion validates only the fallback. A sweep
 awaiting cost confirmation validates preparation only. Neither establishes that
@@ -80,6 +83,13 @@ outputs into the transcript. A Tier 3 pass alone is not proof of a completed GPU
 test. Automated GPU certification would also need a runner/verifier check of the
 allocated hardware, completed execution, and required outputs, with separate
 reporting for CPU fallback results.
+
+Design cases `005` through `007` instead request offline configuration review:
+sample budgeting, generation versus refolding dependencies, and AME search
+configuration. They require no hardware probe or execution manifest and do not
+test GPU inference. Case `004` remains the unrelated-task routing check. See
+[`complexa-design/evals/README.md`](./complexa-design/evals/README.md) for fixture
+provenance and comparison rules; the expanded suite is a new benchmark dataset.
 
 The `complexa-target` cases edit supplied dictionaries without inference and run
 on either type of host. Input fixtures under `evals/files/` are staged into

@@ -5,9 +5,11 @@ example, what it controls. Defaults come from the actual YAML files under
 `configs/pipeline/` — when this doc disagrees with the config, the config
 wins.
 
-All overrides use Hydra `++` (forced) syntax — `+` would error on keys not
-already in the config. Apply to a `complexa design` invocation; they propagate
-to all four stages (generate, filter, evaluate, analyze).
+All overrides use Hydra `++` syntax to add a missing key or replace an existing
+one; `+` is for adding keys only. Apply to a `complexa design` invocation; the
+resulting configuration is available to all four stages, but each key affects
+its own consumer. In particular, changing evaluation `metric.*` does not change
+generation `reward_model.*` or `refinement.*`.
 
 ## Top-level (pipeline YAML)
 
@@ -16,13 +18,13 @@ These live at the root of `configs/search_*_pipeline.yaml`.
 | Key | Type | Default | Example override | What it controls |
 |-----|------|---------|------------------|------------------|
 | `run_name` | str | (config stem, e.g. `search_binder_local`) | `++run_name=pdl1_v1` | Suffix for output dirs and log file names |
-| `ckpt_path` | str | `${oc.env:CKPT_PATH}` | `++ckpt_path=/data/ckpts` | Directory containing the model and AE checkpoints |
+| `ckpt_path` | str | `./ckpts` | `++ckpt_path=/data/ckpts` | Directory containing the generation model checkpoint; set the AE path separately |
 | `ckpt_name` | str | per pipeline: `complexa.ckpt` / `complexa_ligand.ckpt` / `complexa_ame.ckpt` | `++ckpt_name=complexa.ckpt` | Which model checkpoint to load |
-| `autoencoder_ckpt_path` | str | `${oc.env:CKPT_PATH}/complexa[_ligand\|_ame]_ae.ckpt` | `++autoencoder_ckpt_path=/data/my_ae.ckpt` | AE checkpoint path |
+| `autoencoder_ckpt_path` | str | `./ckpts/complexa[_ligand\|_ame]_ae.ckpt` | `++autoencoder_ckpt_path=/data/my_ae.ckpt` | AE checkpoint path |
 | `seed` | int | `5` | `++seed=42` | Sampling RNG seed |
 | `ncpus_` | int | `24` | `++ncpus_=16` | CPU count for dataloader workers |
-| `gen_njobs` | int | `2` (binder/ligand/AME) | `++gen_njobs=4` | Number of parallel generate jobs |
-| `eval_njobs` | int | `2` (binder/ligand/AME) | `++eval_njobs=4` | Number of parallel evaluate jobs |
+| `gen_njobs` | int | `1` (binder/ligand/AME) | `++gen_njobs=4` | Number of parallel generate jobs; splits the sample budget |
+| `eval_njobs` | int | `1` (binder/ligand/AME) | `++eval_njobs=4` | Number of parallel evaluate jobs |
 | `lora.r` | int | `32` (ligand/AME), (unset for protein binder) | `++lora.r=64` | LoRA rank |
 | `lora.lora_alpha` | float | `64.0` | `++lora.lora_alpha=128.0` | LoRA scaling factor (typically 2x rank) |
 | `lora.lora_dropout` | float | `0.0` | `++lora.lora_dropout=0.1` | Dropout on LoRA inputs |
@@ -43,6 +45,13 @@ the per-pipeline variants.
 | `generation.dataloader.dataset.nres.nsamples` | int | `4` (binder), `2` (ligand), `4` (AME) | `++generation.dataloader.dataset.nres.nsamples=200` | Number of length samples per pipeline |
 | `generation.dataloader.dataset.nres.endpoint` | bool | `true` | `++generation.dataloader.dataset.nres.endpoint=false` | Include high in length range |
 | `generation.dataloader.dataset.nrepeat_per_sample` | int | `1` | `++generation.dataloader.dataset.nrepeat_per_sample=4` | How many designs per length sample |
+
+For `UniformInt`, the base dataset size is `nsamples * nrepeat_per_sample`,
+not the number of integer lengths in `[low, high]` times that product.
+`gen_njobs` splits this budget (`generate.py:split_by_job`); it does not multiply
+it. Batch size and filtering limits also do not set this count. Report observed
+generation, retained candidates, and passing designs separately because search
+lookaheads, deduplication, filters, and failures can change the output counts.
 
 ## Generation — diffusion sampling (`generation.args.*`)
 

@@ -1,0 +1,26 @@
+# Opt-in equivalent of the RF3 reward example in configs/pipeline/ame/ame_generate.yaml.
+# This changes generation reward only; evaluation and success criteria are inherited.
+generation:
+  reward_model:
+    _target_: proteinfoundation.rewards.base_reward.CompositeRewardModel
+    reward_models:
+      rf3folding:
+        _target_: proteinfoundation.rewards.rf3_reward.RF3RewardRunner
+        ckpt_path: ${oc.env:RF3_CKPT_PATH}
+        rf3_path: ${oc.env:RF3_EXEC_PATH}
+        normalize_pae: true
+        reward_weights:
+          min_ipAE: -1.0
+          plddt: 0.0
+          ipAE: 0.0
+          mean_min_ipAE: 0.0
+          mean_ipAE: 0.0
+          min_mean_ipAE: 0.0
+          pAE: 0.0
+          ipTM: 0.0
+          pTM: 0.0
+          ranking_score: 0.0
+          has_clash: 0.0
+          min_ipSAE: 0.0
+          max_ipSAE: 0.0
+          avg_ipSAE: 0.0

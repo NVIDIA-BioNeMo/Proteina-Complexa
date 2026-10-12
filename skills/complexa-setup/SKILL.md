@@ -52,7 +52,7 @@ bash scripts/preflight.sh
 
 The script writes `./complexa_setup/preflight.json`. Read it and surface:
 
-- `gpu.available` — if `false`, design / evaluate steps will fail; warn the user.
+- `gpu.status` / `gpu.evidence` — distinguish accessible, absent, blocked and unknown allocation/access. `gpu.available=false` alone is not proof of GPU absence; management access does not validate CUDA execution.
 - `gpu.vram_gb` — Complexa needs ≥40 GB (A100/H100/L40S).
 - `disk.free_gb` at `CKPT_PATH` — minimum ~50 GB for the full Complexa + community model set.
 - `env.missing_required` — anything listed here must be edited in `.env` before validation passes.
