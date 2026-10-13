@@ -254,18 +254,73 @@ class ProbeTests(unittest.TestCase):
 
 
 class GraderTests(unittest.TestCase):
+    def budget_artifacts(self, root):
+        plan, _, script = planner.build_plan(ROOT, "binder", PlannerTests().options(), samples=60)
+        (root / "budget.json").write_text(json.dumps(plan["sample_budget"]))
+        (root / "budget_review.md").write_text("60 base samples; filter keeps at most 12, no measured outcomes.")
+        return script
+
     def test_budget_grades_real_script_not_only_claim(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            options = PlannerTests().options()
-            plan, _, script = planner.build_plan(ROOT, "binder", options, samples=60)
+            script = self.budget_artifacts(root)
             (root / "launch.sh").write_text(script)
-            (root / "budget.json").write_text(json.dumps(plan["sample_budget"]))
-            (root / "budget_review.md").write_text("60 base samples; filter keeps at most 12, no measured outcomes.")
             entry = {"id": "complexa-design-005"}
             self.assertEqual(grader.grade(entry, root)["custom_metrics"]["artifact_contract"], 1)
             (root / "launch.sh").write_text(script.replace("nsamples=20", "nsamples=60"))
             self.assertEqual(grader.grade(entry, root)["custom_metrics"]["artifact_contract"], 0)
+
+    def test_budget_accepts_direct_literal_command_forms(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = self.budget_artifacts(root)
+            direct = script[script.index("complexa design "):]
+            for candidate in (
+                script,
+                direct,
+                direct.replace("\\\n", " "),
+                "set -euo pipefail;\n" + direct.rstrip() + "; # Single terminated invocation\n",
+                direct.rstrip() + ";# Comment after the terminator\n",
+                '#!/bin/bash\n# Prepared offline\nset -e\nset -u\nset -o pipefail\ncd -- "/tmp/project root"\n'
+                + direct.replace("run_name=pdl1_budget", "run_name='pdl1_budget'").rstrip()
+                + " # End of the single command\n# Review complete\n",
+                direct.replace("run_name=pdl1_budget", "'run_name=\"pdl1_budget\"'"),
+            ):
+                with self.subTest(script=candidate):
+                    (root / "launch.sh").write_text(candidate)
+                    result = grader.grade({"id": "complexa-design-005"}, root)
+                    self.assertEqual(result["custom_metrics"]["artifact_contract"], 1, result)
+
+    def test_budget_rejects_extra_shell_statements_without_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = self.budget_artifacts(root).rstrip()
+            marker = root / "must-not-exist"
+            extra = f"touch {marker}"
+            candidates = [script + separator + extra + "\n" for separator in ("; ", " && ", " || ", " | ", " & ", "\n")]
+            candidates += [
+                script + "\n# A comment must not hide another command\n" + extra,
+                script + "\n# A backslash in a comment is not a continuation \\\n" + extra,
+                script + "\n" + script[script.index("complexa design "):],
+                script + "\ngen_njobs=2\n",
+                script + f" > {marker}\n",
+                script + f" 2> {marker}\n",
+                script.replace("nsamples=20", f"nsamples=$(touch {marker}; echo 20)"),
+                script.replace("nsamples=20", f"nsamples=`touch {marker}; echo 20`"),
+                extra + "\n" + script,
+                "if false; then\n" + script + "\nfi\n",
+                script.replace("complexa design", "echo complexa design"),
+                script.replace("gen_njobs=2", "gen_njobs=2 gen_njobs=2"),
+                script.replace("nsamples=20", "nsamples='20 # not a shell comment'"),
+                script.replace("nsamples=20", "nsamples=20#not-a-shell-comment"),
+                script.replace("nsamples=20", "nsamples='2\\\n0'"),
+            ]
+            for candidate in candidates:
+                with self.subTest(script=candidate):
+                    (root / "launch.sh").write_text(candidate)
+                    result = grader.grade({"id": "complexa-design-005"}, root)
+                    self.assertEqual(result["custom_metrics"]["artifact_contract"], 0, result)
+                    self.assertFalse(marker.exists(), "Grading must never execute the artifact")
 
     def test_dependency_contract_rejects_false_readiness(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -284,6 +339,44 @@ class GraderTests(unittest.TestCase):
                 (root / "dependency_review.json").write_text(json.dumps(review))
                 self.assertEqual(
                     grader.grade({"id": "complexa-design-006"}, root)["custom_metrics"]["artifact_contract"], score
+                )
+
+    def test_dependency_contract_requires_arrays_of_strings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            review = {
+                "ready_to_run": False,
+                "generation_reward_environment": ["AF2_DIR"],
+                "evaluation_refolder": "esmfold",
+                "evaluation_environment": ["ESM_DIR"],
+                "missing_prerequisites": ["AF2_DIR"],
+                "change_generation_objective": False,
+            }
+            (root / "dependency_review.md").write_text("AF2 weights still required for generation.")
+            for field in ("generation_reward_environment", "evaluation_environment", "missing_prerequisites"):
+                required = review[field][0]
+                for value, score in (
+                    ([required], 1),
+                    ([required, "ANOTHER_DEPENDENCY"], 1),
+                    (required, 0),
+                    ({required: True}, 0),
+                    (None, 0),
+                    (True, 0),
+                    (42, 0),
+                    ([], 0),
+                    ([required, None], 0),
+                    ([required, 42], 0),
+                    ([required, {"name": "other"}], 0),
+                    ([[required]], 0),
+                ):
+                    with self.subTest(field=field, value=value):
+                        (root / "dependency_review.json").write_text(json.dumps(dict(review, **{field: value})))
+                        result = grader.grade({"id": "complexa-design-006"}, root)
+                        self.assertEqual(result["custom_metrics"]["artifact_contract"], score, result)
+                missing = {key: value for key, value in review.items() if key != field}
+                (root / "dependency_review.json").write_text(json.dumps(missing))
+                self.assertEqual(
+                    grader.grade({"id": "complexa-design-006"}, root)["custom_metrics"]["artifact_contract"], 0
                 )
 
     def test_ame_grader_rejects_null_reward_or_changed_criteria(self):
@@ -327,6 +420,37 @@ class GraderTests(unittest.TestCase):
 
 
 class ExperimentTests(unittest.TestCase):
+    def test_execution_budget_includes_both_arms_of_each_generated_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = experiment.prepare(
+                SKILL,
+                SKILL,
+                Path(tmp) / "comparison",
+                version="1.5.6",
+                image="example/runner@sha256:" + "a" * 64,
+                models={"codex": "pinned-codex", "claude-code": "pinned-claude"},
+            )
+            counts = {}
+            for run in manifest["runs"]:
+                data = json.loads((Path(run["skill"]) / "evals/evals.json").read_text())
+                config = yaml.safe_load((Path(run["skill"]) / "evals/config.yml").read_text())
+                self.assertNotIn("--skip-baseline", run["command"])
+                self.assertNotIn("--skip-with-skill", run["command"])
+                self.assertEqual(run["conditions"], ["with_skill", "without_skill"])
+                self.assertEqual(run["case_count"], len(data["evals"]))
+                counts[(run["cohort"], run["variant"])] = (
+                    len(data["evals"]) * 2 * config["harbor"]["n_attempts"] * len(config["harbor"]["agents"])
+                )
+                self.assertEqual(run["planned_agent_executions"], counts[(run["cohort"], run["variant"])])
+            self.assertEqual(counts, {
+                ("original", "instructions"): 80,
+                ("original", "helpers"): 80,
+                ("capability", "instructions"): 60,
+                ("capability", "helpers"): 60,
+            })
+            self.assertEqual(manifest["planned_agent_executions"], sum(counts.values()))
+            self.assertEqual(manifest["planned_agent_executions"], 280)
+
     def test_paired_inputs_identical_and_modified_source_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "comparison"

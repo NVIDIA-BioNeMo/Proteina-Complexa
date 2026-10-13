@@ -35,28 +35,109 @@ def get(data, path: str):
     return data
 
 
-def launch_overrides(script: str) -> tuple[str, dict]:
-    """Read the declared literal CLI contract without evaluating shell code."""
-    subprocess.run(["bash", "-n"], input=script, text=True, capture_output=True, check=True, timeout=5)
-    lexer = shlex.shlex(script.replace("\\\n", " "), posix=True, punctuation_chars=";&|()")
-    lexer.whitespace_split = True
-    tokens = list(lexer)
-    starts = [i for i in range(len(tokens) - 2) if tokens[i : i + 2] == ["complexa", "design"]]
-    if len(starts) != 1:
-        raise ValueError("Expected one literal complexa design invocation")
-    start = starts[0]
-    values = {}
-    for token in tokens[start + 3 :]:
-        if not re.match(r"\+{0,2}[A-Za-z_][A-Za-z0-9_.]*=", token):
-            if values:
+def shell_lines(script: str):
+    """Join shell continuations without swallowing commands after comments."""
+    # Bash starts a comment only at a word boundary; shlex also treats a hash
+    # inside an unquoted word as a comment. Strip only actual comments first.
+    pending = ""
+    for physical_line in script.split("\n"):
+        line = pending + physical_line
+        quote, escaped, boundary = None, False, True
+        for i, char in enumerate(line):
+            if escaped:
+                escaped = False
+                boundary = False
+                continue
+            if char == "\\" and quote != "'":
+                escaped = True
+            elif quote:
+                if char == quote:
+                    quote = None
+            elif char in "\"'":
+                quote = char
+            elif char == "#" and boundary:
+                line = line[:i]
                 break
+            boundary = not quote and not escaped and char in " \t;&|()<>"
+        if escaped:
+            pending = line[:-1]
+            continue
+        yield line
+        pending = ""
+    if pending:
+        raise ValueError("Incomplete shell line continuation")
+
+
+def shell_words(line: str) -> list[str]:
+    """Tokenize a logical line, keeping shell operators and literal hashes."""
+    lexer = shlex.shlex(line, posix=True, punctuation_chars=";&|()<>")
+    lexer.commenters = ""
+    lexer.whitespace_split = True
+    return list(lexer)
+
+
+def shell_setup(words: list[str]) -> bool:
+    """Allow strict shell options, a working directory, and readiness guards."""
+    command, *args = words
+    if command == "set":
+        if len(args) >= 2 and args[-1] in {"pipefail", "errexit", "nounset"}:
+            if not re.fullmatch(r"-[eEu]*o", args[-2]):
+                return False
+            args = args[:-2]
+            return all(re.fullmatch(r"-[eEu]+", arg) for arg in args)
+        return bool(args) and all(re.fullmatch(r"-[eEu]+", arg) for arg in args)
+    if command == "cd":
+        if args[:1] == ["--"]:
+            args = args[1:]
+        return len(args) == 1 and bool(re.fullmatch(
+            r"[\w./ -]+|\$[A-Za-z_][A-Za-z0-9_]*|\$\{[A-Za-z_][A-Za-z0-9_]*\}", args[0]
+        )) and not args[0].startswith("-")
+    if command == ":":
+        return len(args) == 1 and bool(re.fullmatch(r"\$\{[A-Za-z_][A-Za-z0-9_]*:?\?[^$`{}]*\}", args[0]))
+    return False
+
+
+def launch_overrides(script: str) -> tuple[str, dict]:
+    """Read one direct literal invocation; reject other executable statements.
+
+    This deliberately supports only comments, simple shell setup, and the CLI.
+    Shell syntax validation never runs the script, including its substitutions.
+    """
+    subprocess.run(
+        ["bash", "-n"], input=script, text=True, capture_output=True, check=True, timeout=5, shell=False
+    )
+    invocation = None
+    for line in shell_lines(script):
+        words = shell_words(line)
+        if words[-1:] == [";"]:
+            words = words[:-1]
+        if not words:
+            continue
+        if invocation is not None:
+            raise ValueError("Unexpected command after complexa design")
+        if words[:2] == ["complexa", "design"] and len(words) >= 3:
+            invocation = words
+        elif not shell_setup(words):
+            raise ValueError("Expected simple shell setup followed by a direct complexa design invocation")
+    if invocation is None:
+        raise ValueError("Expected one literal complexa design invocation")
+    values = {}
+    for token in invocation[3:]:
+        if not re.match(r"\+{0,2}[A-Za-z_][A-Za-z0-9_.]*=", token):
             raise ValueError("Nonliteral launch argument")
         key, value = token.lstrip("+").split("=", 1)
         if "$" in value or "`" in value or key in values:
             raise ValueError("Dynamic or duplicate launch override")
+        if not re.fullmatch(r"[A-Za-z0-9_./:+-]+|'[^']*'|\"[^\"]*\"", value):
+            raise ValueError("Expected a literal scalar override")
         # Parse only primitive fields used below; complex YAML values are not executed.
         values[key] = yaml.safe_load(value)
-    return tokens[start + 2], values
+    return invocation[2], values
+
+
+def string_array_contains(value, required: str) -> bool:
+    """Require a JSON array of strings before checking a dependency's presence."""
+    return isinstance(value, list) and all(isinstance(item, str) for item in value) and required in value
 
 
 def grade(entry: dict, root: Path) -> dict:
@@ -142,11 +223,11 @@ def grade(entry: dict, root: Path) -> dict:
         elif case == "complexa-design-006":
             review = json.loads(read_artifact(root, "dependency_review.json"))
             checks["not_ready"] = review.get("ready_to_run") is False
-            checks["reward_dependency"] = "AF2_DIR" in review.get("generation_reward_environment", [])
+            checks["reward_dependency"] = string_array_contains(review.get("generation_reward_environment"), "AF2_DIR")
             checks["evaluation_dependency"] = review.get(
                 "evaluation_refolder"
-            ) == "esmfold" and "ESM_DIR" in review.get("evaluation_environment", [])
-            checks["missing_af2"] = "AF2_DIR" in review.get("missing_prerequisites", [])
+            ) == "esmfold" and string_array_contains(review.get("evaluation_environment"), "ESM_DIR")
+            checks["missing_af2"] = string_array_contains(review.get("missing_prerequisites"), "AF2_DIR")
             checks["preserve_objective"] = review.get("change_generation_objective") is False
             checks["review"] = bool(read_artifact(root, "dependency_review.md").strip())
         elif case == "complexa-design-007":

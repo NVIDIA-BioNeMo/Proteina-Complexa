@@ -69,6 +69,13 @@ with Python, PyYAML and Bash for both arms. Verifier files and `evals/` must be
 excluded from the installed skill; current SkillEvaluator runtime staging does
 this. Do not stage grading oracles as agent input.
 
+Case 005 accepts one literal `complexa design` command, optionally preceded by
+comments, strict `set` options, a `cd` to the project, and `:` readiness guards.
+Line continuations and quoted literals are supported. Additional commands,
+redirections, pipelines, control flow, and dynamic overrides fail the contract.
+Case 006 requires JSON arrays of strings for all three dependency lists;
+strings and objects with matching keys are not arrays.
+
 ## Freeze a comparison before running it
 
 `prepare_experiment.py` creates a new directory containing immutable input copies,
@@ -91,6 +98,20 @@ coverage and a baseline-drift check. Seven cases, two agents, two variants,
 two arms and five attempts require **280 agent executions**. Preparation does
 not run them. Order is shuffled with a recorded seed, early stopping is off,
 and agent models, CPU/memory/storage, runtime image, grading and fixtures match.
+
+The manifest calculates the total from these four runs and records each run's
+case count, conditions, and execution count:
+
+| Cohort | Variant | Cases | Arms | Attempts | Agents | Executions |
+|---|---|---:|---:|---:|---:|---:|
+| Original | Instructions | 4 | 2 | 5 | 2 | 80 |
+| Original | Helpers | 4 | 2 | 5 | 2 | 80 |
+| Capability | Instructions | 3 | 2 | 5 | 2 | 60 |
+| Capability | Helpers | 3 | 2 | 5 | 2 | 60 |
+
+Each `tier3 evaluate` command runs with-skill and without-skill conditions by
+default; neither `--skip-baseline` nor `--skip-with-skill` is supplied. Counting
+only the with-skill condition would give 140 and omit the independent controls.
 
 Install the pinned evaluator in a dedicated environment, verify its provider
 access and resolved models, and preserve its dependency lock and agent CLI

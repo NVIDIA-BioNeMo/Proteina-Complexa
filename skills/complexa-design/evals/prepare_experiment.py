@@ -19,6 +19,8 @@ from pathlib import Path
 
 import yaml
 
+PAIRED_CONDITIONS = ("with_skill", "without_skill")
+
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -117,6 +119,10 @@ def prepare(
                     "variant": variant,
                     "skill": str(dest.resolve()),
                     "dataset_sha256": digest(evaluation / "evals.json"),
+                    # evaluate runs both arms unless a --skip-* flag is supplied.
+                    "case_count": len(entries),
+                    "conditions": list(PAIRED_CONDITIONS),
+                    "planned_agent_executions": len(entries) * len(PAIRED_CONDITIONS) * attempts * len(models),
                     "command": command,
                 }
             )
@@ -129,7 +135,7 @@ def prepare(
         "attempts_per_case_arm": attempts,
         "order_seed": seed,
         "runs": runs,
-        "planned_agent_executions": len(dataset["evals"]) * 2 * 2 * attempts * len(models),
+        "planned_agent_executions": sum(run["planned_agent_executions"] for run in runs),
         "comparison": "Two native paired comparisons with independent no-skill controls. Inspect baseline drift before comparing variants.",
         "reporting": "Report original and capability cohorts separately; union them with per-case weighting for the expanded suite. Exclude case 004 from artifact-only summaries. Preserve per-agent/per-case attempt scores, tokens and wall time.",
         "files": fingerprints(out),
