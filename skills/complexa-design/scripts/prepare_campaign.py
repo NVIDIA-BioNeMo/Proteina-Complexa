@@ -4,6 +4,20 @@
 Requires PyYAML. Reads the released pipeline's direct stage files; this is a
 static review, not Hydra composition or runtime/target validation. Exit 2 means
 an unsupported or inconsistent plan. Writes only to a new output directory.
+
+Usage:
+    python3 prepare_campaign.py --project-root REPO --pipeline binder \\
+        --target TARGET --run-name RUN --out-dir NEW_DIRECTORY
+Arguments:
+    Required paths, pipeline, target, and run name are shown above. Optional
+    sample/search/refolder settings and YAML overrides are listed by --help.
+Output:
+    campaign_plan.json, campaign_overrides.yaml, and launch.sh in NEW_DIRECTORY
+    (a fresh sibling with --revision if it exists); stdout reports output_dir.
+    The launch script is never executed.
+Exit codes:
+    0 on success; 2 for invalid arguments, inconsistent plans, or handled
+    read/write/syntax-check failures; 1 for unexpected Python errors.
 """
 
 from __future__ import annotations
@@ -15,6 +29,7 @@ import re
 import shlex
 import subprocess
 import sys
+import tempfile
 from copy import deepcopy
 from pathlib import Path
 
@@ -28,6 +43,7 @@ PIPELINES = {
 LORA = {"r": 32, "lora_alpha": 64.0, "lora_dropout": 0.0, "train_bias": "none"}
 BACKENDS = {"colabdesign": ["AF2_DIR"], "rf3_latest": ["RF3_CKPT_PATH", "RF3_EXEC_PATH"], "esmfold": ["ESM_DIR"]}
 SEARCHES = ("single-pass", "best-of-n", "beam-search", "fk-steering", "mcts")
+BASH_SYNTAX_TIMEOUT_SECONDS = 5
 
 
 def merge(base: dict, patch: dict) -> dict:
@@ -309,6 +325,10 @@ def main() -> int:
     parser.add_argument(
         "--out-dir", type=Path, required=True, help="New directory; existing artifacts are never overwritten"
     )
+    parser.add_argument(
+        "--revision", action="store_true",
+        help="If --out-dir already exists, write to a new sibling directory and report its path",
+    )
     parser.add_argument("--overrides", type=Path, help="YAML mapping applied over source defaults before CLI choices")
     parser.add_argument("--samples", type=int, help="Exact global base sample budget, not retained or passing designs")
     parser.add_argument("--repeats", type=int)
@@ -344,19 +364,30 @@ def main() -> int:
             patch = merge(patch, read_yaml(Path(__file__).resolve().parent.parent / "config/ame_rf3_reward.yaml"))
         plan, patch, script = build_plan(args.project_root.resolve(), args.pipeline, patch, samples=args.samples)
         # Syntax-check via stdin before writing any artifacts, without a temporary file.
-        subprocess.run(["bash", "-n"], input=script, text=True, check=True, timeout=5)
-        args.out_dir.mkdir(parents=True, exist_ok=False)
+        subprocess.run(
+            ["bash", "-n"], shell=False, input=script, text=True, check=True, timeout=BASH_SYNTAX_TIMEOUT_SECONDS
+        )
+        output_dir = args.out_dir
+        try:
+            output_dir.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            if not args.revision:
+                raise ValueError(
+                    f"Output already exists: {output_dir}. Preserve it; use --revision "
+                    "or choose a new --out-dir. Do not delete an earlier plan to retry."
+                ) from None
+            output_dir = Path(tempfile.mkdtemp(prefix=f"{output_dir.name}-", dir=output_dir.parent))
         for name, contents in (
             ("campaign_plan.json", json.dumps(plan, indent=2) + "\n"),
             ("campaign_overrides.yaml", yaml.safe_dump(patch, sort_keys=False)),
             ("launch.sh", script),
         ):
-            with (args.out_dir / name).open("x") as handle:
+            with (output_dir / name).open("x") as handle:
                 handle.write(contents)
         print(
             json.dumps(
                 {
-                    "output_dir": str(args.out_dir.resolve()),
+                    "output_dir": str(output_dir.resolve()),
                     "sample_budget": plan["sample_budget"],
                     "dependencies": plan["dependencies"],
                     "target": plan["target"],

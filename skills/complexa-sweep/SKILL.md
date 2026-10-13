@@ -1,20 +1,42 @@
 ---
 name: complexa-sweep
-description: Agent runbook for Proteina-Complexa parameter sweeps through the separately installed first-party CLI and config generator. Use for cartesian-product hyperparameter scans, sweeper YAML authoring, configuration comparisons, ablations, tuning, success-rate ranking, or Pareto searches over quality and wall-clock cost. Do not use for a single existing-job launch or SLURM submission template. SKILL.md performs the orchestration; bundled executables only inspect local readiness and write a run manifest.
+description: Author, review, or run Proteina-Complexa parameter sweeps, enumerate configuration grids, and rank measured results by success or Pareto objectives.
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 metadata:
   author: Ohad Mosafi <omosafi@nvidia.com>
+  tags: [proteina-complexa, parameter-sweeps, experiment-analysis]
 ---
 
 <!-- CI revalidation requested. -->
 
 # complexa-sweep
 
+## Purpose
+
 Run cartesian-product parameter sweeps over Proteina-Complexa design pipelines. Pick or author a sweeper YAML in `configs/sweeps/`, expand it to N inference configs with `script_utils/generate_inference_configs.py`, loop `complexa design` over those configs, then aggregate per-config success metrics into a ranked summary CSV plus a manifest.
 
 > **Important:** The `complexa design` CLI does **NOT** accept `--sweeper` directly. Sweeps are driven by `script_utils/generate_inference_configs.py`, which writes one `configs/inference_configs/inf_{idx}_{run_name}.yaml` per sweep combination. You then loop `complexa design` over those generated configs.
 
+## Inputs
+
+Required for a sweep plan: pipeline, targets, axes, and run name. Fixed overrides
+and ranking objectives are optional choices from the request. Explicit user
+choices override supplied defaults; retain the requested success criteria when
+ranking measured results.
+
+## Prerequisites
+
+Offline authoring needs the selected configs; ranking needs measured CSVs.
+Config generation requires the project generator and its Python dependencies.
+GPU launches additionally need Complexa, CUDA, registered targets, and all
+active model/refolder weights. Bundled helpers use Bash and Python 3.
+
 ## Instructions
+
+1. Select the pipeline and target set.
+2. Author or inspect the axes, enumerate the grid, and check the total budget.
+3. For execution, check readiness, generate configs, and launch within the
+   authorized budget. Rank only measured results and report failed runs.
 
 Sweeper authoring, Cartesian enumeration, cost estimates, and analysis of supplied
 CSVs need only the relevant configs and data. Complete those artifacts without
@@ -211,7 +233,7 @@ row per configuration with `n_passed` and `n_designs`, compute
 Do not treat those summary rows as individual designs. For per-design rows,
 use existing pass flags, parsing string booleans explicitly. If flags are absent,
 use the run's analysis thresholds, `result_type`, column names, and units from
-[EVALUATION_METRICS.md](references/EVALUATION_METRICS.md). PAE may be normalized
+[results.md](references/results.md). PAE may be normalized
 by 31 and pLDDT may use different scales; do not substitute generic thresholds.
 
 ## Step 6: Rank configs
@@ -240,6 +262,8 @@ Then report:
   minimize both. A point is dominated when another is no worse on every
   objective and strictly better on at least one. Keep distinct config IDs at
   equal nondominated coordinates; report invalid/missing measurements separately.
+
+## Output Format
 
 Save the full table to `sweep_summary.csv`, then reopen the saved results and
 print a compact summary: row count, best config and metric values, and frontier
@@ -272,6 +296,23 @@ Alongside the manifest, save the ranked `sweep_summary.csv` from Step 6 to `./sw
 | Broaden the best-of-N candidate pool | `search_replicas.yaml` (`best_of_n.replicas`) | More candidates per search; use separate seeds/runs to measure repeatability. |
 | Algorithm shoot-out | `generation.search.algorithm` over `[single-pass, best-of-n, beam-search, fk-steering]` | Compare search regimes; pin everything else. |
 
+## Available Scripts
+
+Use the installed skill's `SKILL_DIR` path for bundled helpers.
+
+| Script | Purpose | Arguments |
+|---|---|---|
+| `scripts/preflight.sh` | Inspect runtime readiness | `--out`; optional `--hash-checkpoints` |
+| `scripts/gpu_probe.py` | Collect GPU evidence; called by preflight | None |
+| `scripts/write_manifest.py` | Save invocation and result provenance | `--output-dir`, `--command`, `--skill`, `--out` |
+
+## Limitations
+
+Sweep enumeration and estimated GPU time are plans, not measured results. This
+skill applies to Complexa sweeper YAML and campaign comparisons; generic ML
+tuning, a single existing-job launch, and SLURM template authoring are separate
+tasks. The Complexa CLI does not accept `--sweeper` directly.
+
 ## Hardware
 
 Total GPU-time for a sweep = `N_configs × per_run_GPU_time`. A single `search_binder_local_pipeline` run on one A100 is roughly 30–90 min (binder length + nsteps dependent). A 4-axis × 4-value sweep = 256 configs × ~60 min = ~256 GPU-hours — at that scale, plan on a multi-GPU host with the Step-4 sharding pattern.
@@ -293,4 +334,5 @@ Refer to [`references/hardware.md`](references/hardware.md) for the per-run base
 
 For per-axis reference (typical ranges, cost, what gets better/worse), see [references/sweep_axes.md](references/sweep_axes.md).
 
-For the user-facing sweep system overview (config generation, output layout), see [`references/SWEEP.md`](references/SWEEP.md).
+For an authorized SLURM launch, see [cluster_execution.md](references/cluster_execution.md)
+for connection settings, staging cleanup, and sync destinations.

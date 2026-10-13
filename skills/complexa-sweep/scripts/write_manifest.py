@@ -46,7 +46,6 @@ import os
 import re
 import socket
 import subprocess
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -97,7 +96,7 @@ def git_sha(repo_root: Path | None) -> str:
     try:
         res = subprocess.run(
             ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
-            capture_output=True, text=True, timeout=GIT_TIMEOUT_SECONDS, check=False,
+            shell=False, capture_output=True, text=True, timeout=GIT_TIMEOUT_SECONDS, check=False,
         )
         if res.returncode == 0:
             return res.stdout.strip() or "unknown"
@@ -222,7 +221,7 @@ def main() -> int:
     ckpt_fields = scan_ckpt_keys(config_text) if config_text else {}
 
     manifest: dict[str, Any] = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),  # noqa: UP017 - host Python 3.10 before setup
         "skill": args.skill,
         "command": redact_sensitive_values(args.command),
         "output_dir": str(Path(args.output_dir)),

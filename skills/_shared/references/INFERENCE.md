@@ -253,9 +253,10 @@ complexa design configs/search_binder_local_pipeline.yaml \
 
 ```bash
 cp slurm_utils/.user_info_example slurm_utils/.user_info
+chmod u=rw,go= slurm_utils/.user_info
 ```
 
-2. Edit `.user_info` with your cluster credentials:
+2. Edit `.user_info` with your cluster connection settings:
 
 ```bash
 USER="your_username"
@@ -265,6 +266,10 @@ ENV_BINDER="complexa"
 PYTHON_BINDER="/path/to/python"
 MAMBA_EXEC="/path/to/mamba"
 ```
+
+Keep `.user_info` private and out of version control; the repository's
+`.gitignore` excludes it. Store only connection settings here, not passwords or
+API tokens. Use SSH authentication with a passphrase-protected key/agent.
 
 ### Launch Scripts
 
@@ -298,6 +303,12 @@ bash slurm_utils/launch_protein_binder_search_target_loop_conda.sh
 3. **Job submission** -- Submits SLURM array jobs for each stage
 4. **Monitoring** -- Waits for each stage to complete before proceeding
 5. **Result download** -- Downloads results locally (local launcher only)
+
+**Overwrite risk:** Code sync and result download use rsync and can overwrite
+files at the remote run path and local download destination. Review the launcher's
+source, destination, and exclusions before launch; use a dedicated run directory
+and retain existing results elsewhere. Preview the actual rsync invocation with
+`--dry-run` when changing destinations, and sync only a reviewed checkout.
 
 ### Job Parallelism
 

@@ -150,8 +150,8 @@ workflow.
 
 ## Evaluation types (summary)
 
-From the local [Evaluation & Analysis Guide](EVALUATION_METRICS.md), the types
-reachable from the three design pipelines:
+The evaluation types associated with these pipelines are below. Interpret their
+measured output using [results.md](results.md).
 
 1. **Protein binder** (`protein_type: binder`, `result_type: protein_binder`) —
    AF2 / RF3 / Boltz2 refold + SolubleMPNN redesign. Metrics: i_pAE, i_pTM,

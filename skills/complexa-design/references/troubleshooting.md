@@ -1,9 +1,7 @@
 # Troubleshooting Reference
 
-Symptoms, causes, and fixes for `complexa design` failures. Sourced from the
-local [Inference Guide](INFERENCE.md),
-[Evaluation & Analysis Guide](EVALUATION_METRICS.md), and the pipeline configs
-themselves.
+Symptoms, causes, and fixes for `complexa design` failures. Check the selected
+pipeline config and actual error before applying a remedy.
 
 Apply runtime fixes only within the authorized execution/setup scope. For an
 offline review, record missing dependencies and future remedies without
@@ -26,9 +24,8 @@ Beam-search amplifies this because `max_batch_size` inherits from
 ++gen_njobs=1
 ```
 
-If still OOMing, drop to `batch_size=4` and `++generation.args.nsteps=200` to
-shrink activation history. Reference: [Inference Guide](INFERENCE.md), "Memory
-Issues".
+If still OOMing, lower `batch_size` further. Changes to search steps or length
+change the experiment; discuss those tradeoffs before changing requested values.
 
 ## GPU OOM during folding
 
@@ -52,7 +49,8 @@ heavier per-sample state than AF2.
 ## Missing `AF2_DIR` (colabdesign fails)
 
 **Symptom:** Hydra `InterpolationKeyError: AF2_DIR` raised when the reward
-model or the evaluator tries to resolve `${oc.env:AF2_DIR}`.
+model or the evaluator tries to resolve the `AF2_DIR` environment variable
+through Hydra's `oc.env` resolver.
 
 **Cause:** The protein binder pipeline's `af2folding` reward model and the
 default `binder_folding_method: colabdesign` both read `AF2_DIR` from the
@@ -68,16 +66,16 @@ backend to ESMFold affects only the final refold:
 The active `generation.reward_model.reward_models.af2folding` still requires
 AF2 weights. Do not disable it or switch search algorithms merely to declare
 the requested campaign ready. Missing AF2 parameters remain a generation
-blocker until provisioned. Reference: [Inference Guide](INFERENCE.md), "Missing
-Model Weights".
+blocker until provisioned.
 
 ## Missing `RF3_CKPT_PATH` / `RF3_EXEC_PATH` (rf3_latest fails)
 
 **Symptom:** `InterpolationKeyError: RF3_CKPT_PATH` or `RF3_EXEC_PATH` during
 generate (ligand binder) or evaluate (ligand binder, AME).
 
-**Cause:** Ligand binder and AME pipelines bake `${oc.env:RF3_CKPT_PATH}` and
-`${oc.env:RF3_EXEC_PATH}` into the RF3 reward and refold paths. RF3 is not
+**Cause:** Ligand binder and AME pipelines read the `RF3_CKPT_PATH` and
+`RF3_EXEC_PATH` environment variables through Hydra's `oc.env` resolver for
+the RF3 reward and refold paths. RF3 is not
 downloaded by `complexa download --complexa-*`; it ships with the community
 model bundle.
 
@@ -89,7 +87,6 @@ export RF3_EXEC_PATH=/path/to/rf3
 ```
 
 Run `complexa download --all` to install RF3 into the canonical location.
-Reference: [Inference Guide](INFERENCE.md), "RF3 Environment Variables".
 
 ## Chain-ID mismatch between target PDB and `target_input`
 
@@ -283,5 +280,4 @@ search. If the user requests a sensitivity analysis with alternative thresholds,
 save it separately with the changed criteria and original result; a higher pass
 rate under a new definition does not demonstrate improved designs.
 
-Reference: [Evaluation & Analysis Guide](EVALUATION_METRICS.md), "Customizing
-Binder Thresholds".
+See [results.md](results.md) for joint pass criteria and metric conventions.

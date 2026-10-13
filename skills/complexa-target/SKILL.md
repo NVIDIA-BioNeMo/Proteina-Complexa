@@ -1,19 +1,19 @@
 ---
 name: complexa-target
 description: >
-  Add, edit, inspect, or validate Proteina-Complexa target definitions for protein
-  binders, ligand binders, and AME motif scaffolding. Use for target registries,
-  chain/residue selectors, hotspots, ligand fields, and incomplete motif inputs.
-  Covers direct YAML edits and complexa target/validate target commands; running
-  a campaign with an already registered target belongs to complexa-design.
+  Use to add, edit, inspect, or validate Proteina-Complexa target registries, including
+  protein hotspots, ligand fields, and AME motif selections.
 allowed-tools: Bash, Read, Write, AskUserQuestion
 metadata:
   author: Ohad Mosafi <omosafi@nvidia.com>
+  tags: [proteina-complexa, target-registration, protein-design]
 ---
 
 <!-- CI revalidation requested. -->
 
 # complexa-target
+
+## Purpose
 
 Add or edit a design target in Proteina-Complexa. Targets live in **three YAML files**, one per `complexa design` pipeline:
 
@@ -22,6 +22,26 @@ Add or edit a design target in Proteina-Complexa. Targets live in **three YAML f
 - `configs/design_tasks/ame_dict_v2.yaml` — AME / enzyme scaffolding
 
 The `complexa target` CLI only manages the first two. AME tasks use an extended schema (the same core fields as ligand targets plus `contig_atoms` for hand-curated per-residue motif atom selections) and are file-edit-only.
+
+## Inputs
+
+Required fields depend on design type: use the registry/task key, structure
+location, and selections in the schema below. Optional fields, such as protein
+hotspots, come from the request. Explicit supplied values take precedence over
+examples or defaults; ask for missing scientific selections rather than deriving
+them from a target name alone.
+
+## Prerequisites
+
+Offline edits need the registry or an output path and a YAML parser for checking
+the saved data. Coordinate validation needs the actual structure; CLI validation
+also needs a prepared Complexa installation and pipeline config.
+
+## Limitations
+
+Registration does not prove hotspot suitability or binding, and an absent
+structure prevents coordinate validation. Launching an already registered
+target is a design-campaign task, not target registration.
 
 ## Instructions
 
@@ -57,7 +77,7 @@ Targets live in **three different files**, one per `complexa design` pipeline. P
 
 | User intent | Pipeline | Targets dict file | This skill? |
 |---|---|---|---|
-| Bind a protein surface (PD-L1, IFNAR2, TNF-α, …) — **default** | `configs/search_binder_local_pipeline.yaml` | `configs/targets/targets_dict.yaml` | Yes — Step 2 (protein) |
+| Bind a protein surface (PD-L1, IFNAR2, TNF-alpha, …) — **default** | `configs/search_binder_local_pipeline.yaml` | `configs/targets/targets_dict.yaml` | Yes — Step 2 (protein) |
 | Bind a small-molecule pocket (FAD, SAM, OQO, …) | `configs/search_ligand_binder_local_pipeline.yaml` | `configs/targets/ligand_targets_dict.yaml` | Yes — Step 2 (ligand) |
 | AME / enzyme scaffolding (motif + ligand, `M####_<pdb>` names) | `configs/search_ame_local_pipeline.yaml` | `configs/design_tasks/ame_dict_v2.yaml` | Partial — see "AME tasks" below |
 

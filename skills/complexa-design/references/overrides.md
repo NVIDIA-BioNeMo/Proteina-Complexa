@@ -114,7 +114,7 @@ post-hoc optimization of the binder sequence.
 | Key | Type | Default | Example override | What it controls |
 |-----|------|---------|------------------|------------------|
 | `generation.filter.filter_samples_limit` | int\|null | `1000` (binder/ligand/AME) | `++generation.filter.filter_samples_limit=500` | Max samples after filtering (top-N by reward) |
-| `generation.filter.delete_non_top_n_samples` | bool | `false` (binder), `true` (ligand, AME) | `++generation.filter.delete_non_top_n_samples=false` | Delete vs move filtered-out samples |
+| `generation.filter.delete_non_top_n_samples` | bool | `false` (binder), `true` (ligand, AME) | `++generation.filter.delete_non_top_n_samples=false` | `true` permanently deletes unselected sample directories; `false` moves them to `filtered_out_samples/`. Prefer `false` when outputs may still be needed; deleted outputs require a backup or regeneration. |
 | `generation.filter.dedup_sequence` | bool | `true` | `++generation.filter.dedup_sequence=false` | Drop duplicate sequences before ranking |
 | `generation.filter.reward_threshold` | float\|null | `null` | `++generation.filter.reward_threshold=0.3` | Drop samples below this reward before top-N |
 
@@ -154,8 +154,8 @@ via override.
 | `...rf3folding.reward_weights.has_clash` | float | `0.0` | `++...rf3folding.reward_weights.has_clash=-5.0` | Clash penalty (1.0 if clash; negative = penalize) |
 | `...rf3folding.reward_weights.{min,max,avg}_ipSAE` | float | `0.0` | `++...rf3folding.reward_weights.min_ipSAE=1.0` | Interface pSAE family |
 | `...rf3folding.normalize_pae` | bool | `true` | `++...rf3folding.normalize_pae=false` | Divide PAE metrics by 31 to map to 0-1 |
-| `...rf3folding.ckpt_path` | str | `${oc.env:RF3_CKPT_PATH}` | `++...rf3folding.ckpt_path=/data/rf3.pt` | RF3 checkpoint path |
-| `...rf3folding.rf3_path` | str | `${oc.env:RF3_EXEC_PATH}` | `++...rf3folding.rf3_path=/opt/rf3` | RF3 executable directory |
+| `...rf3folding.ckpt_path` | str | From environment variable `RF3_CKPT_PATH` via Hydra `oc.env` | `++...rf3folding.ckpt_path=/data/rf3.pt` | RF3 checkpoint path |
+| `...rf3folding.rf3_path` | str | From environment variable `RF3_EXEC_PATH` via Hydra `oc.env` | `++...rf3folding.rf3_path=/opt/rf3` | RF3 executable directory |
 
 ## Evaluation (`metric.*`)
 

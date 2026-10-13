@@ -14,6 +14,12 @@ Developers and computational biologists use this skill to orchestrate end-to-end
 ### Deployment Geography for Use: <br>
 Global <br>
 
+## Activation Scope
+
+Use for requests such as "prepare a Proteina-Complexa binder launch" or "run an
+AME design campaign." Standalone scoring of existing PDBs, target registration,
+installation, database administration, and parameter sweeps are separate tasks.
+
 ## Requirements / Dependencies: <br>
 **Requires API Key or External Credential:** [Not Specified] <br>
 **Credential Type(s):** [None identified] <br>
@@ -26,11 +32,9 @@ Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
 - [Pipeline Reference](references/pipelines.md) <br>
-- [Inference and Search Guide](references/INFERENCE.md) <br>
-- [Pipeline Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
-- [Evaluation & Analysis Guide](references/EVALUATION_METRICS.md) <br>
-- [Search Metadata Tags](references/SEARCH_METADATA.md) <br>
-- [Sweep System](references/SWEEP.md) <br>
+- [Offline Planning](references/planning.md) <br>
+- [Measured Results](references/results.md) <br>
+- [Cluster Execution](references/cluster_execution.md) <br>
 - [Hardware Reference](references/hardware.md) <br>
 - [Overrides Reference](references/overrides.md) <br>
 - [Troubleshooting Reference](references/troubleshooting.md) <br>

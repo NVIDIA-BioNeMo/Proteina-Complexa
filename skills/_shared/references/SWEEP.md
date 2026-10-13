@@ -181,6 +181,13 @@ rsync                     →  $RUN_DIR/configs/{inference_configs,eval_configs}
 cleanup_staged_configs()  →  local canonical dirs removed                (inside lock)
 ```
 
+**Local data loss:** Staging can overwrite files in
+`configs/inference_configs/` and `configs/eval_configs/`; cleanup removes those
+directories. Keep hand-edited configs outside these generated paths and back up
+any existing contents before using this flow. The lock coordinates launchers,
+but does not preserve user files. Rsync also writes to `$RUN_DIR` on the cluster;
+check that destination before syncing.
+
 #### Direct on-cluster flow (no rsync)
 
 When running directly on the cluster, no temp directory is needed.  Configs are

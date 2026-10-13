@@ -8,10 +8,14 @@ request, review the YAML directly.
 
 Required options are `--project-root`, `--pipeline` (`binder`, `ligand_binder`,
 or `ame`), `--target`, `--run-name`, and `--out-dir`. The output directory must
-be new so a previous plan or campaign is never overwritten.
+be new so a previous plan or campaign is never overwritten. Add `--revision`
+when iterating: if that path already exists, the helper creates a new sibling
+directory and returns its actual path in `output_dir`. Read artifacts from that
+returned path. Never remove a previous plan or campaign to make a retry succeed.
 
 | Option | Meaning |
 |---|---|
+| `--revision` | Preserve an existing output path and create a fresh sibling for this plan. |
 | `--samples N --repeats R` | Exact global base budget; N must be divisible by R. Defaults preserve source counts when omitted. |
 | `--gen-jobs N --eval-jobs N` | Split generation/evaluation work; never multiply the global budget. Idle generation jobs are reported as zero. |
 | `--batch-size N --filter-limit N` | Independent memory and retention controls. |

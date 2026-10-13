@@ -24,12 +24,15 @@ Do not include secrets in prompts/logs/output; use least-privilege credentials; 
 Risk: Review before execution as proposals could introduce incorrect or misleading guidance into skills. <br>
 Mitigation: Review and scan skill before deployment. <br>
 
+The skill invokes the external first-party Complexa CLI and writes evaluation
+files, CSV/JSON results, and a replay manifest to disk. Use a dedicated working
+copy of the input PDBs and a unique run/output directory to preserve existing
+inputs and results; inspect resolved paths before execution. <br>
+
 ## Reference(s): <br>
 - [eval_configs.md](references/eval_configs.md) <br>
 - [hardware.md](references/hardware.md) <br>
-- [EVALUATION_METRICS.md](references/EVALUATION_METRICS.md) <br>
-- [CONFIGURATION_GUIDE.md](references/CONFIGURATION_GUIDE.md) <br>
-- [INFERENCE.md](references/INFERENCE.md) <br>
+- [Measured Results](references/results.md) <br>
 
 
 ## Skill Output: <br>

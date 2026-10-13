@@ -2,23 +2,38 @@
 name: complexa-design
 description: >
   Prepare, review, or run Proteina-Complexa design campaigns for protein binders,
-  small-molecule binders, and AME motif-plus-ligand scaffolds. Select the pipeline,
-  search (beam search, best-of-n, FK steering, MCTS), sample budget, checkpoints,
-  and refolder; report completed campaign results. Use for de novo design and
-  future launch plans. Standalone evaluation
-  of existing PDBs, target registration, installation, and parameter sweeps are
-  separate workflows.
+  small-molecule binders, and AME motif-plus-ligand scaffolds.
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 metadata:
   author: Ohad Mosafi <omosafi@nvidia.com>
+  tags: [proteina-complexa, protein-design, campaign-planning]
 ---
 
 # Complexa Design
+
+## Purpose
 
 Use the separately installed first-party `complexa design` CLI for
 **generate → filter → evaluate → analyze**. Bundled scripts prepare plans, inspect
 readiness, and record provenance; they do not implement inference. GPU execution requires
 a prepared CUDA runtime, model and refolder weights, tools, and target inputs.
+
+Activate for requests such as "prepare a Complexa binder launch" or "run an AME
+design campaign." Standalone evaluation of existing PDBs, target registration,
+installation, and parameter sweeps are separate workflows.
+
+## Inputs
+
+Required for launch planning: source checkout/snapshot, pipeline, target/task,
+run name, and output location. Sample budget, search, and refolder are optional
+overrides of the selected config. Explicit user choices take precedence over
+config defaults; ask only for missing scientific inputs needed for the scope.
+
+## Prerequisites
+
+Offline planning needs a source checkout/snapshot, Python 3, PyYAML, and Bash
+for syntax checking. Execution additionally needs the installed Complexa CLI,
+CUDA access, registered inputs, and weights for every active backend.
 
 ## Instructions
 
@@ -33,6 +48,10 @@ compose nested Hydra defaults or validate runtime readiness. Use supplied
 snapshots for reviews. Read source/reference details only where the plan leaves
 an unresolved decision. For unsupported custom pipelines, inspect the selected
 YAML and its generation config directly. Options: [planning.md](references/planning.md).
+
+Use `--revision` for planning retries. Read the returned `output_dir`; an existing
+plan stays intact and the revision receives a new sibling directory. Do not
+delete output directories to satisfy the helper's new-directory requirement.
 
 | Intent | Pipeline under `configs/` | Model / autoencoder | Search / evaluation defaults |
 |---|---|---|---|
@@ -126,8 +145,8 @@ and atom selections separately. Validation does not accept design's Hydra
 overrides; check the effective overrides separately and do not claim the
 base-config check validated them. Retry after a concrete fix, not repeatedly
 against missing dependencies. Use [troubleshooting.md](references/troubleshooting.md)
-for a specific failure, or the relevant section of [INFERENCE.md](references/INFERENCE.md)
-for command details.
+for a specific failure. For an explicitly requested cluster launch, use
+[cluster_execution.md](references/cluster_execution.md).
 
 Launch the authorized `complexa design` command and follow its logs through all
 four stages. Report an unfinished/background run as running, not completed.
@@ -139,7 +158,7 @@ for generated counts, combined per-design CSVs for evaluation, `res_filter_*_pas
 for success, and `res_div_foldseek_*.csv` / `res_div_mmseqs_*.csv` for diversity.
 Report the sample subset and saved success criteria. Do not loosen thresholds
 to improve a pass rate or infer diversity from configuration files. Details:
-[EVALUATION_METRICS.md](references/EVALUATION_METRICS.md).
+[results.md](references/results.md).
 
 After execution, record the real invocation and output directory:
 
@@ -149,6 +168,8 @@ python3 "$SKILL_DIR/scripts/write_manifest.py" \
   --skill complexa-design --out "$OUTPUT_DIR/run_manifest.json"
 ```
 
+## Output Format
+
 Before finishing, reopen the saved artifacts. Show compact, separately bounded
 tool output for the mode/reason, allocation evidence, exact launch command and
 sample controls, or actual result counts and CSV paths. Avoid a single large
@@ -157,6 +178,30 @@ dump that truncates the command or evidence. If the request requires
 `reason`, and paths to actual evidence; keep CPU preparation distinct from a
 completed GPU campaign. Report unresolved prerequisites and unmeasured results.
 
+## Available Scripts
+
+Set `SKILL_DIR` to this skill's installed directory. Invoke helpers through Bash
+or Python as shown in the examples.
+
+| Script | Purpose | Arguments |
+|---|---|---|
+| `scripts/prepare_campaign.py` | Prepare a static plan and syntax-checked launch script | `--project-root`, `--pipeline`, `--target`, `--run-name`, `--out-dir`; optional controls via `--help` |
+| `scripts/preflight.sh` | Inspect readiness without installing dependencies | `--out`; optional `--hash-checkpoints` |
+| `scripts/gpu_probe.py` | Collect bounded GPU allocation/access evidence; used by preflight | None |
+| `scripts/write_manifest.py` | Record invocation, config, and result paths | `--output-dir`, `--command`, `--skill`, `--out` |
+
+## Limitations
+
+A static plan does not compose nested Hydra defaults or prove runtime readiness.
+GPU access does not establish scientific success; only completed evaluations
+provide measured success and diversity results.
+
+## Troubleshooting
+
+For missing weights, refolder errors, chain mismatches, or OOMs, match the
+symptom in [troubleshooting.md](references/troubleshooting.md) before retrying.
+For an offline review, record the remedy without provisioning a runtime.
+
 ## Examples
 
 **PD-L1, beam search, AF2, 50 base samples.** Set `PROJECT_ROOT` to the source
@@ -164,7 +209,7 @@ tree and `PLAN_DIR` to a new artifact directory. Prepare and inspect the plan:
 
 ```bash
 python3 "$SKILL_DIR/scripts/prepare_campaign.py" \
-  --project-root "$PROJECT_ROOT" --out-dir "$PLAN_DIR" \
+  --project-root "$PROJECT_ROOT" --out-dir "$PLAN_DIR" --revision \
   --pipeline binder --target 02_PDL1 --run-name pdl1_beam \
   --samples 50 --repeats 1 --search beam-search --beam-width 8 \
   --refolder colabdesign

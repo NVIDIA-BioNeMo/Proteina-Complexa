@@ -2,13 +2,14 @@
 """Keep each complexa skill's owned copies of shared assets in sync with _shared/.
 
 `_shared/` is the single edit point for assets used by more than one skill
-(`scripts/`, hardware guidance, and shared scientific guides). Each asset has an
+(`scripts/`, hardware guidance, and concise workflow references). Each asset has an
 explicit owner set below so it is copied only into skills that need it. These
 owned assets cannot be replaced by symlinks or cross-skill references: the
 NVIDIA/skills catalog sparse-checks-out each skill directory on its own and
 copies it with `rsync -a`, and `codex plugin add` drops symlinks on install.
-Because the scientific guides cross-link one another, every skill that owns one
-guide owns the complete guide set and remains self-contained.
+The complete scientific manuals remain canonical repository documentation, with
+stable docs/ aliases. Skills carry focused references for their own workflows
+instead of copying the full manual set into each installed skill.
 
 Authors edit the canonical copy under `_shared/` and run `--write`; CI runs
 `--check` to fail a PR whose owned copies drifted, whose non-owners contain an
@@ -33,7 +34,7 @@ SHARED = SKILLS_ROOT / "_shared"
 REPO_ROOT = SKILLS_ROOT.parent
 DOCS_ROOT = REPO_ROOT / "docs"
 
-GUIDE_OWNERS = frozenset(
+RESULTS_OWNERS = frozenset(
     {
         "complexa-design",
         "complexa-evaluate-pdbs",
@@ -73,15 +74,18 @@ SHARED_ASSET_OWNERS: dict[str, frozenset[str]] = {
             "complexa-target",
         }
     ),
-    "references/INFERENCE.md": GUIDE_OWNERS,
-    "references/CONFIGURATION_GUIDE.md": GUIDE_OWNERS,
-    "references/EVALUATION_METRICS.md": GUIDE_OWNERS,
-    "references/SEARCH_METADATA.md": GUIDE_OWNERS,
-    "references/SWEEP.md": GUIDE_OWNERS,
+    "references/results.md": RESULTS_OWNERS,
+    "references/cluster_execution.md": frozenset({"complexa-design", "complexa-sweep"}),
+    # Keep the full manuals and docs/ aliases, but retire their installed copies.
+    "references/INFERENCE.md": frozenset(),
+    "references/CONFIGURATION_GUIDE.md": frozenset(),
+    "references/EVALUATION_METRICS.md": frozenset(),
+    "references/SEARCH_METADATA.md": frozenset(),
+    "references/SWEEP.md": frozenset(),
 }
 
-# Canonical shared guides must link to one another by sibling filename. Their
-# ownership closure guarantees those same links work in every distributed copy.
+# Canonical repository guides link to one another by sibling filename, so both
+# the canonical documents and their docs/ aliases retain valid navigation.
 SHARED_GUIDES = frozenset(
     {
         "references/INFERENCE.md",

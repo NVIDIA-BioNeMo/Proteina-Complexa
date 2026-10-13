@@ -14,6 +14,12 @@ Developers and engineers use this skill to run cartesian-product parameter sweep
 ### Deployment Geography for Use: <br>
 Global <br>
 
+## Activation Scope
+
+Use for "run a Proteina-Complexa sweep," "author Complexa sweeper YAML," or
+"rank Complexa sweep results." Generic ML tuning unrelated to Complexa, a
+single existing-job launch, and SLURM template authoring do not activate it.
+
 ## Requirements / Dependencies: <br>
 **Requires API Key or External Credential:** [Not Specified] <br>
 **Credential Type(s):** [None identified] <br>
@@ -25,13 +31,10 @@ Risk: Review before execution as proposals could introduce incorrect or misleadi
 Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
-- [Sweep System](references/SWEEP.md) <br>
 - [Sweep Axes](references/sweep_axes.md) <br>
 - [Hardware](references/hardware.md) <br>
-- [Pipeline Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
-- [Evaluation & Analysis Guide](references/EVALUATION_METRICS.md) <br>
-- [Inference and Search Guide](references/INFERENCE.md) <br>
-- [Search Metadata Tags](references/SEARCH_METADATA.md) <br>
+- [Measured Results](references/results.md) <br>
+- [Cluster Execution](references/cluster_execution.md) <br>
 
 
 ## Skill Output: <br>

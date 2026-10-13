@@ -165,7 +165,21 @@ class PlannerTests(unittest.TestCase):
             content = (out / "launch.sh").read_bytes()
             second = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(second.returncode, 2)
+            self.assertIn("--revision", second.stderr)
             self.assertEqual((out / "launch.sh").read_bytes(), content)
+
+            sentinel = out / "user-notes.txt"
+            sentinel.write_text("Keep the original plan and these notes.")
+            for _ in range(2):
+                revision = subprocess.run(command + ["--revision"], capture_output=True, text=True)
+                self.assertEqual(revision.returncode, 0, revision.stderr)
+                revision_dir = Path(json.loads(revision.stdout)["output_dir"])
+                self.assertNotEqual(revision_dir, out)
+                self.assertEqual(revision_dir.parent, out.parent)
+                self.assertEqual((revision_dir / "launch.sh").read_bytes(), content)
+            self.assertEqual(len(list(out.parent.glob("plan-*"))), 2)
+            self.assertEqual((out / "launch.sh").read_bytes(), content)
+            self.assertEqual(sentinel.read_text(), "Keep the original plan and these notes.")
 
 
 class ProbeTests(unittest.TestCase):

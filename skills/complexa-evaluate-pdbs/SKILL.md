@@ -1,23 +1,36 @@
 ---
 name: complexa-evaluate-pdbs
 description: >
-  Agent runbook for evaluating an existing PDB directory through the separately
-  installed first-party Proteina-Complexa CLI. Use to refold or score designs,
-  compute interface pAE, i_pLDDT, scRMSD, motif RMSD, or designability, run
-  complexa analysis, or assess third-party BindCraft, AlphaProteo, or RFdiffusion
-  outputs. SKILL.md selects and invokes the evaluation configuration; bundled
-  executables only inspect local readiness and write a run manifest.
+  Use to refold and score existing PDB designs with Proteina-Complexa, including
+  interface, motif, designability, success, and diversity metrics.
 compatibility: "complexa CLI installed (pip install -e .); CUDA GPU; AF2_DIR (colabdesign) or RF3_CKPT_PATH+RF3_EXEC_PATH (rf3_latest); ESMFold weights for monomer paths"
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
+metadata:
+  author: Ohad Mosafi <omosafi@nvidia.com>
+  tags: [proteina-complexa, protein-evaluation, refolding]
 ---
 
 <!-- CI revalidation requested. -->
 
 # Complexa Evaluate-PDBs Skill
 
+## Purpose
+
 Score a directory of pre-existing PDB files against the same metrics Proteina-Complexa uses internally. Wraps `complexa analysis <evaluate_config> ++sample_storage_path=<dir>`: the CLI runs the `evaluate` step (refold + interface metrics + monomer metrics) and then the `analyze` step (success thresholds, diversity, pass-rate CSVs). Do **not** run `complexa generate` here — the inputs already exist.
 
-## What this skill enables
+## Prerequisites
+
+Use a prepared Complexa installation with CUDA, target inputs, and the selected
+refolder/inverse-folder weights. Shell helpers need Bash and Python 3. Config
+reviews can use a supplied snapshot without launching refolding.
+
+## Limitations
+
+This workflow evaluates existing designs; it does not generate binders or prove
+experimental binding. Missing inputs or failed refolds must remain visible in
+the summary, with success thresholds preserved.
+
+## Instructions
 
 - Re-fold a directory of designed PDBs with AF2 (`colabdesign`), RF3 (`rf3_latest`), ESMFold (`esmfold`), or Boltz2 (`boltz2_default`).
 - Compute binder interface metrics: `i_pAE`, `min_ipAE`, `i_pTM`, `pLDDT`, binder/complex scRMSD.
@@ -28,9 +41,11 @@ Score a directory of pre-existing PDB files against the same metrics Proteina-Co
 ## Step 1: Pre-flight
 
 Always check GPU / disk / tool binaries before launching a refold job. RF3 and ColabDesign-AF2 are large.
+Set `SKILL_DIR` to this skill's installed directory before invoking its helpers
+from the project root.
 
 ```bash
-bash scripts/preflight.sh
+bash "$SKILL_DIR/scripts/preflight.sh"
 ```
 
 Surface from `preflight.json`:
@@ -94,9 +109,14 @@ complexa analysis configs/evaluate_ame_from_pdb_dir.yaml \
 
 See `references/eval_configs.md` for the full matrix (every `result_type`, every threshold default, every supported folding backend, motif-protein-binder variant).
 
-## Step 3: Gather inputs (AskUserQuestion)
+## Inputs
 
-Ask in one batched `AskUserQuestion`:
+### Step 3: Gather inputs
+
+Use supplied values and config defaults; explicit user choices take precedence.
+The PDB directory, design type, and target/task are required. The folding backend
+is an optional override of that design type's default. Ask only for missing
+required inputs, in one batch:
 
 1. **`pdb_dir`** — absolute path to the directory of PDBs to evaluate.
 2. **Design type** — protein binder / ligand binder / AME (motif + ligand).
@@ -107,6 +127,10 @@ Ask in one batched `AskUserQuestion`:
 ## Step 4: Run evaluate → analyze
 
 Prefer `complexa analysis` (the evaluate→analyze chain) — it reuses the same config for both steps and writes a single log dir.
+
+The external CLI writes evaluation files and CSV/JSON results to disk. Use a
+dedicated working copy of the PDB directory and a unique run/output location
+when preserving existing inputs or results; inspect resolved paths before launch.
 
 ```bash
 # Protein binder PDB dir, AF2 refold
@@ -154,7 +178,12 @@ For normal one-shot runs prefer `complexa analysis` — you get the shared log
 dir and a single replayable invocation, instead of having to thread the same
 overrides through two `python -m` calls.
 
-## Step 5: Parse results
+## Output Format
+
+### Step 5: Parse results
+
+Use [results.md](references/results.md) to reconcile unique designs, sequence
+types, normalized confidence values, joint success criteria, and diversity.
 
 Output lands under `./evaluation_results/${run_name}/`:
 
@@ -173,7 +202,7 @@ Summarize to the user:
 Capture the resolved invocation + outputs for replay.
 
 ```bash
-python3 scripts/write_manifest.py \
+python3 "$SKILL_DIR/scripts/write_manifest.py" \
   --output-dir ./evaluation_results/${run_name} \
   --command "complexa analysis configs/evaluate_from_pdb_dir.yaml ++sample_storage_path=<dir> ++dataset.task_name=<task> ++metric.binder_folding_method=<backend> ++run_name=<run>" \
   --skill complexa-evaluate-pdbs \
@@ -199,6 +228,24 @@ The manifest pins: resolved config, git SHA, ckpt SHA-256s, the result CSV paths
 | `++eval_njobs=N`                               | Parallel GPUs for the evaluate step.                                  |
 | `++dryrun=true`                                | Plan without running any folding.                                     |
 | `++file_limit=N`                               | Cap input PDBs (handy for first-pass smoke tests).                    |
+
+## Available Scripts
+
+Set `SKILL_DIR` to this skill's installed directory; invoke its scripts using
+that path from the project root.
+
+| Script | Purpose | Arguments |
+|---|---|---|
+| `scripts/preflight.sh` | Inspect runtime readiness | `--out`; optional `--hash-checkpoints` |
+| `scripts/gpu_probe.py` | Collect GPU evidence; called by preflight | None |
+| `scripts/write_manifest.py` | Save invocation and result provenance | `--output-dir`, `--command`, `--skill`, `--out` |
+
+## Examples
+
+- Existing protein-binder PDBs: use the AF2 invocation in Step 2 with the
+  requested target and PDB directory.
+- Existing AME outputs: use the motif-aware config in Step 2 and resolve its
+  ligand and motif inputs before refolding.
 
 ## Hardware
 
