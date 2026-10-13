@@ -1,0 +1,7 @@
+schema_version: 1
+skill_workspace:
+  mode: isolated
+  include: []
+grading:
+  mode: default_plus_custom
+  custom_metrics: [artifact_contract]

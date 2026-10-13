@@ -25,7 +25,7 @@ When this doc disagrees with the configs, the configs win — re-read them.
 | Evaluation folding | `colabdesign` (AF2) | `rf3_latest` | `rf3_latest` |
 | Analysis `result_type` | `protein_binder` | `ligand_binder` | `motif_ligand_binder` |
 | Analysis modes | `[binder, monomer]` | `[binder, monomer]` | `[motif_binder, monomer]` |
-| Default `gen_njobs` / `eval_njobs` | 2 / 2 | 2 / 2 | 2 / 2 |
+| Default `gen_njobs` / `eval_njobs` | 1 / 1 | 1 / 1 | 1 / 1 |
 | Default `dataloader.batch_size` | 16 | 16 | 16 |
 
 ## Protein binder
@@ -150,8 +150,8 @@ workflow.
 
 ## Evaluation types (summary)
 
-From the local [Evaluation & Analysis Guide](EVALUATION_METRICS.md), the types
-reachable from the three design pipelines:
+The evaluation types associated with these pipelines are below. Interpret their
+measured output using [results.md](results.md).
 
 1. **Protein binder** (`protein_type: binder`, `result_type: protein_binder`) —
    AF2 / RF3 / Boltz2 refold + SolubleMPNN redesign. Metrics: i_pAE, i_pTM,

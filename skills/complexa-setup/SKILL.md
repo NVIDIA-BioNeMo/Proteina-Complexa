@@ -1,17 +1,20 @@
 ---
 name: complexa-setup
 description: >
-  Agent runbook for first-time Proteina-Complexa setup, dotenv configuration,
-  runtime activation, model-weight installation, GPU preflight, and environment
-  validation. Use for "set up complexa", "install complexa", "complexa init",
-  "complexa download", checkpoint installation or status, UV versus Docker
-  selection, and fresh checkouts. SKILL.md invokes the first-party CLI; bundled
-  executables safely inspect local readiness and write a private setup manifest.
+  Use for Proteina-Complexa installation: configure UV/Docker and dotenv,
+  download model weights, check GPU readiness, and validate setup.
 compatibility: "complexa CLI installed (pip install -e .); bash 4+; nvidia-smi optional"
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
+metadata:
+  author: Ohad Mosafi <omosafi@nvidia.com>
+  tags: [proteina-complexa, installation, environment]
 ---
 
+<!-- CI revalidation requested. -->
+
 # Complexa Setup Skill
+
+## Purpose
 
 Drive the three steps a fresh Proteina-Complexa checkout needs before any
 design run: create `.env`, fetch model weights, and sanity-check the env.
@@ -19,7 +22,22 @@ Probe the host for GPU / disk / tool binaries first so the user does not
 discover a missing dependency mid-pipeline. End with a JSON setup artifact the
 user (or a future agent) can re-read instead of re-deriving state.
 
-## CLI vs direct file-edit — pick the cheapest path per step
+## Inputs
+
+Required for setup: checkout path and runtime choice. Model families and storage
+paths are optional choices from the request or existing settings. Preserve those
+settings unless explicitly changed; ask only for unresolved values. Never put
+credentials in generated summaries.
+
+## Prerequisites
+
+Start from a trusted checkout with Bash and Python 3. Downloads need network
+access and sufficient disk space; runtime validation needs the selected
+environment. Hardware requirements are listed below.
+
+## Instructions
+
+Use the CLI or direct edit for each setup step:
 
 | Step | Preferred path | Why |
 |---|---|---|
@@ -30,7 +48,7 @@ user (or a future agent) can re-read instead of re-deriving state.
 | Validate env (Step 5) | **CLI** (`complexa validate env`) or `test -f .env && test -d $DATA_PATH` | CLI prints a nicer report; the manual check is one-liner-safe. |
 | Validate full design config (after picking a pipeline) | **CLI** (`complexa validate design CONFIG`) | Non-trivial Hydra defaults traversal + ckpt + env-var checks; not worth replicating. |
 
-## What this skill enables
+## Output Format
 
 - A correctly-shaped `.env` for either UV or Docker runtime.
 - Model checkpoints (Complexa protein/ligand/AME plus community models) downloaded to known paths.
@@ -43,14 +61,16 @@ user (or a future agent) can re-read instead of re-deriving state.
 Always run the shared preflight before touching the environment. It does not
 require `.env` to exist — it falls back to defaults — and it tells you whether
 the host can run Complexa at all.
+Set `SKILL_DIR` to this skill's installed directory before invoking its helpers
+from the project root.
 
 ```bash
-bash scripts/preflight.sh
+bash "$SKILL_DIR/scripts/preflight.sh"
 ```
 
 The script writes `./complexa_setup/preflight.json`. Read it and surface:
 
-- `gpu.available` — if `false`, design / evaluate steps will fail; warn the user.
+- `gpu.status` / `gpu.evidence` — distinguish accessible, absent, blocked and unknown allocation/access. `gpu.available=false` alone is not proof of GPU absence; management access does not validate CUDA execution.
 - `gpu.vram_gb` — Complexa needs ≥40 GB (A100/H100/L40S).
 - `disk.free_gb` at `CKPT_PATH` — minimum ~50 GB for the full Complexa + community model set.
 - `env.missing_required` — anything listed here must be edited in `.env` before validation passes.
@@ -95,7 +115,13 @@ If the CLI is not yet available but the checkout is trusted, `cp .env_example
 .env` is equivalent to phase 1 only. Runtime selection happens later through
 `env.sh`; do not rewrite the active path expressions in `.env`.
 
-To deliberately discard an existing dotenv and recreate it from the template:
+**Overwrite warning:** `complexa init --force` permanently replaces every
+existing `.env` edit, including credentials and machine-specific paths. Use it
+only when resetting those values is intended. First preserve the existing file
+in a private backup outside version control, using a new backup path so an
+earlier backup is not overwritten. Do not print its contents.
+
+To recreate the file after preserving the settings:
 
 ```bash
 complexa init --force            # Recreate .env from .env_example (drops any edits)
@@ -226,7 +252,7 @@ describing the resulting state. The shared helper writes it for you:
 
 ```bash
 mkdir -p ./complexa_setup
-python scripts/write_manifest.py \
+python3 "$SKILL_DIR/scripts/write_manifest.py" \
     --output-dir ./complexa_setup \
     --command "complexa init ${COMPLEXA_INIT}; complexa download <selected flags>; complexa validate env" \
     --skill complexa-setup \
@@ -260,6 +286,30 @@ complexa_setup/
 Ubuntu 20.04 throws GLIBC errors with the UV runtime — use `complexa init
 docker` on those hosts. See `references/hardware.md`
 for per-pipeline (binder vs ligand vs AME) requirements.
+
+## Available Scripts
+
+Set `SKILL_DIR` to this skill's installed directory and run helpers from the
+project root.
+
+| Script | Purpose | Arguments |
+|---|---|---|
+| `scripts/preflight.sh` | Inspect paths, disk, GPU, and tool readiness | `--out`; optional `--hash-checkpoints` |
+| `scripts/gpu_probe.py` | Collect GPU evidence; called by preflight | None |
+| `scripts/write_manifest.py` | Record setup invocation and state | `--output-dir`, `--command`, `--skill`, `--out` |
+
+## Examples
+
+- "Set up Complexa with UV for protein binders": preserve/create `.env`, select
+  UV, fetch the protein and required community weights, then validate.
+- "Check which weights are installed": use `complexa download --status` and
+  report missing files without initiating downloads.
+
+## Limitations
+
+Preflight reports management access and file presence; it cannot establish that
+CUDA inference or every refolder works. Keep unresolved runtime or weight
+requirements visible in the setup summary.
 
 ## Troubleshooting
 

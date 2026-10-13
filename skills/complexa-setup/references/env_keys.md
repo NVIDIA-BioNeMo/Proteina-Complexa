@@ -5,7 +5,7 @@ ones in `.env_example` itself. Each entry says: required vs optional, default,
 what reads it, and the failure mode if it is missing or wrong.
 
 `.env` is loaded by `python-dotenv` via `proteinfoundation/cli/validate.py:load_env_config`
-and resolved into Hydra configs via `${oc.env:VARIABLE_NAME}` interpolation.
+and resolved into Hydra configs via ``${oc.env:VARIABLE_NAME}`` interpolation.
 Missing required variables surface as Hydra `InterpolationKeyError` at config
 resolution time — intentional, so you see exactly which key is missing.
 
@@ -74,7 +74,7 @@ not fill these in; its first phase only copies `.env_example`.
 - **Optional.** Default in `.env_example`: `${LOCAL_CODE_PATH}/checkpoints`.
 - Active alias `CKPT_PATH` resolves to this for UV runtime.
 - Note: `complexa download` always writes Complexa model + AE checkpoints to `$PROJECT_ROOT/ckpts/` (a sibling of `checkpoints/`) regardless of this setting. If you want `CKPT_PATH` to point at the download location, set `LOCAL_CHECKPOINT_PATH=${LOCAL_CODE_PATH}/ckpts` after running `complexa download`.
-- **Failure mode if missing**: pipeline configs resolve `${oc.env:CKPT_PATH}` to the default — if the directory doesn't exist or is empty, loading the model fails.
+- **Failure mode if missing**: pipeline configs resolve ``${oc.env:CKPT_PATH}`` to the default — if the directory doesn't exist or is empty, loading the model fails.
 - Fix: either run `complexa download --complexa-all` and set `LOCAL_CHECKPOINT_PATH=${LOCAL_CODE_PATH}/ckpts`, or move/symlink the downloaded ckpts into the `checkpoints/` default.
 
 ### `DOCKER_MOUNTS`
@@ -137,15 +137,15 @@ overrides and the selected-runtime marker are exported.
 
 ### `DATA_PATH` / `CACHE_DIR` / `CKPT_PATH`
 
-- `DATA_PATH` and `CKPT_PATH` default to `${LOCAL_*}` in `.env`; Docker's
-  generated `env.sh` overrides them with `${DOCKER_*}`. `CACHE_DIR` may be
+- `DATA_PATH` and `CKPT_PATH` default to ``${LOCAL_*}`` in `.env`; Docker's
+  generated `env.sh` overrides them with ``${DOCKER_*}``. `CACHE_DIR` may be
   supplied separately by Docker tooling. Edit the local or Docker source
   values rather than the active aliases.
 
 ### `FOLDSEEK_EXEC` / `RF3_EXEC_PATH` / `SC_EXEC` / `HBPLUS_EXEC` / `MMSEQS_EXEC` / `DSSP_EXEC` / `TMOL_PATH`
 
-- Active tool binaries default to `${UV_*}` in `.env`; generated `env.sh`
-  overrides the supported tool variables with `${DOCKER_*}` for Docker. Edit
+- Active tool binaries default to ``${UV_*}`` in `.env`; generated `env.sh`
+  overrides the supported tool variables with ``${DOCKER_*}`` for Docker. Edit
   the family variables for a non-standard install.
 - Used by: `complexa evaluate` (foldseek for diversity; mmseqs for sequence clustering; hbplus/sc for interface metrics; dssp for secondary structure; tmol for force-field metrics).
 - **Failure mode if path is wrong**: the tool is silently skipped (treated as a warning in `complexa validate evaluate`), and the corresponding metric column is missing from the result CSV.

@@ -46,7 +46,6 @@ import os
 import re
 import socket
 import subprocess
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -97,7 +96,7 @@ def git_sha(repo_root: Path | None) -> str:
     try:
         res = subprocess.run(
             ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
-            capture_output=True, text=True, timeout=GIT_TIMEOUT_SECONDS, check=False,
+            shell=False, capture_output=True, text=True, timeout=GIT_TIMEOUT_SECONDS, check=False,
         )
         if res.returncode == 0:
             return res.stdout.strip() or "unknown"
@@ -122,7 +121,7 @@ def scan_ckpt_keys(config_text: str) -> dict[str, str]:
 
     Intentionally a tiny line-based parser — stdlib has no YAML module and we
     only need three well-known keys at any depth. Treats the first scalar after
-    `<key>:` as the value. Hydra resolvers like `${oc.env:CKPT_PATH}` are
+    `<key>:` as the value. Hydra resolvers like ``${oc.env:CKPT_PATH}`` are
     captured verbatim; the caller can decide whether to hash them.
     """
     found: dict[str, str] = {}
@@ -159,7 +158,7 @@ def hash_first_4k(path: Path) -> dict[str, Any]:
 def resolve_ckpts(ckpt_fields: dict[str, str]) -> dict[str, dict[str, Any]]:
     """Build manifest.checkpoints from the scanned ckpt fields.
 
-    Joins `ckpt_path` + `ckpt_name` if both are scalars (no `${…}` interpolation
+    Joins `ckpt_path` + `ckpt_name` if both are scalars (no ``${…}`` interpolation
     left). Always also records `autoencoder_ckpt_path` if present.
     """
     out: dict[str, dict[str, Any]] = {}
@@ -222,7 +221,7 @@ def main() -> int:
     ckpt_fields = scan_ckpt_keys(config_text) if config_text else {}
 
     manifest: dict[str, Any] = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),  # noqa: UP017 - host Python 3.10 before setup
         "skill": args.skill,
         "command": redact_sensitive_values(args.command),
         "output_dir": str(Path(args.output_dir)),

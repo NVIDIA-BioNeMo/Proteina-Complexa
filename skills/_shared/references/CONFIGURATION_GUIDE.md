@@ -239,6 +239,12 @@ filter:
   reward_threshold: null            # Drop samples below this reward before top-N selection
 ```
 
+**Output retention:** `delete_non_top_n_samples: true` permanently deletes
+unselected sample directories. Recovery requires a backup or another generation
+run. Prefer `false` to move them to `filtered_out_samples/` when outputs may
+still be needed. Protein binder configs default to `false`; ligand binder and
+AME configs default to `true`, so explicitly override them to retain samples.
+
 ### Refinement
 
 Refinement is an optional post-search optimisation step that improves binder sequences using ColabDesign's AlphaFold2 design pipeline. It runs **after** the search algorithm on the final selected samples and **before** reward scoring.

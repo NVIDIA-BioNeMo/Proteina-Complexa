@@ -1,0 +1,15 @@
+# Synthetic top-level override proposal for the released AME pipeline.
+# Review input only; the task and scientific inputs have not been registered.
+run_name: ame_review
+ckpt_name: complexa.ckpt
+autoencoder_ckpt_path: ./ckpts/complexa_ae.ckpt
+lora: null
+env_vars:
+  USE_V2_COMPLEXA_ARCH: "False"
+generation:
+  task_name: UNREGISTERED_MOTIF_TASK
+  search:
+    algorithm: beam-search
+    beam_search:
+      beam_width: 8
+  reward_model: null

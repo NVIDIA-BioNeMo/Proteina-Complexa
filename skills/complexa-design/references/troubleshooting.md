@@ -1,9 +1,11 @@
 # Troubleshooting Reference
 
-Symptoms, causes, and fixes for `complexa design` failures. Sourced from the
-local [Inference Guide](INFERENCE.md),
-[Evaluation & Analysis Guide](EVALUATION_METRICS.md), and the pipeline configs
-themselves.
+Symptoms, causes, and fixes for `complexa design` failures. Check the selected
+pipeline config and actual error before applying a remedy.
+
+Apply runtime fixes only within the authorized execution/setup scope. For an
+offline review, record missing dependencies and future remedies without
+installing packages, downloading weights, or changing the requested experiment.
 
 ## GPU OOM during generation
 
@@ -22,9 +24,8 @@ Beam-search amplifies this because `max_batch_size` inherits from
 ++gen_njobs=1
 ```
 
-If still OOMing, drop to `batch_size=4` and `++generation.args.nsteps=200` to
-shrink activation history. Reference: [Inference Guide](INFERENCE.md), "Memory
-Issues".
+If still OOMing, lower `batch_size` further. Changes to search steps or length
+change the experiment; discuss those tradeoffs before changing requested values.
 
 ## GPU OOM during folding
 
@@ -48,29 +49,33 @@ heavier per-sample state than AF2.
 ## Missing `AF2_DIR` (colabdesign fails)
 
 **Symptom:** Hydra `InterpolationKeyError: AF2_DIR` raised when the reward
-model or the evaluator tries to resolve `${oc.env:AF2_DIR}`.
+model or the evaluator tries to resolve the `AF2_DIR` environment variable
+through Hydra's `oc.env` resolver.
 
 **Cause:** The protein binder pipeline's `af2folding` reward model and the
 default `binder_folding_method: colabdesign` both read `AF2_DIR` from the
 environment. If `.env` does not define it, Hydra interpolation fails.
 
-**Fix:** Add `AF2_DIR=/path/to/af2_params` to `.env`, or switch the eval
-backend to ESMFold (does not need AF2 weights):
+**Fix:** Point `AF2_DIR` at prepared AF2 parameters. Changing the evaluation
+backend to ESMFold affects only the final refold:
 
 ```bash
 ++metric.binder_folding_method=esmfold
 ```
 
-Run `complexa download --all` to fetch AF2 weights into the canonical
-location. Reference: [Inference Guide](INFERENCE.md), "Missing Model Weights".
+The active `generation.reward_model.reward_models.af2folding` still requires
+AF2 weights. Do not disable it or switch search algorithms merely to declare
+the requested campaign ready. Missing AF2 parameters remain a generation
+blocker until provisioned.
 
 ## Missing `RF3_CKPT_PATH` / `RF3_EXEC_PATH` (rf3_latest fails)
 
 **Symptom:** `InterpolationKeyError: RF3_CKPT_PATH` or `RF3_EXEC_PATH` during
 generate (ligand binder) or evaluate (ligand binder, AME).
 
-**Cause:** Ligand binder and AME pipelines bake `${oc.env:RF3_CKPT_PATH}` and
-`${oc.env:RF3_EXEC_PATH}` into the RF3 reward and refold paths. RF3 is not
+**Cause:** Ligand binder and AME pipelines read the `RF3_CKPT_PATH` and
+`RF3_EXEC_PATH` environment variables through Hydra's `oc.env` resolver for
+the RF3 reward and refold paths. RF3 is not
 downloaded by `complexa download --complexa-*`; it ships with the community
 model bundle.
 
@@ -82,7 +87,6 @@ export RF3_EXEC_PATH=/path/to/rf3
 ```
 
 Run `complexa download --all` to install RF3 into the canonical location.
-Reference: [Inference Guide](INFERENCE.md), "RF3 Environment Variables".
 
 ## Chain-ID mismatch between target PDB and `target_input`
 
@@ -265,23 +269,15 @@ at very short lengths.
 **Symptom:** Pipeline completes, `res_filter_*_pass_*.csv` shows
 `pass_rate: 0.0`. Per-design metrics look plausible but nothing passes.
 
-**Cause:** Default thresholds are tuned for the published targets (PDL1,
-TrkA, etc.) and may be too strict for harder targets or smaller search
-budgets.
+**Check:** Inspect per-design metrics, missing or failed refolds, target/chain
+mapping, metric units, and the saved success criteria. For AME, binder and motif
+criteria must pass on the same redesign; separate marginal passes do not imply
+a jointly successful design.
 
-**Fix:** Loosen the thresholds via the aggregation overrides:
+**Report:** Preserve the original thresholds and report the measured zero pass
+rate. Diagnose the limiting metrics before proposing a change to the design or
+search. If the user requests a sensitivity analysis with alternative thresholds,
+save it separately with the changed criteria and original result; a higher pass
+rate under a new definition does not demonstrate improved designs.
 
-```bash
-++aggregation.success_thresholds.i_pAE.threshold=10.0       # was 7.0
-++aggregation.success_thresholds.pLDDT.threshold=0.8        # was 0.9
-++aggregation.success_thresholds.scRMSD.threshold=2.0       # was 1.5
-```
-
-Or re-run analyze alone with the new thresholds — no need to re-generate:
-
-```bash
-complexa analyze configs/search_binder_local_pipeline.yaml ++run_name=<same> ++aggregation.success_thresholds.i_pAE.threshold=10.0
-```
-
-Reference: [Evaluation & Analysis Guide](EVALUATION_METRICS.md), "Customizing
-Binder Thresholds".
+See [results.md](results.md) for joint pass criteria and metric conventions.
