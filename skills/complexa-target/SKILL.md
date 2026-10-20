@@ -11,7 +11,6 @@ metadata:
   author: Ohad Mosafi <omosafi@nvidia.com>
 ---
 
-<!-- CI revalidation requested. -->
 
 # complexa-target
 

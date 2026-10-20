@@ -11,7 +11,6 @@ compatibility: "complexa CLI installed (pip install -e .); CUDA GPU; AF2_DIR (co
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
-<!-- CI revalidation requested. -->
 
 # Complexa Evaluate-PDBs Skill
 
