@@ -7,7 +7,7 @@ Live evaluation did not show a material gain or regression. Collect more evidenc
 ## Evaluation Metadata
 
 - Skill: `complexa-design`
-- Evaluation date: 2026-10-07
+- Evaluation date: 2026-10-21
 - Evaluator version: `1.5.6`
 - Agents: Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`), Codex (`openai/openai/gpt-5.5`)
 - Tasks: 4 evaluation tasks (3 positive, 1 negative)
@@ -33,12 +33,12 @@ The three-tier evaluation checks whether the skill:
 
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 85.1% — baseline ran, but no comparable score was available; uplift unavailable | 89.7% — baseline ran, but no comparable score was available; uplift unavailable |
-| Security | 100.0% → 75.0% (-25.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Overall | 92.1% — baseline ran, but no comparable score was available; uplift unavailable | 89.2% — baseline ran, but no comparable score was available; uplift unavailable |
+| Security | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
 | Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
-| Discoverability | 85.0% — baseline ran, but no comparable score was available; uplift unavailable | 78.3% — baseline ran, but no comparable score was available; uplift unavailable |
-| Effectiveness | 96.9% → 94.1% (-2.8 points) | 98.4% → 100.0% (+1.6 points) |
-| Efficiency | 71.2% — baseline ran, but no comparable score was available; uplift unavailable | 70.4% — baseline ran, but no comparable score was available; uplift unavailable |
+| Discoverability | 86.7% — baseline ran, but no comparable score was available; uplift unavailable | 76.7% — baseline ran, but no comparable score was available; uplift unavailable |
+| Effectiveness | 100.0% → 96.9% (-3.1 points) | 100.0% → 96.9% (-3.1 points) |
+| Efficiency | 76.8% — baseline ran, but no comparable score was available; uplift unavailable | 72.6% — baseline ran, but no comparable score was available; uplift unavailable |
 
 **How to read this table:** baseline is the same task attempted without the target skill. Scores are rounded to one decimal; threshold-adjacent values use additional precision so their displayed band matches the verdict. Uplift is derived from those displayed scores and shown in percentage points.
 
@@ -52,17 +52,17 @@ Actual Tier 3 execution usage is reported for every observed agent/case pair and
 
 | Agent | Dataset case | With skill | Without skill | Delta | Change | Coverage |
 |---|---|---:|---:|---:|---:|---|
-| claude-code | All cases | 5,243,242 | 3,273,134 | +1,970,108 | +60.19% | skill 4/4; base 4/4 |
-| claude-code | complexa-design-001 | 1,807,305 | 1,177,165 | +630,140 | +53.53% | skill 1/1; base 1/1 |
-| claude-code | complexa-design-002 | 1,757,243 | 914,410 | +842,833 | +92.17% | skill 1/1; base 1/1 |
-| claude-code | complexa-design-003 | 1,647,524 | 1,150,712 | +496,812 | +43.17% | skill 1/1; base 1/1 |
-| claude-code | complexa-design-004 | 31,170 | 30,847 | +323 | +1.05% | skill 1/1; base 1/1 |
-| codex | All cases | 1,160,040 | 1,002,364 | +157,676 | +15.73% | skill 4/4; base 4/4 |
-| codex | complexa-design-001 | 412,915 | 204,781 | +208,134 | +101.64% | skill 1/1; base 1/1 |
-| codex | complexa-design-002 | 330,813 | 448,032 | -117,219 | -26.16% | skill 1/1; base 1/1 |
-| codex | complexa-design-003 | 401,880 | 335,648 | +66,232 | +19.73% | skill 1/1; base 1/1 |
-| codex | complexa-design-004 | 14,432 | 13,903 | +529 | +3.80% | skill 1/1; base 1/1 |
-| ALL AGENTS | Dataset aggregate | 6,403,282 | 4,275,498 | +2,127,784 | +49.77% | skill 8/8; base 8/8 |
+| claude-code | All cases | 4,369,888 | 3,702,436 | +667,452 | +18.03% | skill 4/4; base 4/4 |
+| claude-code | complexa-design-001 | 1,776,495 | 1,592,446 | +184,049 | +11.56% | skill 1/1; base 1/1 |
+| claude-code | complexa-design-002 | 1,276,735 | 1,202,735 | +74,000 | +6.15% | skill 1/1; base 1/1 |
+| claude-code | complexa-design-003 | 1,285,697 | 876,528 | +409,169 | +46.68% | skill 1/1; base 1/1 |
+| claude-code | complexa-design-004 | 30,961 | 30,727 | +234 | +0.76% | skill 1/1; base 1/1 |
+| codex | All cases | 1,604,324 | 778,587 | +825,737 | +106.06% | skill 4/4; base 4/4 |
+| codex | complexa-design-001 | 374,070 | 228,849 | +145,221 | +63.46% | skill 1/1; base 1/1 |
+| codex | complexa-design-002 | 474,763 | 276,685 | +198,078 | +71.59% | skill 1/1; base 1/1 |
+| codex | complexa-design-003 | 741,338 | 259,081 | +482,257 | +186.14% | skill 1/1; base 1/1 |
+| codex | complexa-design-004 | 14,153 | 13,972 | +181 | +1.30% | skill 1/1; base 1/1 |
+| ALL AGENTS | Dataset aggregate | 5,974,212 | 4,481,023 | +1,493,189 | +33.32% | skill 8/8; base 8/8 |
 
 Prompt tokens include cached reads, so total tokens are `prompt + completion` (cached is not added twice). The Efficiency score uses `(prompt - cached) + completion`. N/A means the relevant trajectory counters were not available; coverage is never estimated.
 

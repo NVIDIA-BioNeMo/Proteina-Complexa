@@ -1,14 +1,16 @@
 ## Description: <br>
-Agent runbook for first-time Proteina-Complexa setup, dotenv configuration, runtime activation, model-weight installation, GPU preflight, and environment validation. <br>
+Agent runbook for first-time Proteina-Complexa setup, covering dotenv configuration, runtime activation, model-weight installation, GPU preflight, and environment validation. <br>
 
-This skill is ready for commercial/non-commercial use. <br>
+This skill is for research and development only. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
+Multiple licenses — repository contains multiple components covered by different licenses (see LICENSE). <br>
+
 ## Use Case: <br>
-Developers and engineers performing first-time environment setup for the Proteina-Complexa protein binder design pipeline, including runtime configuration, model checkpoint installation, GPU preflight checks, and environment validation. <br>
+Developers and engineers preparing a fresh Proteina-Complexa checkout use this skill to create and edit a .env file, select a UV or Docker runtime, download model checkpoints, run a GPU/disk/tooling preflight, validate the environment, and emit a JSON setup manifest. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -24,16 +26,16 @@ Risk: Review before execution as proposals could introduce incorrect or misleadi
 Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
-- [downloads.md](references/downloads.md) <br>
 - [env_keys.md](references/env_keys.md) <br>
+- [downloads.md](references/downloads.md) <br>
 - [hardware.md](references/hardware.md) <br>
 
 
 ## Skill Output: <br>
 **Output Type(s):** [Shell commands, Configuration instructions, Files] <br>
-**Output Format:** [Markdown with inline bash code blocks and JSON artifacts] <br>
+**Output Format:** [Markdown with inline bash code blocks] <br>
 **Output Parameters:** [1D] <br>
-**Other Properties Related to Output:** [Produces preflight.json (host snapshot) and run_manifest.json (replay-friendly setup record)] <br>
+**Other Properties Related to Output:** [Writes preflight.json and run_manifest.json under ./complexa_setup/] <br>
 
 ## Evaluation Agents Used: <br>
 - Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`) <br>
@@ -42,36 +44,36 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative), each run in an isolated sandbox pod. Evaluator version 1.5.6. <br>
+4 evaluation tasks (3 positive, 1 negative), one attempt per task, each run in an isolated k8s-sandbox pod. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Final-answer correctness against the reference answer. <br>
-- Discoverability: Whether the right skill was selected and activated when needed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal and followed the expected workflow (50% goal completion + 50% behavior adherence). <br>
-- Efficiency: Whether the skill avoided wasted tool calls and token usage (50% tool productivity + 50% token efficiency). <br>
+- Security: Is it safe to use? Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Is the answer correct? Final-answer correctness against the reference answer. <br>
+- Discoverability: Was the right skill loaded when needed? Whether the expected skill was selected and decoys were avoided. <br>
+- Effectiveness: Did the skill help complete the task? Equal-weight mean of goal completion and expected-workflow adherence. <br>
+- Efficiency: Did it avoid wasted tool calls and token usage? Equal-weight mean of tool-call productivity and token efficiency. <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
-- `accuracy`: Final-answer correctness against the reference answer. <br>
+- `security`: Unsafe operations, secret leakage, and unauthorized access. <br>
 - `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
+- `accuracy`: Final-answer correctness against the reference answer. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `skill_efficiency`: Tool-call productivity (routing scored under Discoverability, not here). <br>
-- `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
+- `skill_efficiency`: Tool-call productivity (legacy wire id; routing is scored under Discoverability). <br>
+- `token_efficiency`: Actual uncached prompt plus completion usage (50% of Efficiency). <br>
 
 
 
 ## Evaluation Results: <br>
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 81.8% — uplift unavailable | Not available |
-| Security | 87.5% → 100.0% (+12.5 points) | Not available |
-| Correctness | 30.0% → 90.0% (+60.0 points) | Not available |
-| Discoverability | 95.0% — uplift unavailable | Not available |
-| Effectiveness | 28.8% → 38.8% (+10.0 points) | Not available |
-| Efficiency | 85.1% — uplift unavailable | Not available |
+| Overall | 95.1% — baseline ran, but no comparable score was available; uplift unavailable | 80.0% — baseline ran, but no comparable score was available; uplift unavailable |
+| Security | 100.0% → 100.0% (±0.0 points) | 75.0% → 50.0% (-25.0 points) |
+| Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Discoverability | 98.3% — baseline ran, but no comparable score was available; uplift unavailable | 80.0% — baseline ran, but no comparable score was available; uplift unavailable |
+| Effectiveness | 100.0% → 100.0% (±0.0 points) | 96.9% → 96.3% (-0.6 points) |
+| Efficiency | 77.2% — baseline ran, but no comparable score was available; uplift unavailable | 73.8% — baseline ran, but no comparable score was available; uplift unavailable |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

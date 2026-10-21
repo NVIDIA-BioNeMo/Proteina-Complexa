@@ -9,7 +9,7 @@ Recommended for publication based on the completed evaluation evidence in this r
 ## Evaluation Metadata
 
 - Skill: `complexa-target`
-- Evaluation date: 2026-10-07
+- Evaluation date: 2026-10-21
 - Evaluator version: `1.5.6`
 - Agents: Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`), Codex (`openai/openai/gpt-5.5`)
 - Tasks: 4 evaluation tasks (3 positive, 1 negative)
@@ -35,12 +35,12 @@ The three-tier evaluation checks whether the skill:
 
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 94.5% — baseline ran, but no comparable score was available; uplift unavailable | 88.7% — baseline ran, but no comparable score was available; uplift unavailable |
-| Security | 100.0% → 100.0% (±0.0 points) | 25.0% → 75.0% (+50.0 points) |
+| Overall | 94.7% — baseline ran, but no comparable score was available; uplift unavailable | 82.1% — baseline ran, but no comparable score was available; uplift unavailable |
+| Security | 100.0% → 100.0% (±0.0 points) | 25.0% → 50.0% (+25.0 points) |
 | Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
-| Discoverability | 93.3% — baseline ran, but no comparable score was available; uplift unavailable | 81.7% — baseline ran, but no comparable score was available; uplift unavailable |
-| Effectiveness | 97.5% → 100.0% (+2.5 points) | 97.5% → 98.8% (+1.3 points) |
-| Efficiency | 78.9% — baseline ran, but no comparable score was available; uplift unavailable | 87.9% — baseline ran, but no comparable score was available; uplift unavailable |
+| Discoverability | 95.0% — baseline ran, but no comparable score was available; uplift unavailable | 86.7% — baseline ran, but no comparable score was available; uplift unavailable |
+| Effectiveness | 97.5% → 100.0% (+2.5 points) | 97.5% → 100.0% (+2.5 points) |
+| Efficiency | 78.4% — baseline ran, but no comparable score was available; uplift unavailable | 74.0% — baseline ran, but no comparable score was available; uplift unavailable |
 
 **How to read this table:** baseline is the same task attempted without the target skill. Scores are rounded to one decimal; threshold-adjacent values use additional precision so their displayed band matches the verdict. Uplift is derived from those displayed scores and shown in percentage points.
 
@@ -54,17 +54,17 @@ Actual Tier 3 execution usage is reported for every observed agent/case pair and
 
 | Agent | Dataset case | With skill | Without skill | Delta | Change | Coverage |
 |---|---|---:|---:|---:|---:|---|
-| claude-code | All cases | 3,046,519 | 2,816,720 | +229,799 | +8.16% | skill 4/4; base 4/4 |
-| claude-code | complexa-target-001 | 738,828 | 632,819 | +106,009 | +16.75% | skill 1/1; base 1/1 |
-| claude-code | complexa-target-002 | 960,859 | 933,466 | +27,393 | +2.93% | skill 1/1; base 1/1 |
-| claude-code | complexa-target-003 | 1,242,717 | 988,372 | +254,345 | +25.73% | skill 1/1; base 1/1 |
-| claude-code | complexa-target-004 | 104,115 | 262,063 | -157,948 | -60.27% | skill 1/1; base 1/1 |
-| codex | All cases | 1,014,289 | 969,776 | +44,513 | +4.59% | skill 4/4; base 4/4 |
-| codex | complexa-target-001 | 333,887 | 319,795 | +14,092 | +4.41% | skill 1/1; base 1/1 |
-| codex | complexa-target-002 | 173,909 | 244,635 | -70,726 | -28.91% | skill 1/1; base 1/1 |
-| codex | complexa-target-003 | 316,752 | 118,455 | +198,297 | +167.40% | skill 1/1; base 1/1 |
-| codex | complexa-target-004 | 189,741 | 286,891 | -97,150 | -33.86% | skill 1/1; base 1/1 |
-| ALL AGENTS | Dataset aggregate | 4,060,808 | 3,786,496 | +274,312 | +7.24% | skill 8/8; base 8/8 |
+| claude-code | All cases | 2,821,072 | 2,886,799 | -65,727 | -2.28% | skill 4/4; base 4/4 |
+| claude-code | complexa-target-001 | 918,193 | 624,617 | +293,576 | +47.00% | skill 1/1; base 1/1 |
+| claude-code | complexa-target-002 | 864,450 | 853,654 | +10,796 | +1.26% | skill 1/1; base 1/1 |
+| claude-code | complexa-target-003 | 798,839 | 1,170,824 | -371,985 | -31.77% | skill 1/1; base 1/1 |
+| claude-code | complexa-target-004 | 239,590 | 237,704 | +1,886 | +0.79% | skill 1/1; base 1/1 |
+| codex | All cases | 875,155 | 789,823 | +85,332 | +10.80% | skill 4/4; base 4/4 |
+| codex | complexa-target-001 | 326,186 | 227,088 | +99,098 | +43.64% | skill 1/1; base 1/1 |
+| codex | complexa-target-002 | 294,178 | 244,017 | +50,161 | +20.56% | skill 1/1; base 1/1 |
+| codex | complexa-target-003 | 167,803 | 193,006 | -25,203 | -13.06% | skill 1/1; base 1/1 |
+| codex | complexa-target-004 | 86,988 | 125,712 | -38,724 | -30.80% | skill 1/1; base 1/1 |
+| ALL AGENTS | Dataset aggregate | 3,696,227 | 3,676,622 | +19,605 | +0.53% | skill 8/8; base 8/8 |
 
 Prompt tokens include cached reads, so total tokens are `prompt + completion` (cached is not added twice). The Efficiency score uses `(prompt - cached) + completion`. N/A means the relevant trajectory counters were not available; coverage is never estimated.
 
@@ -72,7 +72,7 @@ Prompt tokens include cached reads, so total tokens are `prompt + completion` (c
 
 | Tier | Purpose | Status | Evidence |
 |---|---|---|---|
-| Tier 1 | Static validation | **PASSED WITH OBSERVATIONS** | 11 validator(s); 7 finding(s) |
+| Tier 1 | Static validation | **PASSED WITH OBSERVATIONS** | 11 validator(s); 8 finding(s) |
 | Tier 2 | Semantic deduplication | **PASSED** | 2 validator(s); 0 finding(s) |
 | Tier 3 | Live agent evaluation | **PASS** | 2 agent(s); 4 task(s) |
 
@@ -86,7 +86,7 @@ Prompt tokens include cached reads, so total tokens are `prompt + completion` (c
 - **LOW** QUALITY/quality_discoverability: Description very long (390 chars, recommend 50-150) (`skills/complexa-target/SKILL.md`)
 - **LOW** QUALITY/quality_discoverability: No '## Purpose' section (`skills/complexa-target/SKILL.md`)
 - **LOW** QUALITY/quality_reliability: No prerequisites/requirements documented (`skills/complexa-target/SKILL.md`)
-- 2 additional finding(s) are available in the full evaluation artifacts.
+- 3 additional finding(s) are available in the full evaluation artifacts.
 
 </details>
 
