@@ -1,0 +1,91 @@
+{
+  "synthetic": true,
+  "description": "Complete synthetic file inventory for the two requested model families on a future host; absent entries represent missing files. Sizes are test inputs, not real checkpoint sizes or proof of integrity. No model files are supplied.",
+  "project_root": "/srv/Proteina-Complexa",
+  "files": [
+    {
+      "path": "community_models/ProteinMPNN/ca_model_weights/v_48_002.pt",
+      "size_bytes": 4096
+    },
+    {
+      "path": "community_models/ProteinMPNN/ca_model_weights/v_48_010.pt",
+      "size_bytes": 4096
+    },
+    {
+      "path": "community_models/ProteinMPNN/ca_model_weights/v_48_020.pt",
+      "size_bytes": 4096
+    },
+    {
+      "path": "community_models/ProteinMPNN/vanilla_model_weights/v_48_002.pt",
+      "size_bytes": 4096
+    },
+    {
+      "path": "community_models/ProteinMPNN/vanilla_model_weights/v_48_010.pt",
+      "size_bytes": 4096
+    },
+    {
+      "path": "community_models/ProteinMPNN/vanilla_model_weights/v_48_020.pt",
+      "size_bytes": 4096
+    },
+    {
+      "path": "community_models/ProteinMPNN/vanilla_model_weights/v_48_030.pt",
+      "size_bytes": 4096
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_1.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_1_ptm.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_1_multimer_v3.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_2.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_2_ptm.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_2_multimer_v3.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_3.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_3_ptm.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_4.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_4_ptm.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_4_multimer_v3.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_5.npz",
+      "size_bytes": 8192
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_5_ptm.npz",
+      "size_bytes": 0
+    },
+    {
+      "path": "community_models/ckpts/AF2/params_model_5_multimer_v3.npz",
+      "size_bytes": 8192
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+check_pmpnn_status() {
+    local missing=()
+    local ca_files=("v_48_002.pt" "v_48_010.pt" "v_48_020.pt")
+    local vanilla_files=("v_48_002.pt" "v_48_010.pt" "v_48_020.pt" "v_48_030.pt")
+    
+    for file in "${ca_files[@]}"; do
+        [ ! -f "$PROJECT_ROOT/community_models/ProteinMPNN/ca_model_weights/$file" ] && missing+=("ca_model_weights/$file")
+    done
+    for file in "${vanilla_files[@]}"; do
+        [ ! -f "$PROJECT_ROOT/community_models/ProteinMPNN/vanilla_model_weights/$file" ] && missing+=("vanilla_model_weights/$file")
+    done
+    
+    if [ ${#missing[@]} -eq 0 ]; then
+        echo -e "${GREEN}✓ Installed (community_models/ProteinMPNN/)${NC}"
+    else
+        echo -e "${YELLOW}○ Missing (community_models/ProteinMPNN/):${NC}"
+        for f in "${missing[@]}"; do
+            echo -e "      ${RED}✗${NC} $f"
+        done
+    fi
+}
+

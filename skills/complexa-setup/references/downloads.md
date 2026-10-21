@@ -22,24 +22,26 @@ The Python argparse explicitly defines these flags:
 | `--complexa-ligand` | `complexa_ligand.ckpt` + `complexa_ligand_ae.ckpt` (ligand binder) | `./ckpts/` | ~3 GB | NGC `proteina_complexa_ligand` |
 | `--complexa-ame` | `complexa_ame.ckpt` + `complexa_ame_ae.ckpt` (motif scaffolding) | `./ckpts/` | ~3 GB | NGC `proteina_complexa_ame` |
 | `--complexa-all` | All three Complexa pairs | `./ckpts/` | ~9 GB | NGC (3 models) |
-| `--all` | ProteinMPNN + LigandMPNN + AF2 + ESM2 + ESMFold + RF3 | `./community_models/...` | ~50 GB | Mixed (GitHub + AWS + HF + NGC) |
-| `--everything` | All Complexa + community + Boltz2 | both | ~100+ GB | Mixed |
+| `--all` | ProteinMPNN + LigandMPNN + AF2 + ESM2 + RF3 | `./community_models/...` | ~50 GB | Mixed (GitHub + AWS + HF + NGC) |
+| `--everything` | All Complexa pairs plus the `--all` community set | both | Allow additional disk headroom | Mixed |
 | `--status` | Show install state; downloads nothing | (none) | n/a | n/a |
 
 The underlying bash script also accepts per-model flags (`--pmpnn`,
-`--ligmpnn`, `--af2`, `--esm2`, `--esmfold`, `--rf3`, `--boltz2`) that pass
-through unchanged. They are listed in `env/download_startup.sh:show_help` but
-not in the Python argparse — the bash script accepts them directly.
+`--ligmpnn`, `--af2`, `--esm2`, `--rf3`). They are not defined in the Python
+CLI parser, which rejects unknown flags before reaching the download wrapper.
+Invoke the trusted script directly for these selections, for example:
 
-| Passthrough flag | Destination | Approx size |
+```bash
+bash env/download_startup.sh --af2 --pmpnn
+```
+
+| Script flag | Destination | Approx size |
 |------------------|-------------|-------------|
 | `--pmpnn` | `./community_models/ProteinMPNN/{ca,vanilla}_model_weights/` | ~50 MB |
 | `--ligmpnn` | `./community_models/LigandMPNN/model_params/` | ~500 MB |
-| `--af2` | `./community_models/ckpts/AF2/params/` | ~3 GB |
+| `--af2` | `./community_models/ckpts/AF2/` | ~3 GB |
 | `--esm2` | `./community_models/ckpts/ESM2/` | ~2.5 GB |
-| `--esmfold` | `./community_models/ckpts/ESMFold/` | ~8.5 GB |
 | `--rf3` | `./community_models/ckpts/RF3/` | ~10 GB |
-| `--boltz2` | `./community_models/ckpts/Boltz2/` | ~5 GB |
 
 ---
 
@@ -59,22 +61,21 @@ $PROJECT_ROOT/
 │   └── complexa_ame_ae.ckpt                 ← AME autoencoder
 └── community_models/
     ├── ProteinMPNN/
-    │   ├── ca_model_weights/                ← Cα-only weights
+    │   ├── ca_model_weights/                ← C-alpha-only weights
     │   └── vanilla_model_weights/           ← full-backbone weights
     ├── LigandMPNN/model_params/             ← LigandMPNN weights
     └── ckpts/
-        ├── AF2/params/                      ← AlphaFold2 .npz / .pkl params
+        ├── AF2/                             ← AlphaFold2 .npz params
         ├── ESM2/                            ← ESM2-650M weights
-        ├── ESMFold/                         ← ESMFold model
-        ├── RF3/                             ← RoseTTAFold3 ckpt
-        └── Boltz2/                          ← Boltz2 (optional)
+        └── RF3/                             ← RoseTTAFold3 ckpt
 ```
 
-Note: `LOCAL_CHECKPOINT_PATH` in `.env` defaults to `${LOCAL_CODE_PATH}/ckpts`,
-which matches where `complexa download` writes Complexa ckpts. If you edit
-`LOCAL_CHECKPOINT_PATH` to point elsewhere, you must also move (or symlink)
-the existing `./ckpts/` contents — `complexa download` always writes to
-`$PROJECT_ROOT/ckpts/` regardless of the `.env` setting.
+Note: `.env_example` defaults `LOCAL_CHECKPOINT_PATH` to
+`${LOCAL_CODE_PATH}/checkpoints`. Set it to `${LOCAL_CODE_PATH}/ckpts` when
+using the downloader's layout, or move the weights to your configured path.
+`complexa download` always writes to `$PROJECT_ROOT/ckpts/` regardless of
+the `.env` setting. Preserve `CKPT_PATH=${LOCAL_CHECKPOINT_PATH}`; Docker
+activation selects `DOCKER_CHECKPOINT_PATH` separately.
 
 ---
 
@@ -114,7 +115,8 @@ complexa design configs/search_binder_local_pipeline.yaml \
 
 ## `complexa download --status` output
 
-Example output (post `--complexa-all` + `--af2`, no RF3 or ESMFold):
+Abbreviated example after installing all Complexa pairs and AF2 through the
+corresponding aggregate and script flags:
 
 ```
 ═══════════════════════════════════════════
@@ -127,14 +129,14 @@ Example output (post `--complexa-all` + `--af2`, no RF3 or ESMFold):
     LigandMPNN:      ○ Missing (community_models/LigandMPNN/model_params/)
     AF2:             ✓ Installed (community_models/ckpts/AF2/)
     ESM2:            ○ Not installed (community_models/ckpts/ESM2/)
-    ESMFold:         ○ Not installed (community_models/ckpts/ESMFold/)
     RF3:             ○ Missing (community_models/ckpts/RF3/)
-    Boltz2:          ○ Missing (community_models/ckpts/Boltz2/)
 ═══════════════════════════════════════════
 ```
 
 Read each row as: `<Model name>: <✓ Installed | ○ Missing> (<destination>)`.
-Re-run `complexa download --<flag>` for any row that is missing.
+Use the CLI's aggregate flags or the script's per-model flags for missing
+families. The status checks are presence checks, not integrity checks; verify
+nonzero sizes and download completion before treating weights as usable.
 
 ---
 
@@ -143,5 +145,5 @@ Re-run `complexa download --<flag>` for any row that is missing.
 - Run `complexa download --status` **before** any download — it shows what is already on disk and saves re-downloading.
 - Re-running `complexa download --<flag>` is idempotent: existing non-empty ckpts are skipped (`download_complexa_weights` checks `[ -f "$fm_ckpt" ] && [ -s "$fm_ckpt" ]`).
 - Failed downloads leave a zero-byte file then `rm -f` it — safe to retry without manual cleanup.
-- For ESM2 / ESMFold specifically: set `HF_TOKEN` in `.env` before downloading to avoid HF Hub rate limits.
-- `complexa download --everything` will fetch every model the script supports (~100 GB). Prefer the targeted flags unless you actually need all variants.
+- For Hugging Face downloads, configure authentication as required by the selected source without printing tokens.
+- `complexa download --everything` fetches all bundled variants and community families. Prefer targeted script flags unless you need that complete set; optional backends require their own installation procedure.

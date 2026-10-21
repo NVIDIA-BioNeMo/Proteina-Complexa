@@ -1,0 +1,46 @@
+    download_parser = subparsers.add_parser(
+        "download",
+        help="Download model weights",
+        description=(
+            "Download Complexa and community model weights. "
+            "Without arguments, launches an interactive wizard. "
+            "Use flags to download specific models non-interactively."
+        ),
+    )
+    download_parser.add_argument(
+        "--complexa",
+        action="store_true",
+        help="Download Complexa Protein weights (protein binder design)",
+    )
+    download_parser.add_argument(
+        "--complexa-ligand",
+        action="store_true",
+        help="Download Complexa Ligand weights (ligand binder design)",
+    )
+    download_parser.add_argument(
+        "--complexa-ame",
+        action="store_true",
+        help="Download Complexa AME weights (enzyme/motif scaffolding)",
+    )
+    download_parser.add_argument(
+        "--complexa-all",
+        action="store_true",
+        help="Download all Complexa weights (protein + ligand + AME)",
+    )
+    download_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Download all community model weights (ProteinMPNN, LigandMPNN, AF2, ESM2, RF3)",
+    )
+    download_parser.add_argument(
+        "--everything",
+        action="store_true",
+        help="Download all models (Complexa + community + optional)",
+    )
+    download_parser.add_argument(
+        "--status",
+        action="store_true",
+        help="Show installation status of all models",
+    )
+
+    # -------------------------------------------------------------------------

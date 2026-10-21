@@ -1,6 +1,6 @@
 # SkillSpector suppression baseline — complexa-sweep
 #
-# Audited false positives only. NV-CARPS applies this file explicitly during
+# Audited false positives only. NVSkills applies this file explicitly during
 # Tier 1 and retains suppressed findings plus these reasons in its report.
 version: 2
 

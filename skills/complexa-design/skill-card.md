@@ -1,15 +1,14 @@
 ## Description: <br>
 Agent runbook for orchestrating an end-to-end protein, ligand-binder, or AME design through the separately installed first-party Proteina-Complexa CLI. <br>
 
-This skill is ready for commercial/non-commercial use. <br>
+This skill is for research and development only. <br>
 
 ## Owner
 NVIDIA <br>
 
 ### License/Terms of Use: <br>
-Multi-license (multiple components covered by different licenses) <br>
 ## Use Case: <br>
-Developers and computational biologists who need to design protein binders, ligand binders, or AME motif scaffolds using the Proteina-Complexa CLI pipeline. <br>
+Developers and computational biologists use this skill to drive the full four-stage Proteina-Complexa design pipeline (generate, filter, evaluate, analyze) for de novo protein binders, ligand binders, or AME scaffolds, selecting the correct pipeline config, validating readiness, running the CLI, and emitting a replayable run manifest with per-design success and diversity results. <br>
 
 ### Deployment Geography for Use: <br>
 Global <br>
@@ -25,22 +24,22 @@ Risk: Review before execution as proposals could introduce incorrect or misleadi
 Mitigation: Review and scan skill before deployment. <br>
 
 ## Reference(s): <br>
-- [Pipeline Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
-- [Evaluation & Analysis Guide](references/EVALUATION_METRICS.md) <br>
-- [Inference and Search Guide](references/INFERENCE.md) <br>
-- [Search Metadata Tags](references/SEARCH_METADATA.md) <br>
-- [Sweep System](references/SWEEP.md) <br>
-- [Hardware Reference](references/hardware.md) <br>
-- [Overrides Reference](references/overrides.md) <br>
 - [Pipeline Reference](references/pipelines.md) <br>
+- [Inference and Search Guide](references/INFERENCE.md) <br>
+- [Evaluation Metrics Guide](references/EVALUATION_METRICS.md) <br>
+- [Pipeline Configuration Guide](references/CONFIGURATION_GUIDE.md) <br>
+- [Overrides Reference](references/overrides.md) <br>
+- [Hardware Reference](references/hardware.md) <br>
 - [Troubleshooting Reference](references/troubleshooting.md) <br>
+- [Sweep System](references/SWEEP.md) <br>
+- [Search Metadata Tags](references/SEARCH_METADATA.md) <br>
 
 
 ## Skill Output: <br>
 **Output Type(s):** [Shell commands, Configuration instructions, Files, Analysis] <br>
-**Output Format:** [Markdown with inline bash code blocks, JSON manifest, and CSV result summaries] <br>
+**Output Format:** [Markdown with inline bash code blocks, plus a JSON run manifest and result CSV summaries] <br>
 **Output Parameters:** [1D] <br>
-**Other Properties Related to Output:** [None] <br>
+**Other Properties Related to Output:** [Writes a replayable JSON run manifest and summarizes success-rate, per-design, and diversity CSVs produced by the CLI run] <br>
 
 ## Evaluation Agents Used: <br>
 - Claude Code (`aws/anthropic/bedrock-claude-opus-4-8`) <br>
@@ -49,36 +48,36 @@ Mitigation: Review and scan skill before deployment. <br>
 
 
 ## Evaluation Tasks: <br>
-4 evaluation tasks (3 positive, 1 negative) in isolated sandbox pods. <br>
+4 evaluation tasks (3 positive, 1 negative), one attempt per task, each run in an isolated k8s-sandbox pod. <br>
 
 ## Evaluation Metrics Used: <br>
 Reported benchmark dimensions: <br>
-- Security: Whether the skill avoids unsafe operations, secret leakage, and unauthorized access. <br>
-- Correctness: Whether the final answer is correct against the reference answer. <br>
-- Discoverability: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
-- Effectiveness: Whether the skill helped complete the user's goal (50% goal completion + 50% expected workflow adherence). <br>
-- Efficiency: Whether the skill avoided wasted tool calls and token usage (50% tool-call productivity + 50% token efficiency). <br>
+- Security: Is the skill safe to use? Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- Correctness: Is the final answer correct against the reference answer? <br>
+- Discoverability: Was the expected skill selected and activated when needed while decoys were avoided? <br>
+- Effectiveness: Did the skill help complete the task? Equal-weight mean of goal completion and expected workflow adherence. <br>
+- Efficiency: Did the run avoid wasted tool calls and token usage? <br>
 
 Underlying evaluation signals used in this run: <br>
-- `security`: Checks for unsafe operations, secret leakage, and unauthorized access. <br>
+- `security`: Flags unsafe operations, secret leakage, and unauthorized access. <br>
 - `accuracy`: Final-answer correctness against the reference answer. <br>
-- `skill_execution`: Whether the expected skill was selected and the workflow executed. <br>
-- `skill_efficiency`: Tool-call productivity. <br>
+- `skill_execution`: Whether the expected skill was selected, decoys were avoided, and the workflow executed. <br>
 - `goal_accuracy`: Whether the user's goal was achieved. <br>
 - `behavior_check`: Whether the expected workflow behavior was followed. <br>
-- `token_efficiency`: Actual uncached prompt plus completion usage. <br>
+- `skill_efficiency`: Tool-call productivity (legacy wire id; routing is scored under Discoverability). <br>
+- `token_efficiency`: Actual uncached prompt plus completion token usage. <br>
 
 
 
 ## Evaluation Results: <br>
 | Measure | Claude Code (Baseline → Skill Uplift) | Codex (Baseline → Skill Uplift) |
 |---|---:|---:|
-| Overall | 86.3% | 80.8% |
-| Security | 62.5% → 100.0% (+37.5 pts) | 50.0% → 100.0% (+50.0 pts) |
-| Correctness | 45.0% → 95.0% (+50.0 pts) | 65.0% → 90.0% (+25.0 pts) |
-| Discoverability | 100.0% | 90.0% |
-| Effectiveness | 36.3% → 57.5% (+21.2 pts) | 37.5% → 55.0% (+17.5 pts) |
-| Efficiency | 79.2% | 69.1% |
+| Overall | 92.1% — baseline ran, but no comparable score was available; uplift unavailable | 89.2% — baseline ran, but no comparable score was available; uplift unavailable |
+| Security | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Correctness | 100.0% → 100.0% (±0.0 points) | 100.0% → 100.0% (±0.0 points) |
+| Discoverability | 86.7% — baseline ran, but no comparable score was available; uplift unavailable | 76.7% — baseline ran, but no comparable score was available; uplift unavailable |
+| Effectiveness | 100.0% → 96.9% (-3.1 points) | 100.0% → 96.9% (-3.1 points) |
+| Efficiency | 76.8% — baseline ran, but no comparable score was available; uplift unavailable | 72.6% — baseline ran, but no comparable score was available; uplift unavailable |
 
 ## Skill Version(s): <br>
 1.1.0 (source: pyproject.toml) <br>

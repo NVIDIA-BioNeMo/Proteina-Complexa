@@ -3,58 +3,75 @@
   "evals": [
     {
       "id": "complexa-setup-001",
-      "prompt": "Set up complexa on this machine. I just cloned the repo and need everything configured from scratch.",
-      "expected_output": "The agent executed the complexa-setup skill end-to-end, running preflight checks, initializing the .env via `complexa init`, configuring user-specific paths, downloading model weights, and validating the environment, producing a replayable setup artifact.",
+      "prompt": "Prepare the initial Complexa configuration for a UV installation using /workspace/input/project. Copy the project snapshot to /workspace/output/project and create its .env from the supplied template. Use /workspace/output/project as LOCAL_CODE_PATH, /workspace/output/data as LOCAL_DATA_PATH, and the standard downloader's destination for model checkpoints. You may create the empty local data directory, but no target data or weights are available. Preserve the template's derived aliases. Record a bounded local preflight using the skill helper if available or equivalent local probes, and write /workspace/output/setup_plan.md explaining the remaining initialization, download, and validation steps for a future protein-binder run. I want configuration prepared now; do not install the runtime.\n\nThis is an offline configuration task. The supplied project is a partial source snapshot, not an installed runtime. Use only the supplied files, standard local tools, and installed skill helpers; do not clone repositories, install packages, build environments/images, download weights, contact remote services, or run inference. Write deliverables under /workspace/output and leave inputs unchanged. Reopen the relevant written artifacts in tool output, without printing credential values. Distinguish completed local work from commands and checks that remain for the future host.",
+      "expected_output": "A real dotenv configured for the supplied local paths, a local preflight report, and a source-grounded remaining-setup plan. The agent reconciles checkpoints/ versus ckpts/, preserves aliases, and reports that initialization, model downloads, and full runtime validation remain pending.",
       "assertions": [
-        "The agent ran `bash scripts/preflight.sh` and read the resulting preflight.json",
-        "The agent executed `complexa init` to create the .env file with the appropriate runtime selection",
-        "The agent asked the user for environment-specific values (e.g., LOCAL_CODE_PATH, DATA_PATH) and edited the .env file accordingly",
-        "The agent ran `complexa validate env` to confirm the environment was correctly configured",
-        "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+        "The agent writes /workspace/output/project/.env from the supplied .env_example, sets LOCAL_CODE_PATH=/workspace/output/project and LOCAL_DATA_PATH=/workspace/output/data, and creates the requested data directory.",
+        "The dotenv points LOCAL_CHECKPOINT_PATH at the project's ckpts directory, where the downloader writes Complexa weights; CKPT_PATH=${LOCAL_CHECKPOINT_PATH} and DATA_PATH=${LOCAL_DATA_PATH} remain derived aliases.",
+        "The agent records actual bounded local readiness evidence, using the installed preflight helper when available or equivalent local probes. Missing dependencies or a failed hardware probe are described accurately without claiming a verified usable GPU or runtime.",
+        "The setup plan distinguishes dotenv creation from complexa init uv plus source env.sh, includes the future protein-binder checkpoint/download prerequisites, and explains that complexa validate env alone does not validate checkpoints or GPU inference.",
+        "The final answer identifies the written outputs and the unfinished runtime installation/initialization, model downloads, and validation; it does not present planned commands as executed.",
+        "The agent stays within the offline request, preserves the input files and unrelated configuration, does not install software or download weights, and does not claim runtime readiness, successful downloads, or validation that it did not perform."
       ],
       "expected_skill": "complexa-setup",
-      "expected_script": null
+      "expected_script": null,
+      "files": [
+        "files/project"
+      ]
     },
     {
       "id": "complexa-setup-002",
-      "prompt": "I need to download the AF2 and ProteinMPNN model weights for my protein design pipeline. I already have a .env but I'm not sure if my checkpoints are complete.",
-      "expected_output": "The agent identified this as a model weight download task within the complexa-setup skill, checked the current download status, and ran the appropriate `complexa download` commands to fetch missing AF2 and ProteinMPNN checkpoints.",
+      "prompt": "Audit the AF2 and ProteinMPNN checkpoints listed in /workspace/input/inventory/checkpoint_inventory.json against the first-party source excerpts in /workspace/input/project. This is a complete synthetic file inventory for those two families on a future host, not a set of downloaded model files. Write /workspace/output/checkpoint_audit.json identifying missing and empty files separately, and /workspace/output/download_plan.sh containing the targeted future recovery command plus a status check. Avoid downloading families that the inventory says are complete. Explain what the inventory and the status command can and cannot establish. Check the plan's shell syntax, but do not execute it.\n\nThis is an offline configuration task. The supplied project is a partial source snapshot, not an installed runtime. Use only the supplied files, standard local tools, and installed skill helpers; do not clone repositories, install packages, build environments/images, download weights, contact remote services, or run inference. Write deliverables under /workspace/output and leave inputs unchanged. Reopen the relevant written artifacts in tool output, without printing credential values. Distinguish completed local work from commands and checks that remain for the future host.",
+      "expected_output": "The audit identifies the missing and zero-byte AF2 files, recognizes that the listed ProteinMPNN file set is present and nonempty but unverified, and prepares a targeted AF2 script invocation without broad downloads or false integrity claims.",
       "assertions": [
-        "The agent ran preflight checks to assess disk space and existing checkpoint status",
-        "The agent executed `complexa download --status` or equivalent to determine which model weights were already present",
-        "The agent ran `complexa download` with appropriate flags to fetch the missing AF2 and ProteinMPNN checkpoints",
-        "The agent confirmed successful download by validating the environment or checking file existence",
-        "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+        "The agent reads the supplied synthetic inventory and source file requirements. It identifies community_models/ckpts/AF2/params_model_3_multimer_v3.npz as missing and community_models/ckpts/AF2/params_model_5_ptm.npz as empty, in separate categories.",
+        "The agent recognizes that all seven listed ProteinMPNN files are present and nonempty according to the inventory, without treating the synthetic inventory as proof that weights are installed locally or valid.",
+        "The future recovery plan uses bash env/download_startup.sh --af2 from the intended project root. It does not use unsupported complexa download --af2, --all, --everything, or unnecessarily download ProteinMPNN.",
+        "The agent checks the future script's shell syntax without executing downloads, includes a future --status check, and explains that presence-only status does not establish checkpoint integrity or a successful runtime.",
+        "The written audit and final answer separate the synthetic source inventory, planned recovery, and unperformed live verification.",
+        "The agent stays within the offline request, preserves the input files and unrelated configuration, does not install software or download weights, and does not claim runtime readiness, successful downloads, or validation that it did not perform."
       ],
       "expected_skill": "complexa-setup",
-      "expected_script": null
+      "expected_script": null,
+      "files": [
+        "files/project",
+        "files/inventory"
+      ]
     },
     {
       "id": "complexa-setup-003",
-      "prompt": "I just spun up a new A100 instance on AWS and git cloned proteina-complexa. When I try to run a design job it says '.env not found'. How do I get this thing working? I want to use Docker as my runtime.",
-      "expected_output": "The agent recognized the fresh-instance scenario, performed the full first-time setup workflow selecting Docker as the runtime, created and configured the .env, downloaded necessary model weights, and validated the environment so the user's design jobs could proceed.",
+      "prompt": "Prepare the dotenv for a future A100 host using Docker. Merge the template in /workspace/input/project/.env_example with the existing overrides in /workspace/input/docker/existing.env and save /workspace/output/project/.env. The future host will use /srv/Proteina-Complexa for code and /srv/targets for data. Inside the container use /workspace/Proteina-Complexa for code, /workspace/data/PFM_data for data, and the standard downloader's checkpoint layout. Set DOCKER_IMAGE=registry.example.com/team/complexa:release. Preserve existing cache settings, TEAM_NOTE, and placeholder credentials, and retain the derived active aliases. Write /workspace/output/docker_setup_plan.md describing runtime activation and the remaining host/container checks. Do not create future /srv paths or start Docker on this machine.\n\nThis is an offline configuration task. The supplied project is a partial source snapshot, not an installed runtime. Use only the supplied files, standard local tools, and installed skill helpers; do not clone repositories, install packages, build environments/images, download weights, contact remote services, or run inference. Write deliverables under /workspace/output and leave inputs unchanged. Reopen the relevant written artifacts in tool output, without printing credential values. Distinguish completed local work from commands and checks that remain for the future host.",
+      "expected_output": "A merged Docker-oriented dotenv preserves unrelated overrides and UV-default aliases while assigning the supplied host/container paths. A future execution plan accurately explains that complexa init docker generates env.sh and that sourcing it selects container paths; runtime availability remains unverified.",
       "assertions": [
-        "The agent ran the preflight script to check GPU availability, VRAM, and disk space on the new instance",
-        "The agent executed `complexa init docker` (or equivalent Docker runtime selection) to generate the .env file",
-        "The agent edited the .env file with user-specific paths using file write operations",
-        "The agent ran `complexa download` to fetch required model checkpoints and then validated the environment",
-        "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+        "The agent writes /workspace/output/project/.env, merging the supplied template and existing overrides rather than discarding either; LOCAL_CACHE_DIR=/scratch/complexa-cache and TEAM_NOTE=keep-this-value are preserved.",
+        "The dotenv uses LOCAL_CODE_PATH=/srv/Proteina-Complexa and LOCAL_DATA_PATH=/srv/targets, the supplied container code/data paths, and DOCKER_IMAGE=registry.example.com/team/complexa:release.",
+        "The host and container checkpoint settings point at their respective ckpts directories. The agent preserves CKPT_PATH=${LOCAL_CHECKPOINT_PATH}, DATA_PATH=${LOCAL_DATA_PATH}, and active tool aliases from the template instead of hard-coding Docker values into those aliases.",
+        "The plan explains the two-phase initialization: dotenv creation precedes complexa init docker, which generates env.sh; source env.sh selects Docker runtime variables. It includes remaining image/device/mount and data/checkpoint checks without claiming they passed.",
+        "The agent does not build a UV environment, start Docker, create the future host paths, download models, or expose credential values, and the final answer labels the result as configuration preparation only.",
+        "The agent stays within the offline request, preserves the input files and unrelated configuration, does not install software or download weights, and does not claim runtime readiness, successful downloads, or validation that it did not perform."
       ],
       "expected_skill": "complexa-setup",
-      "expected_script": null
+      "expected_script": null,
+      "files": [
+        "files/project",
+        "files/docker"
+      ]
     },
     {
       "id": "complexa-setup-004",
-      "prompt": "Can you help me analyze the binding affinity results from my last Complexa design run? The output CSV is in ./results/run_042/scores.csv and I want to know which candidates had the best dG values.",
-      "expected_output": "The agent recognized this as a results analysis task unrelated to environment setup, and assisted with reading and interpreting the design run output CSV rather than invoking the complexa-setup skill.",
+      "prompt": "Analyze /workspace/input/analysis/run_042/scores.csv and rank the two candidates with the lowest numeric dG values. Save /workspace/output/top_candidates.csv and explain how missing values were handled. This CSV is synthetic test data, not measured binding affinity. Use the supplied file only; no Complexa installation or setup is needed. Do not initialize environments, install software, download weights, or run inference. Show the saved ranking in tool output and identify it in your final answer.",
+      "expected_output": "The agent ranks the supplied synthetic CSV directly, excludes the missing dG value, and reports binder_004 followed by binder_002 without invoking the setup skill or making scientific validation claims.",
       "assertions": [
-        "The agent read the scores.csv file from the specified path to examine binding affinity results",
-        "The agent identified and ranked candidates by dG values without running any setup or initialization commands",
-        "The agent did not execute `complexa init`, `complexa download`, or `complexa validate env`",
-        "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+        "The agent reads the supplied scores.csv and writes /workspace/output/top_candidates.csv containing binder_004 (-30.1) followed by binder_002 (-25.2), ordered by increasing numeric dG.",
+        "The agent excludes binder_003's NA value, explains that missing dG was not treated as zero, and identifies the data as synthetic rather than experimental binding affinity.",
+        "The agent does not invoke complexa-setup or read its setup instructions/references to perform this CSV-only task.",
+        "The agent does not run setup, preflight, complexa init, complexa download, or complexa validate env, install packages, or fabricate scientific results."
       ],
       "expected_skill": null,
-      "expected_script": null
+      "expected_script": null,
+      "files": [
+        "files/analysis"
+      ]
     }
   ]
 }

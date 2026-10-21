@@ -25,7 +25,7 @@ json_str() {
     if command -v python3 >/dev/null 2>&1; then
         python3 -c 'import json,sys; sys.stdout.write(json.dumps(sys.argv[1]))' "$v"
     else
-        printf '"%s"' "$(printf '%s' "$v" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+        printf '"%s"' "$(sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' <<<"$v")"
     fi
 }
 
@@ -108,15 +108,15 @@ if command -v nvidia-smi >/dev/null 2>&1; then
     OUT_LINES=$(nvidia-smi --query-gpu=name,memory.total,driver_version \
                            --format=csv,noheader,nounits 2>/dev/null || true)
     if [[ -n "$OUT_LINES" ]]; then
-        N=$(printf '%s\n' "$OUT_LINES" | wc -l | tr -d ' ')
-        F=$(printf '%s\n' "$OUT_LINES" | head -n1)
-        NAME=$(printf '%s' "$F" | awk -F',' '{gsub(/^ +| +$/,"",$1); print $1}')
-        VRAM_MIB=$(printf '%s' "$F" | awk -F',' '{gsub(/[^0-9]/,"",$2); print $2}')
+        N=$(wc -l <<<"$OUT_LINES" | tr -d ' ')
+        F=$(head -n1 <<<"$OUT_LINES")
+        NAME=$(awk -F',' '{gsub(/^ +| +$/,"",$1); print $1}' <<<"$F")
+        VRAM_MIB=$(awk -F',' '{gsub(/[^0-9]/,"",$2); print $2}' <<<"$F")
         VRAM_GB=$(( VRAM_MIB / 1024 ))
-        DRV=$(printf '%s' "$F" | awk -F',' '{gsub(/^ +| +$/,"",$3); print $3}')
+        DRV=$(awk -F',' '{gsub(/^ +| +$/,"",$3); print $3}' <<<"$F")
         CUDA=$(nvidia-smi 2>/dev/null | sed -n 's/.*CUDA Version: *\([0-9.]*\).*/\1/p' | head -n1)
-        GPU_JSON=$(printf '{"available":true,"name":%s,"vram_gb":%s,"count":%s,"driver":%s,"cuda":%s}' \
-            "$(json_str "$NAME")" "$VRAM_GB" "$N" "$(json_str "$DRV")" "$(json_str "${CUDA:-unknown}")")
+        printf -v GPU_JSON '{"available":true,"name":%s,"vram_gb":%s,"count":%s,"driver":%s,"cuda":%s}' \
+            "$(json_str "$NAME")" "$VRAM_GB" "$N" "$(json_str "$DRV")" "$(json_str "${CUDA:-unknown}")"
     fi
 fi
 
@@ -129,7 +129,7 @@ if [[ -n "$DISK_TARGET" ]]; then
         [[ -n "${FREE_KB:-}" ]] && DISK_FREE=$(( FREE_KB / 1024 / 1024 ))
     fi
 fi
-DISK_JSON=$(printf '{"ckpt_path":%s,"free_gb":%s}' "$(json_str "$DISK_TARGET")" "$DISK_FREE")
+printf -v DISK_JSON '{"ckpt_path":%s,"free_gb":%s}' "$(json_str "$DISK_TARGET")" "$DISK_FREE"
 
 # ---- Checkpoints ----
 CKPT_ITEMS=()
@@ -146,7 +146,9 @@ for name in complexa.ckpt complexa_ae.ckpt complexa_ligand.ckpt complexa_ligand_
         fi
         [[ -n "${s:-}" ]] && sha="$(json_str "$s")"
     fi
-    CKPT_ITEMS+=("$(json_str "$name"):$(printf '{"path":%s,"exists":%s,"size":%s,"sha256":%s}' "$(json_str "$p")" "$ex" "$size" "$sha")")
+    printf -v item '%s:{"path":%s,"exists":%s,"size":%s,"sha256":%s}' \
+        "$(json_str "$name")" "$(json_str "$p")" "$ex" "$size" "$sha"
+    CKPT_ITEMS+=("$item")
 done
 CKPT_JSON="{$(IFS=,; echo "${CKPT_ITEMS[*]}")}"
 
@@ -157,7 +159,8 @@ for entry in "foldseek=${V[FOLDSEEK_EXEC]:-}" "mmseqs=${V[MMSEQS_EXEC]:-}" \
              "sc=${V[SC_EXEC]:-}"             "rf3=${V[RF3_EXEC_PATH]:-}"; do
     k="${entry%%=*}"; p="${entry#*=}"; ex=false
     [[ -n "$p" && ( -x "$p" || -f "$p" ) ]] && ex=true
-    TOOL_ITEMS+=("$(json_str "$k"):$(printf '{"path":%s,"exists":%s}' "$(json_str "$p")" "$ex")")
+    printf -v item '%s:{"path":%s,"exists":%s}' "$(json_str "$k")" "$(json_str "$p")" "$ex"
+    TOOL_ITEMS+=("$item")
 done
 TOOLS_JSON="{$(IFS=,; echo "${TOOL_ITEMS[*]}")}"
 
@@ -171,9 +174,9 @@ if [[ ${#MISSING[@]} -gt 0 ]]; then
     parts=(); for m in "${MISSING[@]}"; do parts+=("$(json_str "$m")"); done
     MISS_JSON="[$(IFS=,; echo "${parts[*]}")]"
 fi
-ENV_JSON=$(printf '{".env_loaded":%s,".env_path":%s,"missing_required":%s,"LOCAL_CODE_PATH":%s,"LOCAL_DATA_PATH":%s,"CKPT_PATH":%s}' \
+printf -v ENV_JSON '{".env_loaded":%s,".env_path":%s,"missing_required":%s,"LOCAL_CODE_PATH":%s,"LOCAL_DATA_PATH":%s,"CKPT_PATH":%s}' \
     "$ENV_LOADED" "$(json_str "$ENV_FILE")" "$MISS_JSON" \
-    "$(json_str "${V[LOCAL_CODE_PATH]:-}")" "$(json_str "${V[LOCAL_DATA_PATH]:-}")" "$(json_str "${V[CKPT_PATH]:-}")")
+    "$(json_str "${V[LOCAL_CODE_PATH]:-}")" "$(json_str "${V[LOCAL_DATA_PATH]:-}")" "$(json_str "${V[CKPT_PATH]:-}")"
 
 # ---- Git SHA ----
 GIT_SHA="unknown"; GIT_DIR="${V[LOCAL_CODE_PATH]:-$PWD}"
@@ -184,15 +187,15 @@ if command -v git >/dev/null 2>&1; then
 fi
 
 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-DOC=$(printf '{"timestamp":%s,"gpu":%s,"disk":%s,"checkpoints":%s,"tools":%s,"env":%s,"community_models":%s,"complexa_runtime":%s,"git_sha":%s}' \
+printf -v DOC '{"timestamp":%s,"gpu":%s,"disk":%s,"checkpoints":%s,"tools":%s,"env":%s,"community_models":%s,"complexa_runtime":%s,"git_sha":%s}' \
     "$(json_str "$TS")" "$GPU_JSON" "$DISK_JSON" "$CKPT_JSON" "$TOOLS_JSON" "$ENV_JSON" "$COMMUNITY_JSON" \
-    "$(json_str "${V[COMPLEXA_INIT]:-}")" "$(json_str "$GIT_SHA")")
+    "$(json_str "${V[COMPLEXA_INIT]:-}")" "$(json_str "$GIT_SHA")"
 
 PRETTY="$DOC"
 if command -v jq >/dev/null 2>&1; then
-    PRETTY=$(printf '%s' "$DOC" | jq . 2>/dev/null || printf '%s' "$DOC")
+    PRETTY=$(jq . <<<"$DOC" 2>/dev/null || printf '%s' "$DOC")
 elif command -v python3 >/dev/null 2>&1; then
-    PRETTY=$(printf '%s' "$DOC" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin), indent=2))' 2>/dev/null || printf '%s' "$DOC")
+    PRETTY=$(python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin), indent=2))' <<<"$DOC" 2>/dev/null || printf '%s' "$DOC")
 fi
 
 OUT_PARENT=$(dirname -- "$OUT")

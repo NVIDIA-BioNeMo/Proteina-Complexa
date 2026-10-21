@@ -1,0 +1,27 @@
+def validate_env() -> ValidationReport:
+    """Validate the .env file exists and has required variables."""
+    report = ValidationReport(validation_type="Environment")
+
+    env_path = Path(".env")
+    if not env_path.exists():
+        report.add_fail(
+            ".env file",
+            "No .env file found in current directory",
+            fix_hint="Run 'complexa init' to create one",
+        )
+        return report
+
+    report.add_pass(".env file", "Found")
+
+    # Load env
+    env = load_env_config()
+
+    # Check critical paths
+    if env.get("DATA_PATH"):
+        report.add(check_dir_exists(env["DATA_PATH"], "DATA_PATH"))
+    else:
+        report.add_fail("DATA_PATH", "Not set in .env", fix_hint="Run 'complexa init'")
+
+    return report
+
+

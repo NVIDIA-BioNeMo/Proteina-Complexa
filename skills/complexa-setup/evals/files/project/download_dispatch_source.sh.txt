@@ -1,0 +1,72 @@
+        for arg in "$@"; do
+            case $arg in
+                --complexa)
+                    download_complexa_weights || true
+                    ;;
+                --complexa-ligand)
+                    download_complexa_ligand_weights || true
+                    ;;
+                --complexa-ame)
+                    download_complexa_ame_weights || true
+                    ;;
+                --complexa-all)
+                    download_complexa_weights || true
+                    download_complexa_ligand_weights || true
+                    download_complexa_ame_weights || true
+                    print_section "Complexa Downloads Complete! 🎉"
+                    ;;
+                --all)
+                    download_pmpnn_weights
+                    download_ligmpnn_weights
+                    download_af2_weights
+                    download_esm2_weights
+                    download_rf3_weights
+                    print_section "Community Downloads Complete! 🎉"
+                    ;;
+                --everything)
+                    download_complexa_weights || true
+                    download_complexa_ligand_weights || true
+                    download_complexa_ame_weights || true
+                    download_pmpnn_weights
+                    download_ligmpnn_weights
+                    download_af2_weights
+                    download_esm2_weights
+                    download_rf3_weights
+                    print_section "All Downloads Complete! 🎉"
+                    ;;
+                --pmpnn)
+                    download_pmpnn_weights
+                    ;;
+                --ligmpnn)
+                    download_ligmpnn_weights
+                    ;;
+                --af2)
+                    download_af2_weights
+                    ;;
+                --esm2)
+                    download_esm2_weights
+                    ;;
+                --rf3)
+                    download_rf3_weights
+                    ;;
+                --status)
+                    print_status
+                    ;;
+                --help|-h)
+                    show_help
+                    exit 0
+                    ;;
+                *)
+                    print_error "Unknown option: $arg"
+                    show_help
+                    exit 1
+                    ;;
+            esac
+        done
+        
+        print_status
+    fi
+}
+
+main "$@"
+
