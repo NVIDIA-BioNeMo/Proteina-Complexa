@@ -61,7 +61,7 @@ $PROJECT_ROOT/
 │   └── complexa_ame_ae.ckpt                 ← AME autoencoder
 └── community_models/
     ├── ProteinMPNN/
-    │   ├── ca_model_weights/                ← Cα-only weights
+    │   ├── ca_model_weights/                ← C-alpha-only weights
     │   └── vanilla_model_weights/           ← full-backbone weights
     ├── LigandMPNN/model_params/             ← LigandMPNN weights
     └── ckpts/

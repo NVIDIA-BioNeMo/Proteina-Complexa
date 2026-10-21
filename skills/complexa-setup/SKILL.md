@@ -33,9 +33,12 @@ does not establish runtime or GPU readiness. Keep commands actually executed
 separate from commands planned for later; do not record an unexecuted download
 as completed in the manifest.
 
-Resolve `SETUP_SKILL_DIR` to the directory containing this `SKILL.md`. Bundled
-script paths below are relative to that directory; run them with the project
-root as the working directory so they inspect the intended `.env`.
+Set `SETUP_SKILL_DIR` to this skill's absolute installation directory, using
+the location supplied by the skill loader. The bundled helpers are
+[preflight.sh](scripts/preflight.sh) and
+[write_manifest.py](scripts/write_manifest.py). Run them with the
+Proteina-Complexa project root as the working directory so they inspect the
+intended `.env`.
 
 ## CLI vs direct file-edit — pick the cheapest path per step
 
@@ -115,7 +118,11 @@ If the CLI is not yet available but the checkout is trusted, `cp .env_example
 .env` is equivalent to phase 1 only. Runtime selection happens later through
 `env.sh`; do not rewrite the active path expressions in `.env`.
 
-To deliberately discard an existing dotenv and recreate it from the template:
+`complexa init --force` replaces the entire existing dotenv, including custom
+paths and credentials. Use it only when the user has explicitly requested a
+reset; otherwise preserve the existing file and edit the required values.
+Before an authorized reset, save a private backup with a unique filename and
+report its path without printing its contents:
 
 ```bash
 complexa init --force            # Recreate .env from .env_example (drops any edits)
