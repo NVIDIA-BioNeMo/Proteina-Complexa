@@ -7,7 +7,7 @@ description: >
   "complexa download", checkpoint installation or status, UV versus Docker
   selection, and fresh checkouts. SKILL.md invokes the first-party CLI; bundled
   executables safely inspect local readiness and write a private setup manifest.
-compatibility: "complexa CLI installed (pip install -e .); bash 4+; nvidia-smi optional"
+compatibility: "bash 4+ and Python 3 for local checks; complexa CLI for runtime initialization/downloads; nvidia-smi optional"
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
 ---
 
@@ -19,6 +19,23 @@ design run: create `.env`, fetch model weights, and sanity-check the env.
 Probe the host for GPU / disk / tool binaries first so the user does not
 discover a missing dependency mid-pipeline. End with a JSON setup artifact the
 user (or a future agent) can re-read instead of re-deriving state.
+
+## Instructions
+
+Match the requested setup scope. For offline configuration, a checkpoint audit,
+or a future-host plan, inspect the supplied files and prepare only the requested
+artifacts. Do not build the ML environment or download weights just to edit a
+dotenv. For those limited tasks, record unavailable prerequisites and future
+commands without attempting full installation. For an installation request,
+follow the runtime build and download steps below, and report concrete failures
+instead of repeatedly restarting provisioning. Configuration-only completion
+does not establish runtime or GPU readiness. Keep commands actually executed
+separate from commands planned for later; do not record an unexecuted download
+as completed in the manifest.
+
+Resolve `SETUP_SKILL_DIR` to the directory containing this `SKILL.md`. Bundled
+script paths below are relative to that directory; run them with the project
+root as the working directory so they inspect the intended `.env`.
 
 ## CLI vs direct file-edit — pick the cheapest path per step
 
@@ -41,12 +58,13 @@ user (or a future agent) can re-read instead of re-deriving state.
 
 ## Step 1: Pre-flight check
 
-Always run the shared preflight before touching the environment. It does not
-require `.env` to exist — it falls back to defaults — and it tells you whether
-the host can run Complexa at all.
+Run the shared preflight before configuring or installing on the current host.
+It does not require `.env` to exist and records local readiness observations.
+For an exported inventory audit or future-host configuration, use the supplied
+evidence and distinguish it from checks actually performed on the current host.
 
 ```bash
-bash scripts/preflight.sh
+bash "$SETUP_SKILL_DIR/scripts/preflight.sh"
 ```
 
 The script writes `./complexa_setup/preflight.json`. Read it and surface:
@@ -57,12 +75,13 @@ The script writes `./complexa_setup/preflight.json`. Read it and surface:
 - `env.missing_required` — anything listed here must be edited in `.env` before validation passes.
 - `tools.{foldseek,mmseqs,dssp,hbplus,sc}.exists` — missing tools degrade evaluation but do not block generation.
 
-## Step 1b: Build the Python environment (only if `.venv/` is missing)
+## Step 1b: Build the Python environment (when installation is requested)
 
 The `complexa` CLI is installed inside the project's Python environment, not on
 the system path by default. On a **fresh clone**, the `.venv/` directory does
 not yet exist and `complexa init` will fail with `command not found`. Build the
-UV venv before anything else:
+UV venv when an actual UV installation is requested and its prerequisites are
+available. Offline configuration and audit tasks skip this step:
 
 ```bash
 test -d .venv || ./env/build_uv_env.sh   # first-time UV build
@@ -73,7 +92,7 @@ which complexa                            # sanity check: should point inside .v
 Skip this step if `which complexa` already resolves — that means a previous
 build is still good. The Docker runtime skips it entirely; the venv lives
 inside the container image instead. If the user said "I just cloned" or you
-see no `.venv/` next to `pyproject.toml`, run the build script — `complexa init`
+see no `.venv/` next to `pyproject.toml` during an installation task, run the build script — `complexa init`
 without a venv produces a confusing `command not found` rather than an obvious
 "build the venv first" error.
 
@@ -110,7 +129,7 @@ test -f .env && echo "OK: .env present" || echo "MISSING"
 
 ## Step 3: Edit .env
 
-No CLI for this — Step 2 only set the runtime; you still need to write your
+No CLI for this — Step 2 only created `.env`; you still need to write your
 machine-specific paths into `.env` by hand (StrReplace or your editor). The two
 absolutely-required edits are:
 
@@ -118,6 +137,12 @@ absolutely-required edits are:
 LOCAL_CODE_PATH=/absolute/path/to/Proteina-Complexa
 LOCAL_DATA_PATH=/absolute/path/to/PFM_data
 ```
+
+The template defaults `LOCAL_CHECKPOINT_PATH` to `${LOCAL_CODE_PATH}/checkpoints`,
+but the downloader writes Complexa weights to `ckpts/`. For that layout, set
+`LOCAL_CHECKPOINT_PATH=${LOCAL_CODE_PATH}/ckpts` and retain the derived
+`CKPT_PATH=${LOCAL_CHECKPOINT_PATH}` alias. For a future Docker run, also align
+`DOCKER_CHECKPOINT_PATH` with the checkpoint directory inside that container.
 
 Everything else (cache, ckpts, community-model dirs, tool binaries) is derived
 from `LOCAL_CODE_PATH` by default and only needs editing if you have a
@@ -146,10 +171,16 @@ for the selected runtime, and exports `COMPLEXA_INIT=uv` or `docker`.
 
 ## Step 4: Download checkpoints
 
-**Always use the CLI here.** `complexa download` dispatches to
+Use the first-party downloader. `complexa download` dispatches to
 `env/download_startup.sh` (~1000 lines of bash with NGC URLs, retries, and
 skip-if-present logic across ~6 community-model families). Rolling your own
 wget loop is a recipe for partial downloads and wrong destination paths.
+
+The CLI parser accepts the aggregate flags below. For just AF2 or ProteinMPNN,
+use `bash env/download_startup.sh --af2` or `--pmpnn` from the trusted checkout;
+these per-model flags are supported by the script, not the CLI parser. Inspect
+the existing inventory before choosing a download. `--status` checks presence,
+so an empty or unverified file is not evidence of usable weights.
 
 Ask which models the user actually needs — downloading everything is ~100+ GB.
 Pick from the three Complexa variants and the community-model set. Each
@@ -163,11 +194,12 @@ need at run time.
 | `--complexa-ligand` | Ligand-binder model + AE (`complexa_ligand.ckpt`, `complexa_ligand_ae.ckpt`) | Ligand binder — `configs/search_ligand_binder_local_pipeline.yaml` | `./ckpts/` | ~3 GB |
 | `--complexa-ame` | AME motif-scaffolding model + AE (`complexa_ame.ckpt`, `complexa_ame_ae.ckpt`) | AME (enzyme) — `configs/search_ame_local_pipeline.yaml` | `./ckpts/` | ~3 GB |
 | `--complexa-all` | All three Complexa variants | All three pipelines | `./ckpts/` | ~9 GB |
-| `--all` | All community models (ProteinMPNN + LigandMPNN + AF2 + ESM2 + ESMFold + RF3) | Needed by **evaluate / reward**: AF2 (protein binder), RF3 (ligand binder + AME), MPNNs (inverse folding for every pipeline). | `./community_models/` | ~50 GB |
-| `--everything` | Complexa + community + optional (Boltz2 / Protenix) | Everything plus alternative refold backends | both | ~100+ GB |
+| `--all` | ProteinMPNN + LigandMPNN + AF2 + ESM2 + RF3 | Needed by **evaluate / reward**: AF2 (protein binder), RF3 (ligand binder + AME), MPNNs (inverse folding). | `./community_models/` | ~50 GB |
+| `--everything` | All three Complexa variants plus the `--all` community set | All bundled pipelines; does not provision additional refold backends | both | Allow additional disk headroom |
 | `--status` | Show install state — does not download | (none) | (none) | n/a |
 
-**Minimum download per pipeline:**
+**Convenient complete bundles per pipeline** (use targeted script flags for
+already-partially-installed community models):
 
 - Protein binder (default): `complexa download --complexa --all`
 - Ligand binder: `complexa download --complexa-ligand --all`
@@ -227,7 +259,7 @@ describing the resulting state. The shared helper writes it for you:
 
 ```bash
 mkdir -p ./complexa_setup
-python scripts/write_manifest.py \
+python3 "$SETUP_SKILL_DIR/scripts/write_manifest.py" \
     --output-dir ./complexa_setup \
     --command "complexa init ${COMPLEXA_INIT}; complexa download <selected flags>; complexa validate env" \
     --skill complexa-setup \

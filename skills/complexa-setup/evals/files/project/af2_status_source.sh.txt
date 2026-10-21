@@ -1,0 +1,35 @@
+check_af2_status() {
+    local missing=()
+    local af2_params_dir="$PROJECT_ROOT/community_models/ckpts/AF2"
+    local files=(
+        "params_model_1.npz"
+        "params_model_1_ptm.npz"
+        "params_model_1_multimer_v3.npz"
+        "params_model_2.npz"
+        "params_model_2_ptm.npz"
+        "params_model_2_multimer_v3.npz"
+        "params_model_3.npz"
+        "params_model_3_ptm.npz"
+        "params_model_3_multimer_v3.npz"
+        "params_model_4.npz"
+        "params_model_4_ptm.npz"
+        "params_model_4_multimer_v3.npz"
+        "params_model_5.npz"
+        "params_model_5_ptm.npz"
+        "params_model_5_multimer_v3.npz"
+    )
+    
+    for file in "${files[@]}"; do
+        [ ! -f "$af2_params_dir/$file" ] && missing+=("$file")
+    done
+    
+    if [ ${#missing[@]} -eq 0 ]; then
+        echo -e "${GREEN}✓ Installed (community_models/ckpts/AF2/)${NC}"
+    else
+        echo -e "${YELLOW}○ Missing (community_models/ckpts/AF2/):${NC}"
+        for f in "${missing[@]}"; do
+            echo -e "      ${RED}✗${NC} $f"
+        done
+    fi
+}
+

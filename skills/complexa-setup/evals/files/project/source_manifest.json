@@ -1,0 +1,56 @@
+{
+  "source_revision": "85724a777063a8597c2efd16388c32b4c0cb72db",
+  "scope": "Unmodified source template and bounded source excerpts for offline setup tasks; not a runnable installation. Inventory and CSV inputs are synthetic.",
+  "full_installation_sha256": "877e7f324df456d57f48b646ce3e69fc3129865c1279b04c3c5d805b0c73429a",
+  "files": {
+    ".env_example": {
+      "source": ".env_example",
+      "source_sha256": "6eb3f403d541e0d14e77bf84334a4a0d5a0a38960ee64d75c8b743eb4197bf3a",
+      "start_line": 1,
+      "end_line": 154,
+      "sha256": "6eb3f403d541e0d14e77bf84334a4a0d5a0a38960ee64d75c8b743eb4197bf3a"
+    },
+    "init_source.py.txt": {
+      "source": "src/proteinfoundation/cli/cli_runner.py",
+      "source_sha256": "c38e6c5730385dbc4198f9d65d8b0df0633c30851dedcbcc7da6f07b51c2dffd",
+      "start_line": 1597,
+      "end_line": 1735,
+      "sha256": "8eba542f261691648dc7f22049ac5a04a50c61748fe2ed9e6738a56e107986f8"
+    },
+    "download_cli_source.py.txt": {
+      "source": "src/proteinfoundation/cli/cli_runner.py",
+      "source_sha256": "c38e6c5730385dbc4198f9d65d8b0df0633c30851dedcbcc7da6f07b51c2dffd",
+      "start_line": 1060,
+      "end_line": 1105,
+      "sha256": "7734006cb5429a73b5a40eaaf7e93217047890102167709aeec6cc7a12960c15"
+    },
+    "validate_env_source.py.txt": {
+      "source": "src/proteinfoundation/cli/validate.py",
+      "source_sha256": "3cd20619872e8b64bb441bdac1253ffd867f720520b948583353e3a83d618e27",
+      "start_line": 250,
+      "end_line": 276,
+      "sha256": "a6d306088398140ed6b93eb8fd8411d62e43a7e7c786bbdee9f70150e6cb9f73"
+    },
+    "pmpnn_status_source.sh.txt": {
+      "source": "env/download_startup.sh",
+      "source_sha256": "bd44402f74a5dfedd99daed991abd76d6b1082d6d1202484fa138584c4e11ec8",
+      "start_line": 464,
+      "end_line": 485,
+      "sha256": "13a38fd1a48ad19b4d7bb6b86917621f932db86064fae00b335e5ebaabbee52a"
+    },
+    "af2_status_source.sh.txt": {
+      "source": "env/download_startup.sh",
+      "source_sha256": "bd44402f74a5dfedd99daed991abd76d6b1082d6d1202484fa138584c4e11ec8",
+      "start_line": 520,
+      "end_line": 554,
+      "sha256": "564dbfb66af0aab640eb0fea40f5d044b1f343744686ebfe15d0ce5d91ced5b8"
+    },
+    "download_dispatch_source.sh.txt": {
+      "source": "env/download_startup.sh",
+      "source_sha256": "bd44402f74a5dfedd99daed991abd76d6b1082d6d1202484fa138584c4e11ec8",
+      "start_line": 831,
+      "end_line": 902,
+      "sha256": "3609d9ec7fe1bbbcbf917c0ed5af3f4ecff80bf2a646022d2ecffd7ab450d5b4"
+    }
+  }
+}

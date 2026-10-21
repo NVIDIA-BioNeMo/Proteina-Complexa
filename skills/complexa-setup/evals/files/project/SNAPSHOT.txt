@@ -1,0 +1,7 @@
+Partial Proteina-Complexa source snapshot for offline configuration and review.
+The template and source excerpts are unmodified; revision, source line spans and
+hashes are in source_manifest.json. The excerpts are reference material, not a
+standalone CLI. No model weights, target data, GPU runtime or installed CLI are
+included. Existing.env and inventory/CSV records in the other fixture folders
+are synthetic inputs. Do not interpret their values as measured host readiness
+or experimental results.
