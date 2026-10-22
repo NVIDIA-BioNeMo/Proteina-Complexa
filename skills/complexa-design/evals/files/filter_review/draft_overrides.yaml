@@ -1,0 +1,7 @@
+# Synthetic pilot filter settings, to be merged into the ligand pipeline.
+generation:
+  filter:
+    filter_samples_limit: 100
+    reward_threshold: 7.0
+    dedup_sequence: true
+    delete_non_top_n_samples: false

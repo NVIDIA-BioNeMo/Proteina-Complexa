@@ -31,8 +31,11 @@ When this doc disagrees with the configs, the configs win — re-read them.
 ## Protein binder
 
 Designs a binder for a protein target. AF2 (ColabDesign) drives both the
-reward during search and the final evaluation refold. Uses `SolubleMPNN` for
-inverse folding so the redesigned binder is soluble.
+reward during search and the final evaluation refold. Complex evaluation defaults
+to `metric.sequence_types: [self]`, scoring the co-generated sequence. Explicitly
+include `mpnn` or `mpnn_fixed` to request binder redesign with the configured
+`soluble_mpnn` model; that model choice does not guarantee solubility. The separate
+monomer designability calculation can also use inverse folding.
 
 - Reward weights: `af2folding.reward_weights.i_pae = -1.0` (minimize interface
   PAE). Other AF2 metrics (`con`, `plddt`, `dgram_cce`, `min_ipae`, `min_ipsae`,
@@ -154,8 +157,8 @@ From the local [Evaluation & Analysis Guide](EVALUATION_METRICS.md), the types
 reachable from the three design pipelines:
 
 1. **Protein binder** (`protein_type: binder`, `result_type: protein_binder`) —
-   AF2 / RF3 / Boltz2 refold + SolubleMPNN redesign. Metrics: i_pAE, i_pTM,
-   pLDDT, binder scRMSD, complex scRMSD.
+   AF2 / RF3 / Boltz2 refold, with SolubleMPNN binder redesign when explicitly
+   selected. Metrics: i_pAE, i_pTM, pLDDT, binder scRMSD, complex scRMSD.
 2. **Ligand binder** (`protein_type: binder`, `result_type: ligand_binder`) —
    RF3 refold + LigandMPNN. Adds min_ipAE, ipSAE, has_clash, ligand_scRMSD,
    ligand_scRMSD_aligned_allatom.

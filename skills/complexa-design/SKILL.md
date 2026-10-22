@@ -32,6 +32,11 @@ does not establish that the CLI, targets, weights, or refolder are installed.
 Finish the requested artifacts and record missing launch prerequisites. Check
 shell syntax with `bash -n`; runtime validation waits for a prepared installation.
 
+For search budgets, composite rewards, refinement comparisons, or interpreting
+campaign results, read [Search and campaign analysis](references/search_and_analysis.md).
+It covers the implementation details that change these decisions; use the supplied
+source revision when it differs from the reference.
+
 For an actual campaign, follow the runtime steps below. Use parameters already
 supplied by the user; ask only for missing inputs that change the design. When
 readiness was already probed for this request, reuse that evidence unless the
@@ -117,6 +122,10 @@ defaults unless the user requests a change.
 - **Evaluation refold backend** — protein binder defaults to `colabdesign`
   (AF2); ligand and AME default to `rf3_latest`. Use `esmfold` for fast iteration
   (worse but seconds per sample).
+- **Sequence evaluation** — protein-binder complex evaluation defaults to `metric.sequence_types=[self]`.
+  Request `mpnn` or `mpnn_fixed` explicitly for post-generation redesign; increasing
+  `num_redesign_seqs` alone does not enable those binder sequence types. Inspect
+  the selected pipeline for ligand/AME defaults.
 
 ## Step 4: Validate
 
@@ -175,6 +184,10 @@ paths printed by the CLI:
 Read the combined results CSV and summarize the success-rate, per-design, and
 diversity CSVs described in the bundled Evaluation Metrics Guide. Report top-N
 designs by i_pAE for protein binders or min_ipAE for ligand binders.
+Separate generated-sequence success from success after redesign. Check metric
+units, comparison operators, missing values, and the denominator before reporting
+a rate; count structural clusters within the successful subset. See
+[Search and campaign analysis](references/search_and_analysis.md) for these checks.
 
 ## Step 7: Emit manifest
 
@@ -201,12 +214,12 @@ default) is in the bundled Overrides Reference.
 | `++generation.task_name=<name>` | (per config) | Which target / AME task to design for |
 | `++run_name=<str>` | (config stem) | Output dir suffix and CSV tag |
 | `++generation.search.algorithm=beam-search` | `best-of-n` (binder and ligand), `single-pass` (AME) | Search strategy |
-| `++generation.search.beam_search.beam_width=8` | `4` | Beam-search width (more = better designs, slower) |
-| `++generation.args.nsteps=200` | `400` | Diffusion steps (fewer = faster, lower quality) |
+| `++generation.search.beam_search.beam_width=8` | `4` | Beams retained per input; increases compute without guaranteeing success |
+| `++generation.args.nsteps=200` | `400` | Denoising steps; also update `generation.search.step_checkpoints` to end at this value |
 | `++generation.dataloader.batch_size=8` | `16` (all pipelines) | Drop to 8 on a 40GB GPU |
 | `++generation.filter.filter_samples_limit=500` | `1000` | Top-N samples to keep after filtering |
 | `++metric.binder_folding_method=esmfold` | `colabdesign` (binder), `rf3_latest` (ligand and AME) | Evaluation refold backend |
-| `++metric.num_redesign_seqs=8` | `2` | Inverse-folded sequences per design |
+| `++metric.num_redesign_seqs=8` | `2` | Redesigns per design when the corresponding `metric.sequence_types` are enabled |
 | `++aggregation.success_thresholds.i_pAE.threshold=10` | seven (protein binder) | Loosen or tighten success criteria |
 
 ## Hardware requirements
@@ -237,6 +250,6 @@ the bundled Hardware Reference for per-pipeline VRAM tables.
 | `InterpolationKeyError: AF2_DIR` | colabdesign eval but `.env` does not set `AF2_DIR` | Set `AF2_DIR` in `.env` or `++metric.binder_folding_method=esmfold` |
 | `InterpolationKeyError: RF3_CKPT_PATH` | RF3 eval but RF3 not installed | `complexa download --all` or switch eval backend |
 | `KeyError: 'task_name' not in target_dict_cfg` | Target absent from the selected target dictionary | Use `complexa-target` skill to add it |
-| 0 designs pass success thresholds | Defaults too strict for this target | Loosen via `++aggregation.success_thresholds.*` |
+| 0 designs pass success thresholds | Failed criteria, missing metrics, or unit/backend mismatch | Audit the recorded metrics and criteria; report zero under the requested criteria. Any exploratory threshold change is a separate analysis. |
 
 For detailed troubleshooting, see the bundled Troubleshooting Reference.

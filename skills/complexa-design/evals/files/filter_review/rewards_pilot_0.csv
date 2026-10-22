@@ -1,0 +1,7 @@
+candidate_id,aatype,raw_min_ipAE,total_reward,pdb_path
+L01,AAAA,8,-0.25806451612903225,samples/L01/sample.pdb
+L02,AAAA,3,-0.0967741935483871,samples/L02/sample.pdb
+L03,CCCC,7,-0.22580645161290322,samples/L03/sample.pdb
+L04,DDDD,5,-0.16129032258064516,samples/L04/sample.pdb
+L05,EEEE,,,samples/L05/sample.pdb
+L06,FFFF,9,-0.2903225806451613,samples/L06/sample.pdb
