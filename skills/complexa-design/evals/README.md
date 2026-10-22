@@ -78,9 +78,7 @@ skillevaluator validate skills/complexa-design --profile external \
 The tests verify source fidelity, preservation of the original cases, fixture
 paths, actual production filter behavior, composite structure routing, and the
 success-count oracle using production threshold functions. Model execution is
-stubbed only for the reward routing test; no folding accuracy is tested. The
-generic Codex skill validator rejects this skill's existing `compatibility`
-frontmatter field; the NV-CARPS SkillEvaluator schema accepts it.
+stubbed only for the reward routing test; no folding accuracy is tested.
 
 Independent local agent trials use isolated copies containing only the prompts,
 raw inputs, and (for the skill arm) runtime instructions, references, and helpers.
@@ -90,9 +88,7 @@ On 2026-10-22, both local arms produced correct artifacts for all five new cases
 under semantic review. This validates task feasibility and the answer expectations;
 it does **not** demonstrate that these cases lower the baseline ceiling. The cases
 add domain-specific regression coverage, while the reference fixes substantive
-guidance gaps. SkillEvaluator 1.5.6 schema and static-only SkillSpector 2.11.2
-security checks passed; the latter reported five advisories in existing files.
-The full LLM-backed scan requires CI credentials unavailable in the local test.
+guidance gaps.
 
 Re-run the full live evaluation to compare with-skill and baseline outcomes; a
 strong baseline is an informative result, not a reason to withhold source evidence
