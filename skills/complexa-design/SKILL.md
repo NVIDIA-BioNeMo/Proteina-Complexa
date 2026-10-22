@@ -1,255 +1,184 @@
 ---
 name: complexa-design
-description: >
-  Agent runbook for orchestrating an end-to-end protein, ligand-binder, or AME
-  design through the separately installed first-party Proteina-Complexa CLI.
-  Use for requests such as "design a binder", "run complexa design", "de novo
-  binder", ligand binding, motif scaffolding, beam search, FK steering, MCTS,
-  refolding, or reporting design success and diversity. SKILL.md selects and
-  invokes the project CLI; bundled executables only inspect local readiness and
-  write a run manifest, and do not implement model inference themselves.
-compatibility: "complexa CLI installed; environment file populated; one CUDA GPU with at least 40 GB VRAM (A100, H100, or L40S); 24 CPUs; about 50 GB disk"
+description: Run or review Proteina-Complexa binder and motif design campaigns; analyze their results. Do not use for sequence annotation.
+compatibility: "Reviews need supplied files; execution needs a configured Proteina-Complexa CLI, CUDA allocation, checkpoints, and selected model dependencies."
 allowed-tools: Bash, Read, Write, Env, AskUserQuestion
+metadata:
+  author: Ohad Mosafi <omosafi@nvidia.com>
+  tags: [protein-design, complexa, binder-design, scientific-workflows]
 ---
 
+# Complexa Design
 
-# Complexa Design Skill
+## Purpose
 
-Drive the full four-stage `complexa design` pipeline: generate (flow matching +
-search), filter (top-N by reward), evaluate (refold with AF2 or RF3), then
-analyze (success rate and sequence-structure diversity). Pick the right pipeline
-config for the design intent, validate the run upfront so the user does not
-discover a missing ckpt mid-folding, run it, and emit a replayable manifest +
-per-design success CSV.
+Prepare, execute, or analyze protein-binder, ligand-binder, and AME motif-scaffolding
+campaigns with Proteina-Complexa. The project CLI implements generation, filtering,
+refolding, and analysis. This skill supplies decision guidance and two local
+bookkeeping helpers; it does not implement inference.
 
-## Choose the requested outcome
+## Prerequisites
 
-For a configuration review or future launch script, use the supplied project
-files and [Pipeline Reference](references/pipelines.md). Read the selected
-pipeline YAML and its generation config; follow other references only for a
-specific unresolved key or output. A partial snapshot supports a review, but
-does not establish that the CLI, targets, weights, or refolder are installed.
-Finish the requested artifacts and record missing launch prerequisites. Check
-shell syntax with `bash -n`; runtime validation waits for a prepared installation.
+For an offline review, use the supplied configuration, source snapshot, or result
+tables. A partial checkout is enough to review the represented behavior; record
+unresolved inputs without installing dependencies or downloading weights.
 
-For search budgets, composite rewards, refinement comparisons, or interpreting
-campaign results, read [Search and campaign analysis](references/search_and_analysis.md).
-It covers the implementation details that change these decisions; use the supplied
-source revision when it differs from the reference.
+For execution, use an initialized project installation with its environment file,
+target structures, matching model/autoencoder checkpoints, and allocated CUDA GPU.
+Search rewards and final evaluation have separate dependencies: AF2 needs
+`AF2_DIR`; RF3 needs `RF3_CKPT_PATH` and `RF3_EXEC_PATH`. Check additional models
+and tools selected by the resolved configuration, including auxiliary monomer
+metrics. Python 3 and Bash suffice for the bundled helpers. See
+[hardware and dependency checks](references/hardware.md) when assessing readiness.
 
-For an actual campaign, follow the runtime steps below. Use parameters already
-supplied by the user; ask only for missing inputs that change the design. When
-readiness was already probed for this request, reuse that evidence unless the
-environment changes. Keep configuration preparation, generation, and measured
-evaluation results distinct in the final answer.
+## Inputs
 
-## Step 1: Pre-flight
+| Input | Required or optional | Source |
+|---|---|---|
+| Requested outcome | Required | User request: review, preparation, execution, or result analysis |
+| Source/configuration | Required for implementation-specific work | Supplied snapshot or installed project revision |
+| Target and structures | Required for execution | Registered task key and matching structures; reviews may record missing inputs |
+| Campaign overrides | Optional | User's run name, sample/search/refinement settings, backend, sequence types, and criteria; otherwise preserve defaults |
+| Result tables and metadata | Required for outcome analysis | Supplied export with units and denominators |
+| Output destination | Optional | User's requested paths; otherwise choose a new run directory |
 
-Always run the shared preflight before launching a design — generation needs the
-GPU and the right checkpoint, evaluation needs AF2 or RF3 weights and tool
-binaries. Bail early if the host cannot run the chosen pipeline.
+Explicit user choices take precedence over saved state and configuration defaults.
+Reuse prior evidence for this request when it still applies. Resolve implementation
+questions against the supplied source revision, not contradictory comments or an
+unrelated installation. Ask only for missing inputs that affect the requested work.
 
-When a request permits a CPU fallback only if no GPU is available, verify the
-allocated hardware first. An allocated GPU with missing dependencies or weights, or a
-failed GPU run, remains blocked on the requested execution; it does not qualify
-for that fallback. Report probe failures separately from confirmed GPU absence.
-The shared preflight's `gpu.available=false` also covers failed or missing
-`nvidia-smi`; check device/allocation evidence before treating it as GPU absence.
-In containers, `/proc/driver/nvidia/gpus` and loaded kernel modules may describe
-the host, not this task's allocation. Check container device exposure and any
-available scheduler allocation information together. A CPU allocation can share
-a GPU host; an allocated GPU with inaccessible devices is blocked. If allocation
-remains unclear, report it as undetermined.
+## Instructions
 
-Set `SKILL_DIR` to the directory containing this manifest in a separate shell
-assignment, then run; an inline environment assignment cannot set its expansion
-in the same command:
+1. **Choose the task mode.** For reviews and launch preparation, inspect the supplied
+   inputs and the relevant reference below, then write the requested artifacts.
+   Skip runtime probes and inference. For result analysis, compute from the actual
+   tables and metadata; do not launch a new campaign. For execution, follow steps
+   2–5. Do not read evaluation definitions or benchmark reports as task guidance.
+2. **Resolve the campaign.** Select the matching pipeline using
+   [pipeline defaults](references/pipelines.md). Inspect that pipeline and the
+   relevant composed stage config. Target keys are registry entries, not arbitrary
+   protein names. If a requested target is absent, identify the missing structure,
+   chain/hotspot or motif definition needed to prepare it. Preserve LoRA and
+   architecture settings required by the selected checkpoint.
+3. **Check the actual runtime.** Keep the installed skill location separate from
+   the project working directory. Run `preflight.sh` from the project directory,
+   using an explicit report destination, and read its JSON. Reuse an existing probe
+   unless the environment changed. A failed probe, inaccessible allocated GPU,
+   missing weights, or failed GPU run does not establish GPU absence; consult
+   allocation/device evidence before using an absence-conditioned CPU fallback.
+4. **Validate and execute.** Review overrides against the composed configuration.
+   Run `complexa validate design PIPELINE` on the prepared installation. At the
+   documented revision this validator does not accept Hydra overrides or fully
+   validate their semantics; use the checks in [CLI execution](references/INFERENCE.md).
+   Correct an identified configuration error before retrying; report unresolved
+   runtime/input blockers. Launch `complexa design` with the exact reviewed
+   configuration and overrides. Follow an authorized foreground campaign through
+   completion, checking process exit status and stage logs. A submitted/background
+   job is running, not a completed result; retain its job/session and log paths.
+5. **Inspect and deliver.** Read the actual generated/evaluated artifacts, apply the
+   recorded criteria, and report attrition and missing metrics. Use
+   [evaluation outputs](references/EVALUATION_METRICS.md) for output discovery.
+   Write a manifest beside executed-run results and verify its command, config,
+   revision, and CSV pointers. Record missing provenance rather than inventing it.
 
-```bash
-bash "$SKILL_DIR"/scripts/preflight.sh
-```
+For any requested file deliverable, write it to the requested destination, reopen
+it, and check the relevant configuration or computed values. Validate shell
+syntax with `bash -n`; parse YAML/JSON and check table-derived results when
+applicable. Stop once the requested artifacts and relevant checks are complete.
+Configuration preparation alone is not evidence of model execution.
 
-Read the JSON report emitted by preflight and bail if any of these are missing
-for the chosen pipeline:
+## Available Scripts
 
-- `gpu.available: false` -> GPU execution is not ready; distinguish absent hardware from a failed probe as above.
-- `gpu.vram_gb < 40` -> generation OOMs at default `batch_size: 16`; lower to 8.
-- `checkpoints["complexa.ckpt"].exists` and `checkpoints["complexa_ae.ckpt"].exists` -> required for protein binder.
-- `checkpoints["complexa_ligand.ckpt"].exists` and `checkpoints["complexa_ligand_ae.ckpt"].exists` -> required for ligand binder.
-- `checkpoints["complexa_ame.ckpt"].exists` and `checkpoints["complexa_ame_ae.ckpt"].exists` -> required for AME.
-- `community_models.AF2_DIR.exists: false` -> protein binder default eval (`colabdesign`) fails.
-- `community_models.RF3_CKPT_PATH.exists: false` or `tools.rf3.exists: false` -> ligand binder / AME default eval (`rf3_latest`) fails.
+| Script | Purpose | Arguments |
+|---|---|---|
+| [preflight.sh](scripts/preflight.sh) | Inspect local GPU, checkpoint, and tool readiness; write JSON | `--out PATH`, optional `--quiet`; `--help` |
+| [write_manifest.py](scripts/write_manifest.py) | Record an executed command, available config, checkpoint fingerprints, and CSV pointers | Required `--output-dir DIR --command TEXT --skill complexa-design`; `--out PATH`; optional `--include-system-metadata`; `--help` |
 
-If a ckpt is missing, point at `complexa-setup` and have the user run
-`complexa download --complexa-<variant>` first.
+Invoke these with Bash/Python. Use the installed skill location provided by the
+host for `COMPLEXA_SKILL_DIR`; use the actual inference project for
+`COMPLEXA_PROJECT_DIR`. Assign variables before expanding them in commands.
+Preflight reads `.env` as data from the current directory. Both helpers write
+files, and an existing destination can be overwritten, so choose run-specific
+paths. Neither helper provisions an environment or validates scientific success.
 
-## Step 2: Pick the pipeline
+## Examples
 
-Select the pipeline YAML that matches the requested target. Each YAML pins the
-corresponding checkpoint, target dictionary, reward, and refold backend.
+For an offline request such as “review these ligand filter settings and write an
+audit,” read the supplied table and filtering source, use the relevant section of
+`search_and_analysis.md`, compute the selections, and save/reopen the audit. Do not
+probe GPUs or treat synthetic PDB paths as files to refold.
 
-| Request | Pipeline | Target pattern | Default refold |
-|---|---|---|---|
-| Protein-surface binder (default) | Protein local pipeline | `02_PDL1` | `colabdesign` |
-| Small-molecule pocket or ligand binder | Ligand local pipeline | `39_7V11_LIGAND` | `rf3_latest` |
-| AME enzyme or motif-plus-ligand scaffold | AME local pipeline | `M0096_1chm` | `rf3_latest` |
-
-Protein binder is the default when the user does not identify a ligand or
-motif. Do not remove the `lora:` block in ligand or AME pipeline YAMLs; those
-released checkpoints require it. AME defaults to `single-pass`; enable a
-reward model before selecting a reward-guided search algorithm. Use the exact
-pipeline command in the bundled Pipeline Reference at
-`"$SKILL_DIR"/references/pipelines.md`; it also lists checkpoints, target
-dictionaries, and thresholds.
-
-## Step 3: Gather parameters
-
-Fill in parameters not already specified. Preserve the selected pipeline's
-defaults unless the user requests a change.
-
-- **Target name** — must be a key in the matching protein, ligand, or AME target
-  dictionary documented in the bundled Pipeline Reference. If the user names a
-  target that is not present, hand off to `complexa-target` to add it first.
-- **Run name** — a short identifier appended to the output dir (e.g. `pdl1_v1`).
-- **Search algorithm** — binder and ligand default to `best-of-n`; AME defaults
-  to `single-pass` with no reward model. A requested beam-width change also
-  needs `++generation.search.algorithm=beam-search`; changing the width alone
-  does not select that algorithm.
-- **Sample count** — set `++generation.dataloader.dataset.nres.nsamples=N`
-  for the requested base sample count. `batch_size` controls memory use and
-  `filter_samples_limit` caps retained outputs; neither requests N generated
-  designs. Search intermediates, filtering, and failures can change final counts.
-- **Evaluation refold backend** — protein binder defaults to `colabdesign`
-  (AF2); ligand and AME default to `rf3_latest`. Use `esmfold` for fast iteration
-  (worse but seconds per sample).
-- **Sequence evaluation** — protein-binder complex evaluation defaults to `metric.sequence_types=[self]`.
-  Request `mpnn` or `mpnn_fixed` explicitly for post-generation redesign; increasing
-  `num_redesign_seqs` alone does not enable those binder sequence types. Inspect
-  the selected pipeline for ligand/AME defaults.
-
-## Step 4: Validate
-
-Validate before running. This is cheap (seconds) and catches missing ckpts,
-missing env vars, configuration errors, and missing target entries — all of
-which would otherwise abort the pipeline mid-evaluation after hours of
-generation.
-
-Run `complexa validate design` with the selected pipeline command and the
-chosen target override. The bundled Inference Guide at
-`"$SKILL_DIR"/references/INFERENCE.md` has exact validation examples. The
-validator returns non-zero on failure and prints a status report. Correct the
-reported configuration issue and retry after that change. Missing runtime or
-scientific inputs are blockers to report, not reasons to keep retrying validation.
-
-## Step 5: Run the pipeline
-
-`complexa design` is the right tool for the full 4-stage run — it orchestrates
-`generate → filter → evaluate → analyze` as sequential subprocesses with a
-shared run name, log directory, and multi-GPU split. Re-implementing that
-manually loses the per-stage log routing and progress prints.
-
-Use `++` (forced) Hydra overrides; they apply to all stages. Start from the
-matching production command in the bundled Pipeline Reference and add the run
-name, target, search algorithm, beam width, and refold backend selected above.
-For ligand binder and AME, select the matching pipeline and target; the common
-overrides can otherwise be reused.
-
-Add `--verbose` to stream logs to the terminal. The skill does not poll
-progress — the user re-invokes if they want a status; point them at
-`complexa status` and the run's log directory.
-
-### Debugging a single stage
-
-For debugger or profiler use, call the matching `proteinfoundation` module
-directly with the same resolved pipeline configuration. Prefer the CLI for
-ordinary runs because it preserves logs and parallel-job routing; the
-individual-stage command patterns are in the bundled Inference Guide.
-
-For AME inputs evaluated with RF3, ensure the ligand is represented as `L:0`
-before refolding; otherwise RF3 can complete CCD atoms and corrupt RMSD
-calculation. This does not apply to AF2 with ColabDesign or non-AME runs.
-
-Wall-clock at default (`nsteps=400`, `beam_width=8`, `batch_size=16`, 100
-designs, colabdesign eval) is about 30–120 minutes on a single A100 or H100.
-
-## Step 6: Collect results
-
-Outputs land in generation and evaluation directories. Surface both, using the
-paths printed by the CLI:
-
-> **Caution:** These paths are relative to the current directory. Runs can
-> consume tens of GB, and the manifest path below is overwritten on repeated
-> use. Choose an empty run directory or back up existing results first.
-
-Read the combined results CSV and summarize the success-rate, per-design, and
-diversity CSVs described in the bundled Evaluation Metrics Guide. Report top-N
-designs by i_pAE for protein binders or min_ipAE for ligand binders.
-Separate generated-sequence success from success after redesign. Check metric
-units, comparison operators, missing values, and the denominator before reporting
-a rate; count structural clusters within the successful subset. See
-[Search and campaign analysis](references/search_and_analysis.md) for these checks.
-
-## Step 7: Emit manifest
-
-Drop a JSON manifest beside the results so the run is replayable. The shared
-helper captures the command, config, git SHA, and pointers to the result CSVs.
+For a prepared protein-binder runtime, these are separate readiness and launch
+commands; replace the example target/run with the reviewed values:
 
 ```bash
-python3 "$SKILL_DIR"/scripts/write_manifest.py \
-    --output-dir <results-directory> \
-    --command "<exact-complexa-command-that-was-run>" \
-    --skill complexa-design \
-    --out <manifest-file>
+cd "$COMPLEXA_PROJECT_DIR"
+bash "$COMPLEXA_SKILL_DIR/scripts/preflight.sh" --out "$RUN_ARTIFACT_DIR/preflight.json"
+complexa validate design configs/search_binder_local_pipeline.yaml
+complexa design configs/search_binder_local_pipeline.yaml \
+    ++run_name=binder_pilot ++generation.task_name=02_PDL1 \
+    ++generation.dataloader.dataset.nres.nsamples=12
 ```
 
-Surface the manifest path and the result CSV to the user.
+Inspect readiness before launching. The sample count is a base dataset setting;
+search replicas and repeats can produce more candidate records. After execution,
+set `RESULTS_DIR` to the actual results directory and `EXECUTED_COMMAND` to the
+command that was run, then record provenance:
 
-## Most-common overrides
+```bash
+python3 "$COMPLEXA_SKILL_DIR/scripts/write_manifest.py" \
+    --output-dir "$RESULTS_DIR" --command "$EXECUTED_COMMAND" \
+    --skill complexa-design --out "$RUN_ARTIFACT_DIR/run_manifest.json"
+```
 
-The 10 overrides that cover ~90% of runs. Full reference (every key, type,
-default) is in the bundled Overrides Reference.
+## Output Format
 
-| Override | Default | What it controls |
-|----------|---------|------------------|
-| `++generation.task_name=<name>` | (per config) | Which target / AME task to design for |
-| `++run_name=<str>` | (config stem) | Output dir suffix and CSV tag |
-| `++generation.search.algorithm=beam-search` | `best-of-n` (binder and ligand), `single-pass` (AME) | Search strategy |
-| `++generation.search.beam_search.beam_width=8` | `4` | Beams retained per input; increases compute without guaranteeing success |
-| `++generation.args.nsteps=200` | `400` | Denoising steps; also update `generation.search.step_checkpoints` to end at this value |
-| `++generation.dataloader.batch_size=8` | `16` (all pipelines) | Drop to 8 on a 40GB GPU |
-| `++generation.filter.filter_samples_limit=500` | `1000` | Top-N samples to keep after filtering |
-| `++metric.binder_folding_method=esmfold` | `colabdesign` (binder), `rf3_latest` (ligand and AME) | Evaluation refold backend |
-| `++metric.num_redesign_seqs=8` | `2` | Redesigns per design when the corresponding `metric.sequence_types` are enabled |
-| `++aggregation.success_thresholds.i_pAE.threshold=10` | seven (protein binder) | Loosen or tighten success criteria |
+Honor requested filenames and schemas. The final handoff must identify `status`,
+`artifacts`, `checks`, and `limitations`, in the requested format. Include the
+following fields for the applicable outcome:
 
-## Hardware requirements
+- **Review/preparation:** corrected configuration or launch script, source revision,
+  reasons for changes, checks performed, and unresolved launch requirements.
+- **Executed campaign:** completion/partial/failure status, exact command and resolved
+  settings, manifest, generation/evaluation directories, result tables, and logs.
+- **Outcome analysis:** criteria with units/operators, passing IDs and denominators
+  for each sequence type, base-design coverage, missing data/attrition, and
+  successful structural-cluster counts when assignments exist.
 
-| Resource | Minimum | Recommended |
-|----------|---------|-------------|
-| GPU | 1x CUDA GPU, 40 GB VRAM | A100, H100, or L40S, 80 GB VRAM |
-| CPUs | 16 | 24 (the `ncpus_` default in every pipeline config) |
-| Disk | 50 GB for generated and evaluation outputs | 200 GB for sweep runs |
-| RAM | 32 GB | 64 GB+ |
+Separate generated-sequence success from post-generation redesign and distinguish
+synthetic calculations, predicted behavior, and measured in-silico results.
 
-Typical wall-clock for 100 designs, `beam_width=8`, default `nsteps=400`:
+## Limitations
 
-- Protein binder + colabdesign refold: ~60–120 min on one A100 or H100.
-- Ligand binder + RF3 refold: ~90–180 min (RF3 dominates).
-- AME + RF3 refold: ~120–240 min.
-- Any pipeline + ESMFold refold: ~30–60 min (fast iteration).
+Refolding confidence and search rewards do not establish experimental affinity.
+Search and filtering can discard candidates or one member of a refinement pair;
+retain source artifacts for comparisons. Configuration and path checks cannot
+prove that a refolder used the intended geometry or that a model will fit GPU
+memory. The manifest hashes only the first 4 KiB of checkpoints and lists at most
+50 CSVs; check it for unresolved config paths or missing provenance.
 
-Bumping `gen_njobs=2` and `eval_njobs=2` halves wall-clock on a 2-GPU host. See
-the bundled Hardware Reference for per-pipeline VRAM tables.
+## Troubleshooting
 
-## Troubleshooting (common cases)
+Use [failure diagnosis](references/troubleshooting.md) for a reported error.
+Preserve the requested backend, search budget, and scientific criteria while
+correcting the cause. Do not turn missing dependencies into an automatic backend
+switch, or zero successes into relaxed thresholds. Check units and missing metrics
+before interpreting a low pass rate.
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `CUDA out of memory` in generate | `batch_size: 16` too big on 40GB GPU | `++generation.dataloader.batch_size=8` |
-| `CUDA out of memory` in evaluate | AF2 / RF3 batched too aggressively | `++eval_njobs=1` and `++metric.num_redesign_seqs=2` |
-| `InterpolationKeyError: AF2_DIR` | colabdesign eval but `.env` does not set `AF2_DIR` | Set `AF2_DIR` in `.env` or `++metric.binder_folding_method=esmfold` |
-| `InterpolationKeyError: RF3_CKPT_PATH` | RF3 eval but RF3 not installed | `complexa download --all` or switch eval backend |
-| `KeyError: 'task_name' not in target_dict_cfg` | Target absent from the selected target dictionary | Use `complexa-target` skill to add it |
-| 0 designs pass success thresholds | Failed criteria, missing metrics, or unit/backend mismatch | Audit the recorded metrics and criteria; report zero under the requested criteria. Any exploratory threshold change is a separate analysis. |
+## References
 
-For detailed troubleshooting, see the bundled Troubleshooting Reference.
+Load only the reference needed for the current decision, then inspect the relevant
+source/config section if the version differs or a question remains unresolved.
+All paths mentioned inside these guides are relative to the inference project.
+
+| Decision | Reference |
+|---|---|
+| Protein, ligand, or AME pipeline and checkpoint | [Pipeline defaults](references/pipelines.md) |
+| Compose a configuration or trace a nested key | [Configuration guide](references/CONFIGURATION_GUIDE.md) |
+| Choose common command-line overrides | [Overrides](references/overrides.md) |
+| Execute, validate, or resume stages | [CLI execution](references/INFERENCE.md) |
+| Budget search, combine rewards, compare refinement, or audit filtering | [Search and campaign analysis](references/search_and_analysis.md) |
+| Interpret metrics and discover result files | [Evaluation outputs](references/EVALUATION_METRICS.md) |
+| Match candidate lineage | [Search metadata](references/SEARCH_METADATA.md) |
+| Plan an explicitly requested parameter sweep | [Sweeps](references/SWEEP.md) |
+| Diagnose resource or dependency problems | [Hardware](references/hardware.md), [Troubleshooting](references/troubleshooting.md) |

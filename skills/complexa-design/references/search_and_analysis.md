@@ -1,7 +1,7 @@
-# Search and campaign analysis
+# Search, rewards, and refinement
 
 Use this reference for search-budget reviews, reward configuration, refinement
-comparisons, and campaign summaries. The implementation notes below were checked
+comparisons, and post-generation selection. The implementation notes below were checked
 against Proteina-Complexa revision `8fc6f5c85b38a2585ffaac555e708576dc4e8533`.
 Read the corresponding files in the user's checkout when its version differs.
 Configuration review does not require installing the inference stack.
@@ -131,34 +131,3 @@ default ligand success criteria additionally constrain binder and ligand RMSDs.
 
 Sources: [RF3 scoring](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/rewards/rf3_reward.py),
 [post-generation filter](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/filter.py).
-
-## Success and diversity: preserve units and denominators
-
-Use the resolved run criteria, not an assumed threshold from prose. At the pinned
-revision, protein defaults require all three criteria for the **same sequence**:
-normalized complex `i_pAE * 31 <= 7`, complex `pLDDT >= 0.9`, and binder
-`scRMSD_ca < 1.5`. Missing or non-finite values do not pass. The method paper uses
-strict ipAE/pLDDT wording; state whether the report follows the paper or the
-implementation, especially for boundary values.
-
-Ligand defaults require normalized complex `min_ipAE * 31 < 2`, binder
-`scRMSD_ca < 2`, and ligand `scRMSD_aligned_allatom < 5`. Do not replace these with
-the protein thresholds or a reward-only gate.
-
-Report `self`, `mpnn`, and `mpnn_fixed` separately. A design gains passing coverage
-through redesign when its self sequence does not pass the recorded criteria and
-at least one individual redesign passes **all** criteria. Report missing self
-metrics separately: added coverage is not evidence that an unmeasured original
-sequence actually failed. Never combine the best metric from different redesigns
-into a fictitious passing sequence. Distinguish passing sequence attempts from
-base designs with any passing sequence; state denominators and evaluation/filter
-attrition.
-
-Count distinct Foldseek clusters among the successful structures for structural
-diversity, using the recorded clustering settings. Do not count failed clusters,
-PDB files, or unique sequences as successful structural clusters. If assignments
-or structures are absent, report that diversity is unmeasured. Label synthetic
-tables as examples rather than measured campaigns.
-
-Sources: [success criteria and redesign checks](https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/result_analysis/binder_analysis_utils.py),
-[method paper](https://arxiv.org/html/2603.27950v1), sections 3.3, H.2, H.5, I.5, and I.8.
