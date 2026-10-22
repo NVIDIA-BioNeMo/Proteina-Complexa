@@ -1,84 +1,43 @@
-# Proteina-Complexa Hardware Reference
+# Runtime resources and dependencies
 
-Shared hardware reference for every `complexa-*` skill. Tables only — see each
-skill's `SKILL.md` "Hardware" section for the user-facing prose. Numbers marked
-`(empirical)` are not pulled from any doc and represent conservative defaults
-based on the configs in this repo.
+Use this reference for execution readiness or an explicitly requested resource
+review. Configuration-only reviews need neither GPU probes nor model downloads.
 
-## Per-pipeline GPU requirements
+## Assess the selected workload
 
-| Pipeline           | Config                                            | Min VRAM (GB) | Recommended VRAM (GB) | Supported SKUs            | Single-GPU only |
-|--------------------|---------------------------------------------------|--------------:|----------------------:|---------------------------|-----------------|
-| Protein Binder     | `search_binder_local_pipeline.yaml`               |  24 (empirical) |  40 (empirical)       | H100, A100-80, L40S       | Yes             |
-| Ligand Binder      | `search_ligand_binder_local_pipeline.yaml`        |  32 (empirical) |  48 (empirical)       | H100, A100-80, L40S       | Yes             |
-| AME (motif+ligand) | `search_ame_local_pipeline.yaml`                  |  32 (empirical) |  48 (empirical)       | H100, A100-80, L40S       | Yes             |
+The local pipelines default to one generation worker, one evaluation worker,
+24 CPU threads, and a generation batch size of 16. These are defaults, not tested
+minimum resources. Model length, target size, reward/refolder, search expansion,
+batching, and concurrent workers determine memory and time. Do not promise that
+a particular batch size fits a GPU or that doubling workers halves runtime.
 
-Notes:
-- All three inference pipelines are single-GPU (the `complexa generate` stage
-  is one process per `gen_njobs` slot; jobs do not shard a single design
-  across GPUs).
-- AME requires `USE_V2_COMPLEXA_ARCH=True`, set via `env_vars:` in
-  `configs/search_ame_local_pipeline.yaml` (no runtime VRAM impact).
-- Multi-GPU hosts run multiple pipelines / stages in parallel by bumping
-  `gen_njobs` / `eval_njobs` — each job takes one GPU.
+Each generation/evaluation worker uses a GPU; workers do not shard one design
+across devices. Verify allocation and device access before increasing worker
+counts. On memory failure, inspect the failing stage and concurrent processes,
+then reduce its batching if compatible with the request. Reducing branch count,
+steps, or redesign attempts changes the scientific/compute budget; do not make
+those changes silently. Disk retention settings do not reliably fix GPU OOM.
 
-## Per-evaluation-backend requirements
+`preflight.sh` records available devices, paths, and checkpoint fingerprints. Its
+`gpu.available=false` can also mean `nvidia-smi` failed or was absent. Distinguish
+confirmed absence, inaccessible allocated hardware, and an undetermined probe.
+In containers, host driver/module information alone does not prove this task has
+a GPU allocation. Reuse readiness evidence unless the environment changed.
 
-| Backend             | Min VRAM (GB) | Extra packages / env             | Wall-clock per sample      |
-|---------------------|--------------:|----------------------------------|----------------------------|
-| ColabDesign / AF2   |            16 | JAX + ColabFold; `AF2_DIR`       | ~30–60 s (empirical)       |
-| RoseTTAFold3 (rf3)  |            24 | `RF3_EXEC_PATH`, `RF3_CKPT_PATH` | ~60–180 s (empirical)      |
-| ESMFold             |            16 | `fair-esm`, internet/cache OK    | ~5–15 s (empirical)        |
+## Check both search and evaluation dependencies
 
-Selected via `++metric.binder_folding_method=colabdesign|rf3_latest|esmfold`.
+| Selected component | Check before execution |
+|---|---|
+| Generator | Matching model and autoencoder checkpoints; pipeline LoRA/architecture settings |
+| AF2 reward or ColabDesign refolding/refinement | AF2/JAX dependencies and `AF2_DIR` contents |
+| RF3 reward or refolding | RF3 executable/environment at `RF3_EXEC_PATH` and weights at `RF3_CKPT_PATH` |
+| TMOL reward/interface metrics | TMOL dependencies and supported structure/interaction type |
+| MPNN or monomer metrics | Selected inverse-folding and folding models, their dependencies and weights |
+| ESM metrics | Selected ESM packages/weights/cache |
+| Structural/sequence clustering | Configured Foldseek/MMseqs executables and needed structures/sequences |
+| Optional interface geometry tools | The tools selected by the actual metric configuration |
 
-## Search settings that affect resource use
-
-Select the algorithm with `++generation.search.algorithm=<value>`. Values use
-hyphens; nested configuration keys use underscores. These names come from
-`configs/pipeline/*/*_generate.yaml` and `src/proteinfoundation/search/search_factory.py`.
-
-| Algorithm value | Candidate-budget keys under `generation.search` |
-|-----------------|--------------------------------------------------|
-| `single-pass` | No search expansion |
-| `best-of-n` | `best_of_n.replicas` |
-| `beam-search` | `beam_search.beam_width`, `beam_search.n_branch` |
-| `fk-steering` | `fk_steering.beam_width`, `fk_steering.n_branch` |
-| `mcts` | `mcts.n_simulations` |
-
-For example, use `++generation.search.algorithm=best-of-n` with
-`++generation.search.best_of_n.replicas=4`. More candidates increase work, but
-wall-clock time and peak VRAM depend on batching, search checkpoints, the reward
-backend, and hardware; candidate counts are not measured timing multipliers.
-
-## CPU / RAM / disk
-
-Defaults pulled from `configs/search_*_local_pipeline.yaml`:
-
-| Pipeline           | `ncpus_` | `gen_njobs` | `eval_njobs` | RAM (rec.) | Output disk / 100 designs |
-|--------------------|---------:|------------:|-------------:|-----------:|--------------------------:|
-| Protein Binder     |       24 |           1 |            1 |  32 GB (empirical) | ~10–20 GB (empirical) |
-| Ligand Binder      |       24 |           1 |            1 |  32 GB (empirical) | ~15–30 GB (empirical) |
-| AME                |       24 |           1 |            1 |  32 GB (empirical) | ~20–50 GB (empirical) |
-
-`keep_folding_outputs=true` (eval default) roughly doubles the output disk
-footprint — set to `false` if disk is tight.
-
-## When you hit OOM
-
-Try these in order — cheapest mitigations first:
-
-- Reduce `++generation.dataloader.batch_size` (often the biggest VRAM lever).
-- Reduce `++gen_njobs` (frees one inference process worth of memory).
-- Reduce `++generation.args.nsteps` (less VRAM tied up in trajectory buffers
-  when using search algorithms that retain steps).
-- Reduce `++generation.search.beam_search.beam_width` /
-  `++generation.search.beam_search.n_branch`.
-- Set `++metric.keep_folding_outputs=false` to free fold-stage RAM/disk
-  pressure (helps when an OOM lands during evaluation).
-- Switch fold backend: `++metric.binder_folding_method=esmfold` is the
-  cheapest; `rf3_latest` is the heaviest.
-- For AME: confirm `USE_V2_COMPLEXA_ARCH=True` matches the AME checkpoint —
-  loading the wrong arch wastes ~10–20% VRAM (empirical).
-- Multi-GPU host: set `CUDA_VISIBLE_DEVICES=<idx>` to pin the run to a single
-  card and avoid PyTorch placing tensors on a busy peer GPU.
+Changing final refolding does not remove a search reward's dependencies. Verify
+executable usability and weight contents where required; existence flags alone
+are insufficient. Record unresolved requirements in a launch plan. Install or
+download only when runtime provisioning is part of the authorized task.

@@ -1,0 +1,2 @@
+    def __len__(self):
+        return len(self.nres) * self.nrepeat_per_sample

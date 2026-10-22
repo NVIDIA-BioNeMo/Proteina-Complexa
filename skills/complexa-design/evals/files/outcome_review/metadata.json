@@ -1,0 +1,27 @@
+{
+  "synthetic": true,
+  "description": "Flattened, synthetic per-sequence evaluation rows and invented cluster assignments for an offline reporting exercise. No structures or measured inference results are supplied.",
+  "design_ids": [
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06"
+  ],
+  "generated_design_count": 6,
+  "filter_attrition": 0,
+  "binder_folding_method": "colabdesign",
+  "sequence_types": [
+    "self",
+    "mpnn"
+  ],
+  "num_redesign_seqs": 2,
+  "units": {
+    "complex_i_pAE": "normalized PAE (divide Angstroms by 31)",
+    "complex_pLDDT": "0 to 1",
+    "binder_scRMSD_ca": "Angstroms"
+  },
+  "missing_values": "Blank CSV fields are unmeasured, not zero.",
+  "clustering": "Use the supplied cluster IDs as fixed assignments for this exercise; they do not establish a real Foldseek run."
+}

@@ -1,0 +1,94 @@
+    def _compute_reward(
+        self,
+        energy_dict: dict[str, torch.Tensor],
+        inter_chain_mask: torch.Tensor,
+        pose_idx: int = 0,
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        """Compute reward based on interchain interface energies.
+
+        Args:
+            energy_dict: Dictionary containing energy tensors for different types
+            inter_chain_mask: Interchain mask
+            pose_idx: Index of pose
+
+        Returns:
+            Tuple of (total_reward, reward_components_dict)
+        """
+        # Apply mask to get only inter-chain energies
+        total_energies = energy_dict["total"]
+        interface_total_energies = total_energies * inter_chain_mask
+
+        # Compute reward based on specified type
+        if self.reward_type == "energy_sum":
+            # Sum of interface energies (more negative = better for both H-bonds and elec)
+            # We negate because we want to maximize favorable interactions (minimize positive reward)
+            total_reward = -torch.sum(interface_total_energies)
+        elif self.reward_type == "interaction_count":
+            # Count of significant interactions
+            total_reward = torch.sum((interface_total_energies < self.energy_threshold).float())
+
+        # Normalize by interface size if requested
+        if self.normalize_by_interface_size:
+            n_interface_pairs = torch.sum(inter_chain_mask.float())
+            if n_interface_pairs > 0:
+                total_reward = total_reward / n_interface_pairs
+
+        # Compute reward components for each energy type
+        reward_components = {
+            "total_interface_energy": torch.sum(interface_total_energies),
+            "n_interface_interactions": torch.sum((interface_total_energies < self.energy_threshold).float()),
+            "n_interface_pairs": torch.sum(inter_chain_mask.float()),
+            "mean_interface_energy": (
+                torch.mean(interface_total_energies[inter_chain_mask])
+                if torch.sum(inter_chain_mask) > 0
+                else torch.tensor(0.0)
+            ),
+            "strongest_interface_interaction": (
+                torch.min(interface_total_energies[inter_chain_mask])
+                if torch.sum(inter_chain_mask) > 0
+                else torch.tensor(0.0)
+            ),
+        }
+
+        # Add individual energy type components if enabled
+        if self.enable_hbond and "hbond" in energy_dict:
+            interface_hbond_energies = energy_dict["hbond"] * inter_chain_mask
+            reward_components.update(
+                {
+                    "total_interface_hbond_energy": torch.sum(interface_hbond_energies),
+                    "n_interface_hbonds": torch.sum((interface_hbond_energies < self.energy_threshold).float()),
+                    "mean_interface_hbond_energy": (
+                        torch.mean(interface_hbond_energies[inter_chain_mask])
+                        if torch.sum(inter_chain_mask) > 0
+                        else torch.tensor(0.0)
+                    ),
+                    "strongest_interface_hbond": (
+                        torch.min(interface_hbond_energies[inter_chain_mask])
+                        if torch.sum(inter_chain_mask) > 0
+                        else torch.tensor(0.0)
+                    ),
+                }
+            )
+
+        if self.enable_elec and "elec" in energy_dict:
+            interface_elec_energies = energy_dict["elec"] * inter_chain_mask
+            reward_components.update(
+                {
+                    "total_interface_elec_energy": torch.sum(interface_elec_energies),
+                    "n_interface_elec_interactions": torch.sum(
+                        (interface_elec_energies < self.energy_threshold).float()
+                    ),
+                    "mean_interface_elec_energy": (
+                        torch.mean(interface_elec_energies[inter_chain_mask])
+                        if torch.sum(inter_chain_mask) > 0
+                        else torch.tensor(0.0)
+                    ),
+                    "strongest_interface_elec": (
+                        torch.min(interface_elec_energies[inter_chain_mask])
+                        if torch.sum(inter_chain_mask) > 0
+                        else torch.tensor(0.0)
+                    ),
+                }
+            )
+
+        return total_reward, reward_components

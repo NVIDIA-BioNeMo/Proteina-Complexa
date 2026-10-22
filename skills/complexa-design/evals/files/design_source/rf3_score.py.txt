@@ -1,0 +1,89 @@
+    def score(
+        self,
+        pdb_path: str,
+        requires_grad: bool = False,
+        sequence: torch.Tensor | None = None,
+        structure: torch.Tensor | None = None,
+        binder_chain: str | None = None,
+        target_chain: str | None = None,
+        save_pdb: bool | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Calculate reward using RF3 model.
+
+        Args:
+            pdb_path: Path to PDB file (required)
+            requires_grad: Whether to calculate gradients (not supported, raises error if True)
+            sequence: Not used for RF3 (uses PDB file)
+            structure: Not used for RF3 (uses PDB file)
+            binder_chain: Not used (extracted from PDB)
+            target_chain: Not used (extracted from PDB)
+            save_pdb: Not supported for RF3 (raises error if True)
+            **kwargs: Additional arguments
+
+        Returns:
+            Dictionary with reward components:
+                reward: Dict[str, torch.Tensor]  # Reward values per metric
+                total_reward: torch.Tensor  # Weighted sum of reward components
+                plddt: torch.Tensor  # pLDDT value
+                pae: torch.Tensor  # Overall PAE value
+        """
+        self._check_capabilities(requires_grad=requires_grad, save_pdb=bool(save_pdb))
+
+        ground_truth_conformer_selection = kwargs.get("ground_truth_conformer_selection")
+        template_selection = kwargs.get("template_selection")
+
+        prediction = self.predict_from_file(
+            input_file=pdb_path,
+            ground_truth_conformer_selection=ground_truth_conformer_selection,
+            template_selection=template_selection,
+        )
+
+        # Extract all metric values from prediction
+        if prediction and "summary_confidence" in prediction and len(prediction["summary_confidence"]) > 0:
+            conf = prediction["summary_confidence"][0]
+        else:
+            conf = {}
+
+        # Build reward_components: one scalar tensor per metric in reward_options.
+        # - has_clash: boolean -> 1.0/0.0 so it can be penalized via a negative weight
+        # - PAE-family keys (ipAE, min_ipAE, ...): raw values are in Angstroms (0-31);
+        #   divided by 31 when normalize_pae=True so weights are on the same ~0-1 scale
+        #   as pLDDT/ipTM/pTM. Defaults: 0.0 for higher-is-better, 100.0 for lower-is-better.
+        reward_components = {}
+        for key in self.reward_options:
+            if key == "has_clash":
+                val = 1.0 if conf.get("has_clash", False) else 0.0
+            else:
+                if key in (
+                    "plddt",
+                    "ipTM",
+                    "pTM",
+                    "ranking_score",
+                    "min_ipSAE",
+                    "max_ipSAE",
+                    "avg_ipSAE",
+                ):
+                    default = 0.0
+                else:
+                    default = 100.0
+                val = conf.get(key, default)
+                val = val.item() if isinstance(val, torch.Tensor) else float(val)
+                if self.normalize_pae and key in self.PAE_KEYS:
+                    val = val / 31.0
+            reward_components[key] = ensure_tensor(val)
+
+        # total_reward = sum(component_value * weight) over all metrics
+        total_reward = ensure_tensor(
+            sum(reward_components[k].item() * self.reward_weights[k] for k in self.reward_weights)
+        )
+
+        plddt = reward_components["plddt"]
+        pae = reward_components["pAE"]
+
+        return standardize_reward(
+            reward=reward_components,
+            total_reward=total_reward,
+            plddt=plddt,
+            pae=pae,
+        )

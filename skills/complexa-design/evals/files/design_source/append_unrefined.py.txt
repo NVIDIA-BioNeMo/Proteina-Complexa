@@ -1,0 +1,31 @@
+    def _append_unrefined_samples(
+        self,
+        sample_prots,
+        unrefined_final,
+        unrefined_lookahead,
+        expanded_hotspot_mask,
+        ligand,
+    ):
+        """Score and append pre-refinement copies to the output dict."""
+        if unrefined_final is not None:
+            unrefined_final_rewards = None
+            if self.reward_model is not None:
+                unrefined_final_rewards = compute_reward_from_samples(
+                    self.reward_model,
+                    unrefined_final,
+                    expanded_hotspot_mask,
+                    ligand,
+                )
+            append_samples(
+                sample_prots,
+                unrefined_final,
+                unrefined_final_rewards,
+                "final_unrefined",
+            )
+        if unrefined_lookahead is not None:
+            append_samples(
+                sample_prots,
+                unrefined_lookahead,
+                unrefined_lookahead.get("rewards"),
+                "lookahead_unrefined",
+            )
