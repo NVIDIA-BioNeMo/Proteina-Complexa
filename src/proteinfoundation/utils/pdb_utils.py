@@ -48,7 +48,7 @@ import biotite
 import numpy as np
 import torch
 from atomworks.io.utils.io_utils import load_any
-from atomworks.io.utils.selection import AtomSelectionStack
+from atomworks.io.utils.query import AtomSelectionStack
 from atomworks.ml.encoding_definitions import AF2_ATOM37_ENCODING
 from atomworks.ml.transforms.encoding import atom_array_from_encoding, atom_array_to_encoding
 from Bio.PDB import PDBParser, Superimposer

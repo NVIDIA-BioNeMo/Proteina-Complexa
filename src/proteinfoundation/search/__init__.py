@@ -9,7 +9,6 @@ from proteinfoundation.search.beam_search import BeamSearch
 from proteinfoundation.search.best_of_n_search import BestOfNSearch
 from proteinfoundation.search.fk_steering import FKSteering
 from proteinfoundation.search.mcts_search import MCTSSearch
-from proteinfoundation.search.sequence_hallucination import SequenceHallucination
 from proteinfoundation.search.single_pass_generation import SinglePassGeneration
 
 __all__ = [
@@ -22,3 +21,12 @@ __all__ = [
     "SequenceHallucination",
     "SinglePassGeneration",
 ]
+
+
+def __getattr__(name):
+    # Keep JAX/ColabDesign optional for generation without AF2 refinement.
+    if name == "SequenceHallucination":
+        from proteinfoundation.search.sequence_hallucination import SequenceHallucination
+
+        return SequenceHallucination
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -11,7 +11,6 @@ from proteinfoundation.search import (
     BestOfNSearch,
     FKSteering,
     MCTSSearch,
-    SequenceHallucination,
     SinglePassGeneration,
 )
 
@@ -52,5 +51,7 @@ def instantiate_refinement(proteina: Any, inf_cfg: Any, algorithm: str) -> Any:
         Refinement algorithm instance.
     """
     if algorithm == "sequence_hallucination":
+        from proteinfoundation.search.sequence_hallucination import SequenceHallucination
+
         return SequenceHallucination(proteina, inf_cfg)
     raise ValueError(f"Unknown refinement algorithm: {algorithm}")

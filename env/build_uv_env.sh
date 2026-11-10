@@ -4,25 +4,25 @@ set -e
 # ==============================================================================
 # Protein Foundation Models - Public UV Environment Installation Script
 # ==============================================================================
-# Public release variant: installs all Python dependencies (--full) by default.
+# Public release variant: installs all Python dependencies by default.
 # Does NOT install Foldseek, MMseqs2, Foldcomp, or any NVIDIA-internal binaries.
 #
-# Usage: ./build_public_uv_env.sh [OPTIONS] [INSTALL_ROOT]
+# Usage: ./build_uv_env.sh [OPTIONS] [INSTALL_ROOT]
 #
 # Options:
 #   --clean         Remove existing .venv and UV cache before building (fresh start)
-#   --minimal       Skip optional dependencies (JAX, ColabFold, tmol)
-#   --python VER    Python version: 3.11 or 3.12 (default: 3.12)
+#   --minimal       Skip optional backends (JAX, ColabFold, tmol, Foundry, Modin/Ray)
+#   --python VER    Python version: 3.12 (default: 3.12)
 #   --name NAME     Custom prompt name shown when venv is activated (default: complexa)
 #   --root PATH     Specify installation root directory (where .venv will be created)
 #   -h, --help      Show this help message
 #
 # Examples:
-#   ./build_public_uv_env.sh                      # Full install (Python 3.12)
-#   ./build_public_uv_env.sh --minimal            # Base dependencies only
-#   ./build_public_uv_env.sh --python 3.11        # Full install with Python 3.11
-#   ./build_public_uv_env.sh --name myenv         # Custom prompt: (myenv)
-#   ./build_public_uv_env.sh --root /path/to/dir  # Create .venv in custom directory
+#   ./build_uv_env.sh                      # Full install (Python 3.12)
+#   ./build_uv_env.sh --minimal            # Base dependencies only
+#   ./build_uv_env.sh --python 3.12        # Full install with Python 3.12
+#   ./build_uv_env.sh --name myenv         # Custom prompt: (myenv)
+#   ./build_uv_env.sh --root /path/to/dir  # Create .venv in custom directory
 # ==============================================================================
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -44,36 +44,36 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --python)
-            PYTHON_VERSION="$2"
-            if [[ "$PYTHON_VERSION" != "3.11" && "$PYTHON_VERSION" != "3.12" ]]; then
-                echo "Error: Python version must be 3.11 or 3.12"
+            PYTHON_VERSION="${2:?Missing value for $1}"
+            if [[ "$PYTHON_VERSION" != "3.12" ]]; then
+                echo "Error: Python version must be 3.12 (required by pyproject.toml)"
                 exit 1
             fi
             shift 2
             ;;
         --name)
-            VENV_NAME="$2"
+            VENV_NAME="${2:?Missing value for $1}"
             shift 2
             ;;
         --root)
-            INSTALL_ROOT="$2"
+            INSTALL_ROOT="${2:?Missing value for $1}"
             shift 2
             ;;
         -h|--help)
-            echo "Usage: ./build_public_uv_env.sh [OPTIONS]"
+            echo "Usage: ./build_uv_env.sh [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --clean         Remove existing .venv and UV cache before building"
-            echo "  --minimal       Skip optional dependencies (JAX, ColabFold, tmol)"
-            echo "  --python VER    Python version: 3.11 or 3.12 (default: 3.12)"
+            echo "  --minimal       Skip optional backends (JAX, ColabFold, tmol, Foundry, Modin/Ray)"
+            echo "  --python VER    Python version: 3.12 (default: 3.12)"
             echo "  --name NAME     Custom prompt name (default: complexa)"
             echo "  --root PATH     Specify where to create .venv (default: project dir)"
             echo "  -h, --help      Show this help message"
             echo ""
             echo "Examples:"
-            echo "  ./build_public_uv_env.sh                # Full install (Python 3.12)"
-            echo "  ./build_public_uv_env.sh --minimal      # Base dependencies only"
-            echo "  ./build_public_uv_env.sh --python 3.11  # Full install with Python 3.11"
+            echo "  ./build_uv_env.sh                # Full install (Python 3.12)"
+            echo "  ./build_uv_env.sh --minimal      # Base dependencies only"
+            echo "  ./build_uv_env.sh --python 3.12  # Full install with Python 3.12"
             exit 0
             ;;
         -*)
@@ -127,17 +127,17 @@ echo ""
 # 1. Check/Install UV
 # ------------------------------------------------------------------------------
 if ! command -v uv &> /dev/null; then
-    echo "[1/8] Installing uv..."
+    echo "[1/7] Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
 else
-    echo "[1/8] uv already installed: $(uv --version)"
+    echo "[1/7] uv already installed: $(uv --version)"
 fi
 
 # ------------------------------------------------------------------------------
 # 2. Create virtual environment
 # ------------------------------------------------------------------------------
-echo "[2/8] Creating virtual environment with Python $PYTHON_VERSION..."
+echo "[2/7] Creating virtual environment with Python $PYTHON_VERSION..."
 uv venv --python "$PYTHON_VERSION" --prompt "$VENV_NAME" "$VENV_DIR/.venv"
 
 source "$VENV_DIR/.venv/bin/activate"
@@ -147,69 +147,51 @@ echo "      Python: $(which python)"
 # 3. Install PyTorch with CUDA 12.6
 # ------------------------------------------------------------------------------
 echo "[3/7] Installing PyTorch 2.7.0 with CUDA 12.6..."
-uv pip install torch==2.7.0+cu126 torchvision torchaudio \
+uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" torch==2.7.0+cu126 \
     --index-url https://download.pytorch.org/whl/cu126
 
 # ------------------------------------------------------------------------------
-# 4. Install base dependencies from pyproject.toml
+# 4. Resolve base dependencies together (including Graphein and Atomworks)
 # ------------------------------------------------------------------------------
-echo "[4/8] Installing base dependencies from pyproject.toml..."
-uv pip install --index-strategy unsafe-best-match -e "$PROJECT_DIR"
+echo "[4/7] Installing base dependencies from pyproject.toml..."
+uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" --index-strategy unsafe-best-match -e "$PROJECT_DIR"
 
 # ------------------------------------------------------------------------------
-# 5. Install PyTorch Geometric packages
+# 5. Install the only required PyTorch Geometric extension
 # ------------------------------------------------------------------------------
-echo "[5/7] Installing PyTorch Geometric packages..."
-uv pip install torch_geometric torch_scatter torch_sparse torch_cluster \
+echo "[5/7] Installing torch-scatter from a matching CUDA wheel..."
+uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" torch_scatter --only-binary=:all: \
     -f https://data.pyg.org/whl/torch-2.7.0+cu126.html
 
 # ------------------------------------------------------------------------------
-# 6. Install Graphein and Atomworks
-# ------------------------------------------------------------------------------
-echo "[6/8] Installing Graphein and Atomworks..."
-echo "      -> Graphein..."
-uv pip install graphein==1.7.7 --no-deps
-
-echo "      -> Atomworks..."
-uv pip install "atomworks[ml,openbabel,dev]" || echo "Warning: atomworks install failed"
-
-# ------------------------------------------------------------------------------
-# 7. Install optional/full dependencies
+# 6. Install optional/full dependencies
 # ------------------------------------------------------------------------------
 if [ "$FULL_INSTALL" = true ]; then
-    echo "[7/8] Installing full dependencies (ColabFold, JAX, tmol)..."
+    echo "[6/7] Installing full dependencies (ColabFold, JAX, tmol, Foundry, Modin/Ray)..."
 
-    echo "      -> ColabDesign & AlphaFold-ColabFold..."
-    uv pip install colabdesign==1.1.1 alphafold-colabfold==2.3.7
+    # Resolve JAX and its ecosystem together: sequential downgrades leave newer
+    # chex/optax/ml-dtypes installed against an incompatible JAX or NumPy.
+    uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" \
+        -e "$PROJECT_DIR[data-prep]" \
+        colabdesign==1.1.1 alphafold-colabfold==2.3.7 \
+        "jax[cuda12]==0.4.29" jaxlib==0.4.29+cuda12.cudnn91 flax==0.9.0 \
+        "rc-foundry[all]" \
+        -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
     echo "      -> Installing local colabdesign (community_models/colabdesign)..."
-    uv pip install -e "$PROJECT_DIR/community_models/colabdesign"
-
-    echo "      -> JAX with CUDA..."
-    uv pip install jaxlib==0.4.29+cuda12.cudnn91 \
-        -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-    uv pip install "jax[cuda12]==0.4.29" \
-        -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-    uv pip install flax==0.9.0 --no-deps
+    uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" -e "$PROJECT_DIR/community_models/colabdesign"
 
     echo "      -> Tmol..."
-    uv pip install "git+https://github.com/uw-ipd/tmol.git@d8a6f7f9649d36e74440bca25246ee7c467ce490" || echo "Warning: tmol install failed"
+    uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" "git+https://github.com/uw-ipd/tmol.git@d8a6f7f9649d36e74440bca25246ee7c467ce490" || echo "Warning: tmol install failed"
 else
-    echo "[7/8] Skipping optional dependencies (omit --minimal to install)"
+    echo "[6/7] Skipping optional dependencies (omit --minimal to install)"
 fi
 
 # ------------------------------------------------------------------------------
-# 8. Install Foundry (Python version dependent)
+# 7. Verify dependency consistency
 # ------------------------------------------------------------------------------
-if [[ "$PYTHON_VERSION" == "3.12" ]]; then
-    echo "[8/8] Installing Foundry (rc-foundry)..."
-    uv pip install "rc-foundry[all]"
-else
-    echo "[8/8] Not able to install RF# via rc-foundary. Please try python 3.12."
-fi
-
-uv pip install biotite==1.6.0
-echo "Updated biotite to 1.6.0 for ligand compatibility"
+echo "[7/7] Checking installed dependencies..."
+uv pip check
 
 # ------------------------------------------------------------------------------
 # Done!

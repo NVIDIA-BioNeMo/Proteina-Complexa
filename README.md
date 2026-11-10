@@ -95,22 +95,35 @@ cd Proteina-Complexa
 source .venv/bin/activate
 ```
 
-> **Known Issue: tmol install fails on Python 3.12 for some users**
->
-> tmol depends on `sparse` -> `numba` -> `llvmlite`, and the pinned versions of `llvmlite` are
-> incompatible with Python 3.12. If the install fails during the tmol step, add the following
-> workaround to `build_uv_env.sh` before the tmol install line:
->
-> ```bash
-> if [[ "$PYTHON_VERSION" == "3.12" ]]; then
->     # Pre-install 3.12-compatible versions of llvmlite/numba
->     uv pip install "llvmlite>=0.41" "numba>=0.59" || true
-> fi
-> uv pip install "git+https://github.com/uw-ipd/tmol.git" || echo "Warning: tmol install failed"
-> ```
->
-> This is not needed on all systems -- it depends on which versions of `llvmlite` and `numba`
-> your resolver picks up. If the default install works for you, no action is needed.
+For generation/training without AF2 refinement, TMOL scoring, or RF3/Foundry,
+use the smaller environment instead:
+
+```bash
+./env/build_uv_env.sh --minimal
+source .venv/bin/activate
+python env/smoke_test.py --minimal --cuda
+```
+
+`--minimal` keeps PyTorch, the matching prebuilt `torch-scatter` wheel, Graphein,
+and Atomworks ML/OpenBabel support (including ligand processing). It skips JAX,
+ColabDesign/AlphaFold, TMOL, Foundry, and Modin/Ray. Select configurations that do
+not request those optional backends; the full evaluation pipelines still need
+their configured folding/scoring tools and model weights. The smoke test checks
+imports, CUDA operations, and the compiled scatter operator without model weights.
+Use a fresh environment when checking which packages the minimal install omits;
+it does not remove packages already installed by a full build.
+
+The default command above continues to install the full environment; verify it
+with `python env/smoke_test.py --af2 --cuda`. Modin/Ray
+can also be installed separately for `use_modin=True` and the Foldcomp data
+preparation scripts with `uv pip install -e '.[data-prep]'`.
+The installer resolves core requirements together, pins Atomworks to the tested
+3.0.4 API and Biotite 1.6.0, and checks dependency consistency before reporting
+success. Full installs also resolve the JAX stack together. PyTorch stays pinned
+throughout installation to match the prebuilt scatter extension.
+
+Both installation modes require Python 3.12. Neither installs unused
+`torchvision`, `torchaudio`, `torch-geometric`, `torch-sparse`, or `torch-cluster`.
 
 ### Option 2: Docker Container
 

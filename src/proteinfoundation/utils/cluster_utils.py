@@ -9,7 +9,6 @@ import subprocess
 import tempfile
 from multiprocessing import Pool, cpu_count
 
-import modin.pandas as mpd
 import pandas as pd
 import torch
 from graphein.utils.dependencies import is_tool
@@ -336,6 +335,8 @@ def expand_cluster_splits(
 
         # Create a DataFrame with the cluster representative IDs and their corresponding cluster member IDs for the current split
         if use_modin:
+            from modin import pandas as mpd
+
             split_cluster_members_df = mpd.DataFrame(
                 [
                     (rep_id, member_id)
@@ -450,6 +451,8 @@ def fasta_to_df(fasta_input_file: str, use_modin: bool = False) -> pd.DataFrame:
             data.append([sequence_id, "".join(sequence)])
 
         if use_modin:
+            from modin import pandas as mpd
+
             df = mpd.DataFrame(data, columns=["id", "sequence"])
         else:
             df = pd.DataFrame(data, columns=["id", "sequence"])
