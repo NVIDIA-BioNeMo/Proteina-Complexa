@@ -118,8 +118,14 @@ with `python env/smoke_test.py --af2 --cuda`. Modin/Ray
 can also be installed separately for `use_modin=True` and the Foldcomp data
 preparation scripts with `uv pip install -e '.[data-prep]'`.
 The installer resolves core requirements together, pins Atomworks to the tested
-3.0.4 API and Biotite 1.6.0, and checks dependency consistency before reporting
-success. Full installs also resolve the JAX stack together. PyTorch stays pinned
+3.0.4 API and Biotite 1.6.0, and checks the resolved dependencies before installing
+Graphein separately with
+`--no-deps`, matching the original installer. Only Graphein's residue constants
+and dependency utilities are used and import-tested. NumPy stays below 2 for
+compatibility with Graphein. A subsequent blanket
+`uv pip check` can report intentionally omitted Graphein dependencies such as
+`bioservices`; the installer does not add these unused packages. Full installs
+also resolve the JAX stack together. PyTorch stays pinned
 throughout installation to match the prebuilt scatter extension.
 
 Both installation modes require Python 3.12. Neither installs unused

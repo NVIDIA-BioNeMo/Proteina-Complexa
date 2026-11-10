@@ -151,7 +151,7 @@ uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" torch==2.7.0+cu12
     --index-url https://download.pytorch.org/whl/cu126
 
 # ------------------------------------------------------------------------------
-# 4. Resolve base dependencies together (including Graphein and Atomworks)
+# 4. Resolve base dependencies together (including Atomworks)
 # ------------------------------------------------------------------------------
 echo "[4/7] Installing base dependencies from pyproject.toml..."
 uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" --index-strategy unsafe-best-match -e "$PROJECT_DIR"
@@ -188,10 +188,18 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 7. Verify dependency consistency
+# 7. Verify resolved dependencies, then install Graphein without its optional stack
 # ------------------------------------------------------------------------------
-echo "[7/7] Checking installed dependencies..."
+# Graphein intentionally omits dependencies for features this project does not
+# use (for example bioservices). Check the resolved environment before adding it;
+# a blanket check afterward would report those deliberate omissions as errors.
+echo "[7/7] Checking resolved dependencies before Graphein..."
 uv pip check
+
+echo "      -> Graphein (without dependencies, as in the original installer)..."
+uv pip install --constraint "$PROJECT_DIR/env/constraints.txt" graphein==1.7.7 --no-deps
+# Verify the Graphein functionality actually used by the project.
+python -c 'from graphein.protein.resi_atoms import ATOM_NUMBERING; from graphein.utils.dependencies import is_tool'
 
 # ------------------------------------------------------------------------------
 # Done!

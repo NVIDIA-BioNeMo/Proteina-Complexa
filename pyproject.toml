@@ -9,7 +9,7 @@ dependencies = [
     "einops>=0.7,<1",
     "dm-tree==0.1.8",
     "loguru==0.7.2",
-    "numpy>=1.23.5",
+    "numpy>=1.23.5,<2", # Preserve Graphein compatibility without resolving its dependencies.
     "tqdm==4.66.4",
     "joblib==1.4.2",
     "rich==14.0.0",
@@ -41,7 +41,6 @@ dependencies = [
     
     # Bioinformatics
     "atomworks[ml,openbabel]==3.0.4",
-    "graphein==1.7.7",
     "biopandas==0.5.1",
     "biopython",
     "biotite==1.6.0", # Ligand compatibility; matches Atomworks 3.0.4.

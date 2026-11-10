@@ -20,6 +20,7 @@ def main():
 
     if args.minimal:
         for package in (
+            "bioservices",
             "torchaudio",
             "torchvision",
             "torch-geometric",
@@ -37,6 +38,12 @@ def main():
             except importlib.metadata.PackageNotFoundError:
                 continue
             raise AssertionError(f"Unexpected package in minimal environment: {package}")
+
+    # Exercise the only Graphein modules used by the project; its unused extras
+    # are deliberately not installed by the environment builder.
+    for module in ("graphein.protein.resi_atoms", "graphein.utils.dependencies"):
+        importlib.import_module(module)
+    assert importlib.metadata.version("graphein") == "1.7.7"
 
     import torch
     from torch_scatter import scatter_mean
@@ -69,6 +76,8 @@ def main():
 
     from proteinfoundation.utils.cluster_utils import fasta_to_df
     from proteinfoundation.utils.pdb_utils import AtomSelectionStack
+
+    assert int(np.__version__.split(".")[0]) < 2, np.__version__
 
     # The Atomworks 3 query module must retain the target contig syntax we use.
     atoms = AtomArray(4)
