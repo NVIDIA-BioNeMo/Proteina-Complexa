@@ -5,11 +5,11 @@ description = "Proteina-Complexa"
 requires-python = ">=3.12"
 dependencies = [
     # Core utilities
-    "python-dotenv==1.0.1",
-    "einops==0.6",
+    "python-dotenv>=1.2.2,<2",
+    "einops>=0.7,<1",
     "dm-tree==0.1.8",
     "loguru==0.7.2",
-    "numpy>=1.23.5",
+    "numpy>=1.23.5,<2", # Preserve Graphein compatibility without resolving its dependencies.
     "tqdm==4.66.4",
     "joblib==1.4.2",
     "rich==14.0.0",
@@ -29,10 +29,9 @@ dependencies = [
     
     # Data processing
     "pandas>=2.3.0",
-    "scipy==1.12.0",
+    "scipy>=1.13.1,<2",
     "h5py",
     "xarray",
-    "modin[ray]",
     "deepdiff>=8.6.1",
     
     # Visualization
@@ -41,9 +40,10 @@ dependencies = [
     "scikit-learn",
     
     # Bioinformatics
+    "atomworks[ml,openbabel]==3.0.4",
     "biopandas==0.5.1",
     "biopython",
-    "biotite>=0.41.0", # it gets later reset to 1.4.0 in the build_uv_env.sh script but it causes a conflict if set here
+    "biotite==1.6.0", # Ligand compatibility; matches Atomworks 3.0.4.
     "cpdb-protein==0.2.0",
     "mdtraj==1.10.2",
     "ProDy==2.6.1", #error with 2.4.1 
@@ -54,6 +54,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Only needed for data preparation with use_modin=True or foldcomp_dataprep scripts.
+data-prep = ["modin[ray]"]
 dev = [
     "ruff>=0.15.0",
     "ipdb",

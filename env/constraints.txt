@@ -1,0 +1,4 @@
+# Keep compiled torch-scatter wheels ABI-compatible throughout installation.
+torch==2.7.0+cu126
+# Newer Haiku releases use JAX APIs absent from the AF2 stack's JAX 0.4.29.
+dm-haiku==0.0.12
