@@ -1,0 +1,32 @@
+# Synthetic proposal for a protein-interface reward, not a ligand reward.
+generation:
+  task_name: 33_TrkA
+  search:
+    algorithm: beam-search
+  reward_model:
+    _target_: proteinfoundation.rewards.base_reward.CompositeRewardModel
+    reward_models:
+      af2folding:
+        _target_: proteinfoundation.rewards.alphafold2_reward.AF2RewardModel
+        protocol: binder
+        use_multimer: true
+        af_params_dir: ${oc.env:AF2_DIR}
+        num_recycles: 3
+        use_initial_guess: true
+        use_initial_atom_pos: false
+        reward_weights:
+          i_pae: 1.0
+      tmol:
+        _target_: proteinfoundation.rewards.tmol_reward.TmolRewardModel
+        enable_hbond: true
+        enable_elec: false
+        hbond_weight: 1.0
+        reward_type: energy_sum
+        energy_threshold: -0.6
+        structure_source: colabdesign
+    weights:
+      af2folding: 1.0
+      tmol: -1.0
+metric:
+  binder_folding_method: rf3_latest
+  sequence_types: [self]

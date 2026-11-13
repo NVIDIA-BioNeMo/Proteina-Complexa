@@ -1,0 +1,30 @@
+    def _apply_refinement(self, final_prots, lookahead_prots):
+        """Refine samples and optionally save pre-refinement copies.
+
+        Only call when ``_refinement_enabled()`` is True.
+
+        Returns (final_prots, lookahead_prots, unrefined_final, unrefined_lookahead).
+
+        NOTE: SequenceHallucination.refine() accepts target_hotspot_mask but
+        the original hardcoded hotspot=None.  When hotspot-guided refinement
+        is needed, pass expand_hotspot_mask(...) here.
+        """
+        ref_cfg = self.inf_cfg.refinement
+        algorithm = ref_cfg.get("algorithm")
+
+        if not hasattr(self, "_refinement_instance") or self._refinement_instance is None:
+            self._refinement_instance = instantiate_refinement(self, self.inf_cfg, algorithm)
+
+        refine_targets = ref_cfg.get("refine_targets", "final")
+        save_pre = ref_cfg.get("save_pre_refinement", "none")
+
+        unrefined_final = clone_sample_dict(final_prots) if save_pre in ("final", "all") else None
+        unrefined_lookahead = None
+        if save_pre == "all" and refine_targets == "all" and lookahead_prots is not None:
+            unrefined_lookahead = clone_sample_dict(lookahead_prots)
+
+        final_prots = self._refinement_instance.refine(final_prots)
+        if refine_targets == "all" and lookahead_prots is not None:
+            lookahead_prots = self._refinement_instance.refine(lookahead_prots)
+
+        return final_prots, lookahead_prots, unrefined_final, unrefined_lookahead

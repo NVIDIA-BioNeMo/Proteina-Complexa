@@ -1,0 +1,23 @@
+# Synthetic draft for a future paired refinement experiment.
+generation:
+  refinement:
+    algorithm: sequence_hallucination
+    refine_targets: all
+    save_pre_refinement: none
+    enable_soft_optimization: true
+    enable_greedy_optimization: true
+    n_temp_iters: 45
+    n_hard_iters: 5
+    n_recycles: 3
+    n_greedy_iters: 15
+    greedy_percentage: 1
+  filter:
+    filter_samples_limit: 1000
+    dedup_sequence: true
+    delete_non_top_n_samples: false
+metric:
+  binder_folding_method: colabdesign
+  sequence_types: [self, mpnn]
+  num_redesign_seqs: 8
+  compute_monomer_metrics: true
+  compute_designability: true

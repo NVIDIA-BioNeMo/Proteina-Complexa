@@ -1,0 +1,158 @@
+{
+  "revision": "8fc6f5c85b38a2585ffaac555e708576dc4e8533",
+  "repository": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa",
+  "files": {
+    "configs/search_binder_local_pipeline.yaml": {
+      "source": "configs/search_binder_local_pipeline.yaml",
+      "start_line": 1,
+      "end_line": 39,
+      "source_sha256": "1b856a07672277e227aae02340422e509981a87cdc7dc66b9dfc0ec80cde3b00",
+      "sha256": "1b856a07672277e227aae02340422e509981a87cdc7dc66b9dfc0ec80cde3b00",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/configs/search_binder_local_pipeline.yaml#L1"
+    },
+    "configs/search_ligand_binder_local_pipeline.yaml": {
+      "source": "configs/search_ligand_binder_local_pipeline.yaml",
+      "start_line": 1,
+      "end_line": 48,
+      "source_sha256": "7aa3fe060efe7d25766fb0db902c2e210e1c1b1a7d4c2cf3dde05ad80286f05c",
+      "sha256": "7aa3fe060efe7d25766fb0db902c2e210e1c1b1a7d4c2cf3dde05ad80286f05c",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/configs/search_ligand_binder_local_pipeline.yaml#L1"
+    },
+    "configs/pipeline/binder/binder_generate.yaml": {
+      "source": "configs/pipeline/binder/binder_generate.yaml",
+      "start_line": 1,
+      "end_line": 240,
+      "source_sha256": "501005c8a4b796da01ec00348af79510dba21230d14ae6331a60a1f6d0817aff",
+      "sha256": "501005c8a4b796da01ec00348af79510dba21230d14ae6331a60a1f6d0817aff",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/configs/pipeline/binder/binder_generate.yaml#L1"
+    },
+    "configs/pipeline/binder/binder_evaluate.yaml": {
+      "source": "configs/pipeline/binder/binder_evaluate.yaml",
+      "start_line": 1,
+      "end_line": 79,
+      "source_sha256": "061a8ef1478e2a12958699a5785adea924e45dfc2dd5c61497d1b1f547f5138a",
+      "sha256": "061a8ef1478e2a12958699a5785adea924e45dfc2dd5c61497d1b1f547f5138a",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/configs/pipeline/binder/binder_evaluate.yaml#L1"
+    },
+    "configs/pipeline/ligand_binder/ligand_binder_generate.yaml": {
+      "source": "configs/pipeline/ligand_binder/ligand_binder_generate.yaml",
+      "start_line": 1,
+      "end_line": 161,
+      "source_sha256": "9df5d517bbb758de870ff02efaaab32d082334a05c5bd031bd8f752384f273a7",
+      "sha256": "9df5d517bbb758de870ff02efaaab32d082334a05c5bd031bd8f752384f273a7",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/configs/pipeline/ligand_binder/ligand_binder_generate.yaml#L1"
+    },
+    "configs/pipeline/model_sampling.yaml": {
+      "source": "configs/pipeline/model_sampling.yaml",
+      "start_line": 1,
+      "end_line": 60,
+      "source_sha256": "d5ef6a7d59cd0154fd9c1c0899b4ae2f505ba9548f2717a71a71425441dfdc01",
+      "sha256": "d5ef6a7d59cd0154fd9c1c0899b4ae2f505ba9548f2717a71a71425441dfdc01",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/configs/pipeline/model_sampling.yaml#L1"
+    },
+    "beam_search.py.txt": {
+      "source": "src/proteinfoundation/search/beam_search.py",
+      "start_line": 1,
+      "end_line": 394,
+      "source_sha256": "3795d0409be99b3c9bac21db5a67460654d7ec214db4dd32beeac79a30b46b47",
+      "sha256": "3795d0409be99b3c9bac21db5a67460654d7ec214db4dd32beeac79a30b46b47",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/search/beam_search.py#L1"
+    },
+    "dataset_length.py.txt": {
+      "source": "src/proteinfoundation/datasets/gen_dataset.py",
+      "start_line": 132,
+      "end_line": 133,
+      "source_sha256": "ebcc3be71c2a185046adb1c09b640a864dbafdcd0f88a6339a0861faa3f5c030",
+      "sha256": "e9aa73e1dffcfdf3542d222ba7595a77476bd7a8564875bcb7072f13dc0d1ea2",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/datasets/gen_dataset.py#L132"
+    },
+    "composite_reward.py.txt": {
+      "source": "src/proteinfoundation/rewards/base_reward.py",
+      "start_line": 1,
+      "end_line": 403,
+      "source_sha256": "4eff56e8aa93e5a044b771154f120b26708cce372d3ea2ccfbe776cfece0a5dc",
+      "sha256": "4eff56e8aa93e5a044b771154f120b26708cce372d3ea2ccfbe776cfece0a5dc",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/rewards/base_reward.py#L1"
+    },
+    "tmol_init.py.txt": {
+      "source": "src/proteinfoundation/rewards/tmol_reward.py",
+      "start_line": 161,
+      "end_line": 216,
+      "source_sha256": "1ff3cc265bb4c4f5a3985914ece565ce47c2f7e485b1c3b22d9a2a25a1f1bab5",
+      "sha256": "8a50f7935f3cf045eb4c00efb572472ac57dc32cc992d10b5d464984d6cf5372",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/rewards/tmol_reward.py#L161"
+    },
+    "tmol_score.py.txt": {
+      "source": "src/proteinfoundation/rewards/tmol_reward.py",
+      "start_line": 363,
+      "end_line": 456,
+      "source_sha256": "1ff3cc265bb4c4f5a3985914ece565ce47c2f7e485b1c3b22d9a2a25a1f1bab5",
+      "sha256": "92b9dff7a18bfaed5534d8418924d0c5f35318db73d443d07a70aa95eb677e92",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/rewards/tmol_reward.py#L363"
+    },
+    "rf3_score.py.txt": {
+      "source": "src/proteinfoundation/rewards/rf3_reward.py",
+      "start_line": 345,
+      "end_line": 433,
+      "source_sha256": "0f2a9354266c2920ed86ca3b4289066656c58fc1fb7b334f6943b74b184861ce",
+      "sha256": "7a280b3973529594a7f2f021a673055627e99a9f8e1a04baa88c15dc8b84d87a",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/rewards/rf3_reward.py#L345"
+    },
+    "search_factory.py.txt": {
+      "source": "src/proteinfoundation/search/search_factory.py",
+      "start_line": 1,
+      "end_line": 56,
+      "source_sha256": "25b2f09b31b314430e4b63db6a7a96a329f4dfb853722771bcbd715e46cdea20",
+      "sha256": "25b2f09b31b314430e4b63db6a7a96a329f4dfb853722771bcbd715e46cdea20",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/search/search_factory.py#L1"
+    },
+    "apply_refinement.py.txt": {
+      "source": "src/proteinfoundation/proteina.py",
+      "start_line": 623,
+      "end_line": 652,
+      "source_sha256": "3860f99b97cc82464db9b044451a1248afbbb494ad486540b79a06d4e1c25942",
+      "sha256": "bc116d48092b59d39f5c0817622e9583f2e35a6582eb6b8fca5f905dcc8b0c0f",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/proteina.py#L623"
+    },
+    "append_unrefined.py.txt": {
+      "source": "src/proteinfoundation/proteina.py",
+      "start_line": 654,
+      "end_line": 684,
+      "source_sha256": "3860f99b97cc82464db9b044451a1248afbbb494ad486540b79a06d4e1c25942",
+      "sha256": "6823d429ad7fc8397c3c2cddfc4651962832b4a4f25d191d3e94c54b59947157",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/proteina.py#L654"
+    },
+    "sequence_hallucination.py.txt": {
+      "source": "src/proteinfoundation/search/sequence_hallucination.py",
+      "start_line": 132,
+      "end_line": 353,
+      "source_sha256": "0b7a991a79fe32ebcc48d49036a9d52850ddda20eda348ddfcabdec8fdc3880b",
+      "sha256": "822d15b5a7d370589e8490a2a3c8046ea1336ba51f1e32a1ec1cbbbc669bb178",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/search/sequence_hallucination.py#L132"
+    },
+    "filter.py.txt": {
+      "source": "src/proteinfoundation/filter.py",
+      "start_line": 1,
+      "end_line": 254,
+      "source_sha256": "affa4fa43acb3f72b46c1dda4949ae267c3e60b7fb1bf97aafc801dee6ea5d18",
+      "sha256": "affa4fa43acb3f72b46c1dda4949ae267c3e60b7fb1bf97aafc801dee6ea5d18",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/filter.py#L1"
+    },
+    "binder_analysis_utils.py.txt": {
+      "source": "src/proteinfoundation/result_analysis/binder_analysis_utils.py",
+      "start_line": 1,
+      "end_line": 299,
+      "source_sha256": "9289baed29ca39d57aa944b8ed364bc9870c88097aef9499fc7bc5322ec0e3bf",
+      "sha256": "9289baed29ca39d57aa944b8ed364bc9870c88097aef9499fc7bc5322ec0e3bf",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/result_analysis/binder_analysis_utils.py#L1"
+    },
+    "evaluate_threshold.py.txt": {
+      "source": "src/proteinfoundation/result_analysis/analysis_utils.py",
+      "start_line": 142,
+      "end_line": 175,
+      "source_sha256": "35dc2e84937272c0103e561fe7a520e5bde265d04c3148e278870d3e0fdfd3d8",
+      "sha256": "e1ad826ac1916ce60a36efd78a4a39a33f0d89099e4e7b9424487618ead79f8d",
+      "url": "https://github.com/NVIDIA-BioNeMo/Proteina-Complexa/blob/8fc6f5c85b38a2585ffaac555e708576dc4e8533/src/proteinfoundation/result_analysis/analysis_utils.py#L142"
+    }
+  }
+}

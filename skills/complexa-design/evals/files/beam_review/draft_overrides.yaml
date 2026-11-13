@@ -1,0 +1,28 @@
+# Synthetic proposed overrides, to be merged into search_binder_local_pipeline.
+generation:
+  task_name: 02_PDL1
+  args:
+    nsteps: 180
+  dataloader:
+    batch_size: 2
+    dataset:
+      nres:
+        nsamples: 3
+      nrepeat_per_sample: 2
+  search:
+    algorithm: best-of-n
+    max_batch_size: 2
+    step_checkpoints: [0, 100, 200, 300, 400]
+    reward_threshold: null
+    beam_search:
+      beam_width: 3
+      n_branch: 2
+      keep_lookahead_samples: true
+      save_intermediate_states: false
+  refinement:
+    algorithm: null
+  filter:
+    filter_samples_limit: 20
+    dedup_sequence: true
+    reward_threshold: null
+    delete_non_top_n_samples: false

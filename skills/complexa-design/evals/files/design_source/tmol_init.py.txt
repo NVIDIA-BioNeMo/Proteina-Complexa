@@ -1,0 +1,56 @@
+    def __init__(
+        self,
+        device: torch.device | None = None,
+        enable_hbond: bool = True,
+        enable_elec: bool = False,
+        hbond_weight: float = 1.0,
+        elec_weight: float = 1.0,
+        reward_type: str = "energy_sum",  # "energy_sum" or "interaction_count"
+        energy_threshold: float = -0.6,  # Threshold for counting significant interactions
+        normalize_by_interface_size: bool = False,
+        structure_source: str | None = None,
+    ) -> None:
+        """Initialize the Interface Energy reward model.
+
+        Args:
+            device: Device to use for computations.
+            enable_hbond: Whether to include hydrogen bond energy term.
+            enable_elec: Whether to include electrostatic energy term (fa_elec).
+            hbond_weight: Weight for the hydrogen bond term.
+            elec_weight: Weight for the electrostatic term.
+            reward_type: Type of reward - "energy_sum" (sum of interaction energies) or
+                        "interaction_count" (number of significant interactions)
+            energy_threshold: Energy threshold for counting significant interactions (kcal/mol)
+            normalize_by_interface_size: Whether to normalize by number of interface residue pairs
+            structure_source: Optional folding model key whose predicted structure should be
+                used instead of the generated PDB (resolved by CompositeRewardModel).
+        """
+        if device is None:
+            device = torch.device("cuda")
+        self.device = device
+        self.structure_source = structure_source
+        self.enable_hbond = enable_hbond
+        self.enable_elec = enable_elec
+        self.hbond_weight = hbond_weight
+        self.elec_weight = elec_weight
+        self.reward_type = reward_type
+        self.energy_threshold = energy_threshold
+        self.normalize_by_interface_size = normalize_by_interface_size
+
+        # Validate inputs
+        assert reward_type in [
+            "energy_sum",
+            "interaction_count",
+        ], f"reward_type must be 'energy_sum' or 'interaction_count', got {reward_type}"
+
+        if not enable_hbond and not enable_elec:
+            raise ValueError("At least one of enable_hbond or enable_elec must be True")
+
+        # Initialize TMol components
+        self.param_db = tmol.ParameterDatabase.get_default()
+        self.pose_stack = None
+        self.energy_sfxn = None
+        self.block_pair_scorer = None
+
+        # Setup score function with requested energy terms
+        self._setup_energy_scorefunction()

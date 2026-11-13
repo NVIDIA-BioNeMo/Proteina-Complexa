@@ -74,6 +74,100 @@
       "expected_skill": null,
       "expected_script": null,
       "files": []
+    },
+    {
+      "id": "complexa-design-005",
+      "prompt": "Review /workspace/input/beam_review/draft_overrides.yaml for a PD-L1 protein-binder campaign. I want six seed inputs (three sampled lengths, each repeated twice), beam width 3, two branches per beam, 180 denoising steps split into three equal search intervals, and all lookahead candidates saved. Keep the memory batch limits at 2 and the post-generation retention cap at 20. Repair the nested overrides in beam_overrides.yaml without changing those choices. Write beam_budget.json with seed_count, final_candidates, lookahead_candidates, pre_filter_candidates, max_retained, and assumptions for a fully completed run. Explain which numbers can be predicted before running and whether this setup promises 20 successful designs.\n\nWork offline from the supplied source snapshot in /workspace/input/design_source; this is a review task, not an inference run. Do not provision a runtime or download weights. Use task inputs and, if available, skill instructions/references; evaluation definitions and prior benchmark reports are outside the task. Write the requested artifacts under /workspace/output, reopen them, and show the relevant configuration or computed results in tool output. Distinguish predicted behavior and synthetic-table calculations from measured campaign results.",
+      "expected_output": "A source-grounded beam-search patch and conditional output budget. The schedule ends at 180; six dataset inputs produce 18 finals and 108 retained lookaheads (126 pre-filter candidates) under the stated assumptions. The cap is at most 20 selected candidates, not a generated-seed count or a guarantee of success.",
+      "assertions": [
+        "The saved nested YAML explicitly selects generation.search.algorithm=beam-search and uses generation.search.step_checkpoints=[0,60,120,180] with generation.args.nsteps=180. It identifies that leaving the old final checkpoint at 400 would fail the source implementation guard.",
+        "The patch retains nsamples=3, nrepeat_per_sample=2, beam_width=3, n_branch=2, both memory limits=2, keep_lookahead_samples=true, no search reward cutoff, no refinement, and filter_samples_limit=20.",
+        "The saved budget computes seed_count=6, final_candidates=18, lookahead_candidates=108, and pre_filter_candidates=126, using all three search intervals rather than treating batch size or the retention limit as the generation count.",
+        "The budget states that the counts assume complete generation, saved lookaheads, no search cutoff, and no refinement copies; deduplication/filtering and runtime failures may reduce retained outputs. It does not claim 126 unique designs or 20 successes.",
+        "Both requested artifacts are written and read back, and the final answer describes a completed offline review without claiming a launched or validated GPU campaign."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/design_source",
+        "files/beam_review"
+      ]
+    },
+    {
+      "id": "complexa-design-006",
+      "prompt": "I want a protein-binder search against TrkA that combines AF2 interface confidence with the number of favorable interfacial hydrogen-bond interactions on the AF2-refolded complex. Use equal positive outer coefficients, an interaction energy cutoff of -0.6, and no electrostatic reward. Final evaluation should use RF3 on the generated sequences. Review /workspace/input/reward_review/draft_overrides.yaml, write corrected nested overrides to reward_overrides.yaml, and write reward_review.md explaining the reward signs, numerical scales, structure routing, and remaining runtime requirements. Specify what runtime evidence would establish that the requested geometry was actually used, including what happens if a folding output is absent.\n\nWork offline from the supplied source snapshot in /workspace/input/design_source; this is a review task, not an inference run. Do not provision a runtime or download weights. Use task inputs and, if available, skill instructions/references; evaluation definitions and prior benchmark reports are outside the task. Write the requested artifacts under /workspace/output, reopen them, and show the relevant configuration or computed results in tool output. Distinguish predicted behavior and synthetic-table calculations from measured campaign results.",
+      "expected_output": "The corrected composite uses a negative AF2 i_pae coefficient and a positive TMOL H-bond interaction-count contribution, routes TMOL through the af2folding model alias, and leaves final RF3 evaluation separate from AF2 search scoring. The review acknowledges the source fallback to generated geometry when no saved AF2 structure exists.",
+      "assertions": [
+        "The YAML uses CompositeRewardModel with AF2RewardModel under af2folding, i_pae=-1.0 and no unintended nonzero AF2 reward terms. Both outer af2folding and tmol weights are +1.0, not a negative H-bond coefficient.",
+        "TMOL uses TmolRewardModel, enable_hbond=true, enable_elec=false, hbond_weight=1.0, reward_type=interaction_count, and energy_threshold=-0.6. The review distinguishes interaction counts from the alternative negative energy_sum objective.",
+        "TMOL structure_source is af2folding (the reward-model key), not colabdesign (the evaluation backend name). The review traces folding-first execution and requests evidence of the saved AF2 PDB and downstream scoring input, recognizing that a missing saved file can fall back to the generated PDB.",
+        "The final evaluation settings remain metric.binder_folding_method=rf3_latest and metric.sequence_types=[self]. The review retains AF2/TMOL search prerequisites as well as RF3_CKPT_PATH and RF3_EXEC_PATH for evaluation; changing the final backend does not eliminate AF2.",
+        "The review explains that equal outer weights are not numerical normalization and that favorable search rewards or RF3 confidence do not establish experimental binding affinity. It does not report any computed H-bonds or binding successes from this configuration-only task.",
+        "The agent writes and reopens reward_overrides.yaml and reward_review.md and reports a review outcome without installing dependencies or running inference."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/design_source",
+        "files/reward_review"
+      ]
+    },
+    {
+      "id": "complexa-design-007",
+      "prompt": "Prepare a Generate & Hallucinate comparison for a protein-binder beam-search run. I want only the final candidates refined with AF2: 15 greedy iterations, three recycles, no soft/hard optimization stages. Keep the search lookaheads unchanged and preserve the original finals for a matched before/after comparison. Evaluate the resulting sequences themselves; do not run any additional MPNN redesign, including auxiliary monomer designability. Review /workspace/input/refinement_review/draft_overrides.yaml and write refinement_overrides.yaml plus refinement_plan.md. Explain how to identify pairs, preserve them before post-generation selection, and handle refinement failures or missing pairs. Do not change the search budget or scientific success thresholds.\n\nWork offline from the supplied source snapshot in /workspace/input/design_source; this is a review task, not an inference run. Do not provision a runtime or download weights. Use task inputs and, if available, skill instructions/references; evaluation definitions and prior benchmark reports are outside the task. Write the requested artifacts under /workspace/output, reopen them, and show the relevant configuration or computed results in tool output. Distinguish predicted behavior and synthetic-table calculations from measured campaign results.",
+      "expected_output": "The patch enables sequence_hallucination for finals only, saves pre-refinement finals, configures greedy-only optimization, and disables binder and auxiliary monomer redesign. The plan preserves paired evidence before deduplication/top-N selection and does not infer refinement success solely from output labels.",
+      "assertions": [
+        "The saved patch uses generation.refinement.algorithm=sequence_hallucination, refine_targets=final, and save_pre_refinement=final. It leaves lookahead candidates unchanged rather than refining all candidates.",
+        "The saved patch sets enable_soft_optimization=false, enable_greedy_optimization=true, n_greedy_iters=15, and n_recycles=3; it does not substitute MPNN or an unsupported refinement algorithm for AF2 sequence hallucination.",
+        "The evaluation patch uses metric.sequence_types=[self] and disables metric.compute_designability (or all monomer evaluation) so the comparison does not silently run additional MPNN work. Merely setting num_redesign_seqs is insufficient.",
+        "The plan identifies final_unrefined versus final outputs and pairs them using stable run/sample lineage and metadata rather than sequence identity. It preserves the generation artifacts before filtering and recognizes that top-N selection or sequence deduplication can remove one arm even when deletion is disabled.",
+        "The comparison uses matched pairs and the same evaluation backend/criteria, reports attrition, and checks refinement error evidence because the implementation can return an original sample after an error. It makes no claim of measured refinement improvement.",
+        "The agent writes and reopens both requested artifacts and reports preparation only, without provisioning or launching a GPU run."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/design_source",
+        "files/refinement_review"
+      ]
+    },
+    {
+      "id": "complexa-design-008",
+      "prompt": "Audit a small ligand-binder pilot before I spend GPU time evaluating its selected candidates. The synthetic reward table and draft filter overrides are in /workspace/input/filter_review. Use the released ligand RF3 reward configuration in the supplied snapshot. My intended selection is: raw min_ipAE at most 7 Angstroms, best-scoring candidate per identical sequence, and at most 100 candidates. Explain what the current implementation actually selects from the table with the draft, what a threshold-only correction would change, and what happens with the corrected threshold if I lower the cap to 3. Write filter_audit.json containing the translated threshold, the ordered selected candidate IDs for these three scenarios, and the ordered IDs under my intended policy. Write filter_review.md explaining discrepancies and a non-destructive way to produce the intended selection without modifying the library. These are synthetic records; their PDB paths are not real files.\n\nWork offline from the supplied source snapshot in /workspace/input/design_source; this is a review task, not an inference run. Do not provision a runtime or download weights. Use task inputs and, if available, skill instructions/references; evaluation definitions and prior benchmark reports are outside the task. Write the requested artifacts under /workspace/output, reopen them, and show the relevant configuration or computed results in tool output. Distinguish predicted behavior and synthetic-table calculations from measured campaign results.",
+      "expected_output": "The audit derives total_reward=-raw_min_ipAE/31, hence a threshold of -7/31 for an inclusive raw ceiling. It exposes first-occurrence deduplication and the below-cap threshold guard. Current and threshold-only selections are L04,L03,L01,L06; corrected threshold with cap 3 selects L04,L03. The intended best-per-sequence policy selects L02,L04,L03.",
+      "assertions": [
+        "The audit derives reward=-raw_min_ipAE/31 from normalize_pae=true, the explicit min_ipAE coefficient -1.0, zero other coefficients, and the outer weight 1.0. It gives threshold=-7/31 (approximately -0.22580645), with larger rewards better and an inclusive raw 7-Angstrom boundary.",
+        "It drops L05 for missing total_reward, identifies first-occurrence sequence deduplication as retaining L01 over its better duplicate L02, and gives the actual draft selection in descending reward order as L04,L03,L01,L06.",
+        "It identifies that the filter applies its reward cutoff only when the post-dedup count exceeds the cap. A threshold-only correction with cap 100 still selects L04,L03,L01,L06; the corrected threshold with cap 3 selects L04,L03.",
+        "The intended unconditional cutoff with best-score sequence deduplication yields L02,L04,L03 in descending reward order. The proposed remedy produces a separate reviewed selection while preserving the source candidates; it does not claim an unchanged library threshold override implements the intended policy.",
+        "The audit distinguishes this reward selection from full ligand success evaluation, which also requires binder and ligand RMSD checks. It does not claim that this synthetic table establishes binding or completed refolding.",
+        "The agent writes and reopens filter_audit.json and filter_review.md and shows the actual table-derived selections, rather than only giving generic filtering advice."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/design_source",
+        "files/filter_review"
+      ]
+    },
+    {
+      "id": "complexa-design-009",
+      "prompt": "Summarize the synthetic completed-run export in /workspace/input/outcome_review for a protein-binder design campaign. Use the implementation-default success criteria in the supplied source snapshot, including the exact comparison operators. The metadata describes units and denominators; the CSV has one row per evaluated sequence, and frozen Foldseek cluster assignments are supplied separately. Report generated-sequence success, MPNN sequence-attempt success, base designs with any passing MPNN redesign, designs rescued by MPNN, and overall base-design coverage. Also report structural cluster counts among successful self, MPNN, and combined results. Write outcomes.json with the counts, denominators, passing IDs, and criteria, plus outcome_report.md explaining the scientific interpretation and any missing metrics. Do not relax criteria or treat these synthetic numbers as experimental results.\n\nWork offline from the supplied source snapshot in /workspace/input/design_source; this is a review task, not an inference run. Do not provision a runtime or download weights. Use task inputs and, if available, skill instructions/references; evaluation definitions and prior benchmark reports are outside the task. Write the requested artifacts under /workspace/output, reopen them, and show the relevant configuration or computed results in tool output. Distinguish predicted behavior and synthetic-table calculations from measured campaign results.",
+      "expected_output": "The report applies all three protein thresholds to each individual sequence in the stated units. Self passes D01,D02 (2/6); MPNN has four passing attempts of twelve across D01,D03,D05 (3/6 designs); D03,D05 are rescued and the union is four of six designs. Successful structural-cluster counts are 1 self, 2 MPNN, and 2 combined.",
+      "assertions": [
+        "The saved criteria use complex_i_pAE*31 <= 7, complex_pLDDT >= 0.9, and binder_scRMSD_ca < 1.5 for the same sequence. D02 self passes the inclusive boundaries; the RMSD=1.5 rows fail, and missing pLDDT for D05 self is not treated as zero, a pass, or an omitted criterion.",
+        "Self passing design IDs are D01,D02 with 2/6 base designs. The report does not count post-hoc redesigned sequences as successes of the originally co-designed sequence.",
+        "MPNN passing sequence IDs are D01_mpnn_1,D01_mpnn_2,D03_mpnn_1,D05_mpnn_1 (4/12 attempts). Designs with any passing MPNN sequence are D01,D03,D05 (3/6); it does not combine passing metrics from different failing redesigns, notably D04.",
+        "The rescued design IDs are D03,D05 (2 additional base designs); combined self-or-MPNN coverage is D01,D02,D03,D05 (4/6), not the sum of passing sequence rows or a sum that double-counts D01.",
+        "Using only successful rows and the supplied fixed assignments, structural cluster counts are 1 for self (F01), 2 for MPNN (F01,F02), and 2 for their union. Failed structures and sequence counts do not inflate structural diversity.",
+        "The agent writes and reopens outcomes.json and outcome_report.md with table-derived counts, denominators, and IDs. The report labels the fixtures as synthetic and the conclusions as in-silico criteria, without claiming measured affinity, experimental success, or a newly executed Foldseek run."
+      ],
+      "expected_skill": "complexa-design",
+      "expected_script": null,
+      "files": [
+        "files/design_source",
+        "files/outcome_review"
+      ]
     }
   ]
 }
