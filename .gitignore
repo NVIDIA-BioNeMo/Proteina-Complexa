@@ -103,3 +103,6 @@ tests/test_eval_generated/
 .vscode-server/
 .claude.json*
 params
+
+# Local setup/run artifacts (machine-specific paths, large logs)
+complexa_setup/
