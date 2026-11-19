@@ -106,3 +106,7 @@ params
 
 # Local setup/run artifacts (machine-specific paths, large logs)
 complexa_setup/
+script_utils/ae_recon/out/
+script_utils/ae_recon/out_ame_ae/
+script_utils/ae_recon/pdbs/
+__pycache__/
