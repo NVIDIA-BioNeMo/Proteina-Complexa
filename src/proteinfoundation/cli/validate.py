@@ -274,13 +274,39 @@ def validate_env() -> ValidationReport:
     return report
 
 
+def _defaults_entry_file(entry: str, group_dir: Path, config_root: Path) -> Path:
+    """Map a Hydra defaults entry to the YAML file it loads.
+
+    ``/targets/targets_dict@_here_`` is relative to ``config_root``;
+    ``targets_dict`` is relative to ``group_dir``, the directory of the config
+    that lists it. The ``@package`` suffix is ignored.
+    """
+    name = entry.split("@", 1)[0]
+    if name.startswith("/"):
+        return config_root / f"{name[1:]}.yaml"
+    return group_dir / f"{name}.yaml"
+
+
+def _generation_defaults_file(default, config_dir: Path) -> Path | None:
+    """Return the file a top-level defaults entry loads into ``generation``, if any."""
+    if isinstance(default, dict) and "generation" in default:
+        # ``- generation: <name>``, files under configs/generation/
+        return config_dir / "generation" / f"{default['generation']}.yaml"
+    if isinstance(default, str) and default.endswith("@generation"):
+        # ``- pipeline/binder/binder_generate@generation`` (shipped pipeline configs)
+        return _defaults_entry_file(default, config_dir, config_dir)
+    return None
+
+
 def _get_target_dict_cfg(config_path: Path) -> tuple[dict | None, str | None]:
     """Extract target_dict_cfg and task_name from config.
 
     Follows Hydra defaults chain to find target_dict_cfg:
     1. Check main config for target_dict_cfg
-    2. Follow generation defaults (e.g., targets_search_local.yaml)
-    3. Follow nested defaults (e.g., targets_dict.yaml)
+    2. Follow generation defaults (e.g., ``- generation: targets_search_local``
+       or ``- pipeline/binder/binder_generate@generation``)
+    3. Follow nested defaults (e.g., ``targets_dict`` or
+       ``/targets/targets_dict@_here_``)
 
     Returns
     -------
@@ -305,12 +331,14 @@ def _get_target_dict_cfg(config_path: Path) -> tuple[dict | None, str | None]:
     # Follow defaults chain to find generation config and targets_dict
     if "defaults" in cfg:
         for default in cfg["defaults"]:
-            if isinstance(default, dict) and "generation" in default:
-                gen_file = generation_dir / f"{default['generation']}.yaml"
+            gen_file = _generation_defaults_file(default, config_path.parent)
+            if gen_file is not None:
                 if gen_file.exists():
                     gen_cfg = load_config_yaml(gen_file)
 
                     # Get task_name from generation config if not already set
+                    if not task_name:
+                        task_name = gen_cfg.get("task_name")
                     if not task_name:
                         # Check dataloader.dataset.task_name
                         dataloader = gen_cfg.get("dataloader", {})
@@ -326,7 +354,7 @@ def _get_target_dict_cfg(config_path: Path) -> tuple[dict | None, str | None]:
                         for nested_default in gen_cfg["defaults"]:
                             # Handle string defaults like "- targets_dict"
                             if isinstance(nested_default, str):
-                                nested_file = generation_dir / f"{nested_default}.yaml"
+                                nested_file = _defaults_entry_file(nested_default, gen_file.parent, config_path.parent)
                                 if nested_file.exists():
                                     nested_cfg = load_config_yaml(nested_file)
                                     # targets_dict.yaml has target_dict_cfg at top level
@@ -388,9 +416,8 @@ def validate_target(
 
     report.add(check_dir_exists(data_path, "DATA_PATH"))
 
-    # Check target_data directory exists
-    target_data_dir = Path(data_path) / "target_data"
-    report.add(check_dir_exists(target_data_dir, "target_data directory"))
+    target_data_result = check_dir_exists(Path(data_path) / "target_data", "target_data directory")
+    report.add(target_data_result)
 
     # If config provided, extract target info
     if config_path and config_path.exists():
@@ -420,6 +447,11 @@ def validate_target(
                         if target_cfg.get("target_path"):
                             target_path = Path(target_cfg["target_path"])
                             path_source = "target_path (explicit)"
+                            if not target_data_result.passed:
+                                # This target names its file directly and does not
+                                # read DATA_PATH/target_data.
+                                target_data_result.is_warning = True
+                                target_data_result.fix_hint = "Only needed for targets without target_path"
                         else:
                             source = target_cfg.get("source", "")
                             filename = target_cfg.get("target_filename", "")
