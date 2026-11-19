@@ -1,0 +1,42 @@
+Environment variable CCD_MIRROR_PATH not set. Will not be able to use function requiring this variable. To set it you may:
+  (1) add the line 'export VAR_NAME=path/to/variable' to your .bashrc or .zshrc file
+  (2) set it in your current shell with 'export VAR_NAME=path/to/variable'
+  (3) write it to a .env file in the root of the atomworks.io repository
+Environment variable PDB_MIRROR_PATH not set. Will not be able to use function requiring this variable. To set it you may:
+  (1) add the line 'export VAR_NAME=path/to/variable' to your .bashrc or .zshrc file
+  (2) set it in your current shell with 'export VAR_NAME=path/to/variable'
+  (3) write it to a .env file in the root of the atomworks.io repository
+/home/luke/code/Proteina-Complexa/.venv/lib/python3.12/site-packages/graphein/protein/config.py:217: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+  @validator("alt_locs")
+Failed to get GPU information from pynvml: Not Supported. Using default values for NVIDIA RTX 5000 Ada Generation Laptop GPU.
+GPU information: NVIDIA RTX A6000, 8, 6, 45, 84, 300, 2100
+device: cuda
+[11/18/26 20:13:52] INFO     No features requested        feature_factory.py:181
+['nlayers', 'token_dim', 'abs_coors', 'nheads', 'parallel_mha_transition', 'strict_feats', 'feats_seq', 'feats_cond_seq', 'dim_cond', 'idx_emb_dim', 'feats_pair_repr', 'seq_sep_dim', 'pair_repr_dim', 'update_pair_repr', 'update_pair_repr_every_n', 'use_tri_mult', 'use_qkln']
+[11/18/26 20:13:53] INFO     No features requested        feature_factory.py:181
+loaded ./ckpts/complexa_ae.ckpt, latent_dim=8
+
+ANTIBODY Fv (VH + VL):
+  1a2y Fv                n= 223  all-atom RMSD  0.037 A   median  0.043 A   seq recovery 100.0%
+  1bj1 Fv (bevacizumab)  n= 227  all-atom RMSD  0.038 A   median  0.045 A   seq recovery 100.0%
+  12e8 Fv                n= 234  all-atom RMSD  0.042 A   median  0.046 A   seq recovery 100.0%
+  1n8z Fv (trastuzumab)  n= 227  all-atom RMSD  0.050 A   median  0.058 A   seq recovery 100.0%
+
+3-CHAIN COMPLEX (VH + VL + antigen):
+  1a2y Fv+lysozyme       n= 352  all-atom RMSD  0.049 A   median  0.043 A   seq recovery 100.0%
+  1bj1 Fv+VEGF           n= 321  all-atom RMSD  0.049 A   median  0.047 A   seq recovery 100.0%
+  1n8z Fv+HER2           n= 427  all-atom RMSD  0.062 A   median  0.063 A   seq recovery 100.0%
+
+4-CHAIN COMPLEX (two Fabs + two antigen copies):
+  1bj1 HLVW              n= 415  all-atom RMSD  0.046 A   median  0.046 A   seq recovery 100.0%
+
+NON-ANTIBODY controls:
+  1bj1_cropped           n=  94  all-atom RMSD  0.037 A   median  0.048 A   seq recovery 100.0%
+  1tnf_cropped           n= 146  all-atom RMSD  0.075 A   median  0.077 A   seq recovery 100.0%
+  1tnf_cropped_fixed     FAILED: ValueError: The file has 0 models, the given model 1 does not exist
+  1tnf_repacked          n= 146  all-atom RMSD  0.044 A   median  0.053 A   seq recovery 100.0%
+
+======================================================================
+antibody Fv : RMSD mean 0.042 A (n=4)   seq recovery 100.0%
+control     : RMSD mean 0.052 A (n=3)   seq recovery 100.0%
+ratio       : 0.80x
