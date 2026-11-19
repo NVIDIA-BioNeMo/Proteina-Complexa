@@ -224,7 +224,12 @@ class SkipNanGradCallback(Callback):
         if nan_flag:
             self.count += 1
             print("Nan grad, skipping update", self.count, self.iter)
-            pl_module.zero_grad()
+            # With fp16 mixed precision, the AMP GradScaler already skips the optimizer step when
+            # the gradients are not finite, and lowers the loss scale. Clearing the gradients here
+            # would leave the scaler nothing to unscale, and `scaler.step` then fails with
+            # "No inf checks were recorded for this optimizer".
+            if getattr(trainer.precision_plugin, "scaler", None) is None:
+                pl_module.zero_grad()
 
 
 # class RandomStateCheckpoint(Callback):
