@@ -648,7 +648,7 @@ All evaluation configs share the same structure. The difference between binder-o
 
 ```yaml
 defaults:
-  - /generation/targets_dict@dataset
+  - /targets/targets_dict@dataset
   - _self_
 
 run_name: my_eval
@@ -733,7 +733,8 @@ For evaluating PDB files from external sources (BindCraft, AlphaProteo, etc.) th
 
 ```yaml
 defaults:
-  - /generation/targets_dict@dataset
+  - /targets/targets_dict@dataset
+  - /targets/ligand_targets_dict@dataset
   - _self_
 
 run_name: external_binder_eval
@@ -1022,7 +1023,7 @@ Configs use Hydra's `defaults` list to compose from shared config fragments:
 
 ```yaml
 defaults:
-  - /generation/targets_dict@dataset   # Load target definitions into 'dataset' key
+  - /targets/targets_dict@dataset      # Load target definitions into 'dataset' key
   - /analyze@_here_                    # Load analyze defaults at the current level
   - _self_                             # Apply this file's values last (highest priority)
 ```

@@ -19,7 +19,8 @@
 #   complexa analysis configs/evaluate_from_pdb_dir.yaml dryrun=true
 
 defaults:
-  - generation/targets_dict@dataset
+  - /targets/targets_dict@dataset
+  - /targets/ligand_targets_dict@dataset
   - _self_
 
 run_name: pdb_dir_eval_39_7V11_LIGAND #01_PD1

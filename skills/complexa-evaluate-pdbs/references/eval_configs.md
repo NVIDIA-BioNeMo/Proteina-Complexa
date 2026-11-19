@@ -23,7 +23,7 @@ All `evaluate_*` configs share a top-level shape (run identification, `input_mod
 
 - `protein_type: binder` (one config handles both protein and ligand binders).
 - `input_mode: pdb_dir` (already set; never override back to `generated`).
-- `defaults: - generation/targets_dict@dataset` — resolves `dataset.task_name` against `configs/targets/targets_dict.yaml` (and ligand_targets_dict via task naming).
+- `defaults: - /targets/targets_dict@dataset` and `- /targets/ligand_targets_dict@dataset` — resolves `dataset.task_name` against `configs/targets/targets_dict.yaml` and `configs/targets/ligand_targets_dict.yaml`.
 - Required `dataset.*`:
   - `dataset.task_name` — target key (e.g. `02_PDL1`, `39_7V11_LIGAND`).
 - Key `metric.*` fields:
