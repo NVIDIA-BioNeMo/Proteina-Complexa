@@ -325,10 +325,17 @@ def apply_sweeper_and_save_configs(
 
         # Set inference output path
         infer_cfg["root_path"] = f"./inference/inf_{base_name}"
-        OmegaConf.set_struct(infer_cfg, True)
 
         # Derive eval config
         eval_cfg = create_eval_config(infer_cfg)
+
+        # `complexa design inf_*.yaml` also runs evaluate and analyze on this
+        # config. Give it the same sample and result paths as eval_*.yaml, so
+        # evaluate reads root_path instead of rebuilding a path from the
+        # config name, task name and run_name that generate never wrote.
+        for key in ("sample_storage_path", "output_dir", "results_dir"):
+            infer_cfg[key] = eval_cfg[key]
+        OmegaConf.set_struct(infer_cfg, True)
 
         # Save both configs
         inf_filename = f"inf_{base_name}.yaml"
